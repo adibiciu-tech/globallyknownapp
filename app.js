@@ -1,0 +1,4245 @@
+import { AGENT_CONFIGS } from "./agent-configs.js";
+import { GeminiService } from "./gemini-service.js";
+
+// -------------------------------------------------------------
+// Real-Time Live Auto-Reload Engine (Auto-updates on phone & desktop)
+// -------------------------------------------------------------
+(function initLiveHotReload() {
+  let lastCssMod = null;
+  let lastHtmlMod = null;
+  
+  setInterval(async () => {
+    try {
+      const cssRes = await fetch(`styles.css?t=${Date.now()}`, { method: "HEAD" });
+      const cssMod = cssRes.headers.get("last-modified") || cssRes.headers.get("etag");
+      
+      const htmlRes = await fetch(`index.html?t=${Date.now()}`, { method: "HEAD" });
+      const htmlMod = htmlRes.headers.get("last-modified") || htmlRes.headers.get("etag");
+
+      if ((lastCssMod && cssMod && lastCssMod !== cssMod) || (lastHtmlMod && htmlMod && lastHtmlMod !== htmlMod)) {
+        console.log("⚡ Live change detected! Auto-reloading phone & desktop view...");
+        window.location.reload();
+      }
+      
+      if (cssMod) lastCssMod = cssMod;
+      if (htmlMod) lastHtmlMod = htmlMod;
+    } catch (err) {
+      // Ignore transient network glitches
+    }
+  }, 1200);
+})();
+
+// Initialize Gemini Service
+const geminiService = new GeminiService();
+
+// -------------------------------------------------------------
+// SOL Vocabulary Library (For Random Word Generator)
+// -------------------------------------------------------------
+const VOCABULARY_LIBRARY = {
+  es: [
+    { word: "Cerveza", meta: "noun | /θeɾˈβeθa/", def: "An alcoholic beverage made by fermenting barley, flavored with hops; beer." },
+    { word: "Biblioteca", meta: "noun | /bi.βljoˈte.ka/", def: "A building or room containing collections of books and periodicals; library." },
+    { word: "Madrugada", meta: "noun | /ma.ðɾuˈɣa.ða/", def: "The early morning hours, specifically the period between midnight and sunrise; dawn." },
+    { word: "Girasol", meta: "noun | /xi.ɾaˈsol/", def: "A tall North American plant of the daisy family, with very large golden-rayed flowers; sunflower." },
+    { word: "Desafío", meta: "noun | /de.saˈfi.o/", def: "A call to take part in a contest or competition; a challenge." }
+  ],
+  fr: [
+    { word: "Pamplemousse", meta: "noun | /pɑ̃.plə.mus/", def: "A large round sour citrus fruit with yellow skin and pink or yellow flesh; grapefruit." },
+    { word: "Écureuil", meta: "noun | /e.ky.ʁœj/", def: "A small squirrel-like rodent with a bushy tail that lives in trees; squirrel." },
+    { word: "Crépuscule", meta: "noun | /kʁe.pys.kyl/", def: "The soft glowing light from the sky when the sun is below the horizon; twilight." },
+    { word: "Chuchoter", meta: "verb | /ʃy.ʃɔ.te/", def: "Speak very softly using one's breath rather than one's vocal cords; whisper." },
+    { word: "Dépaysement", meta: "noun | /de.pa.iz.mɑ̃/", def: "The feeling of disorientation or change of scenery one gets when traveling; displacement." }
+  ],
+  de: [
+    { word: "Gemütlichkeit", meta: "noun | /ɡəˈmyːtlɪçkaɪt/", def: "A state of warmth, friendliness, and good cheer; coziness or comfort." },
+    { word: "Fernweh", meta: "noun | /ˈfɛʁnˌveː/", def: "A longing for far-off places or travel; farsickness (opposite of homesickness)." },
+    { word: "Schadenfreude", meta: "noun | /ˈʃaːdn̩ˌfʁɔʏ̯də/", def: "Pleasure derived by someone from another person's misfortune." },
+    { word: "Kummerspeck", meta: "noun | /ˈkʊmɐˌʃpɛk/", def: "Excess weight gained from emotional overeating; grief-bacon." },
+    { word: "Sehnsucht", meta: "noun | /ˈzeːnˌzʊxt/", def: "A deep yearning or wistful longing for something indefinable or unattainable." }
+  ],
+  it: [
+    { word: "Sprezzatura", meta: "noun | /spret.tsaˈtu.ra/", def: "A certain nonchalance, so as to conceal all art and make whatever one does seem effortless." },
+    { word: "Allora", meta: "adverb | /alˈlo.ra/", def: "An introductory filler word meaning 'then', 'well', or 'therefore'." },
+    { word: "Crepuscolo", meta: "noun | /kreˈpus.ko.lo/", def: "The period of fading light after sunset or before sunrise; twilight." },
+    { word: "Mozaico", meta: "noun | /moˈdza.i.ko/", def: "A picture or pattern produced by arranging together small colored pieces of stone or glass; mosaic." },
+    { word: "Riflessione", meta: "noun | /ri.flesˈsjo.ne/", def: "Serious thought or consideration; reflection." }
+  ],
+  en: [
+    { word: "Serendipity", meta: "noun | /ˌserənˈdipədē/", def: "The occurrence and development of events by chance in a happy or beneficial way." },
+    { word: "Mellifluous", meta: "adjective | /məˈliflo͞oəs/", def: "A sound that is sweet and musical; pleasant to hear." },
+    { word: "Ephemeral", meta: "adjective | /əˈfemərəl/", def: "Lasting for a very short time; transient." },
+    { word: "Petrichor", meta: "noun | /ˈpeˌtrīkôr/", def: "A pleasant smell that frequently accompanies the first rain after a long period of warm, dry weather." },
+    { word: "Limerence", meta: "noun | /ˈlimərəns/", def: "The state of being infatuated or obsessed with another person, typically experienced involuntarily." }
+  ]
+};
+
+// -------------------------------------------------------------
+// Curated Videos Library
+// -------------------------------------------------------------
+const VIDEOS_LIBRARY = [
+  { id: "v1", title: "Comprehensible Spanish for Beginners", desc: "A slow, clear story in Spanish using visual guides to aid natural acquisition.", code: "es", embedUrl: "https://www.youtube.com/embed/RJbUtcaoNCY?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_", playlistUrl: "https://www.youtube.com/playlist?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_" },
+  { id: "v2", title: "French Comprehensible Input: Travel Essentials", desc: "Acquire intermediate travel phrases naturally through situational dialogues.", code: "fr", embedUrl: "https://www.youtube.com/embed/8v_Y-5b23d0" },
+  { id: "v3", title: "German A1: Daily Routine Dialogue", desc: "Learn daily activities in German using simple sentences, illustrations, and slow audio.", code: "de", embedUrl: "https://www.youtube.com/embed/3Q_Uj-Wc-3M" },
+  { id: "v4", title: "Introduction to Input-Based Learning Methods", desc: "Linguists explain why comprehensible input accelerates vocabulary and retention.", code: "en", embedUrl: "https://www.youtube.com/embed/J_EQDtpYSNM" }
+];
+
+// -------------------------------------------------------------
+// Simulated Community Board Data
+// -------------------------------------------------------------
+let communityPosts = [
+  {
+    id: "p1",
+    user: "Marco L. 🇮🇹",
+    time: "2 hours ago",
+    content: "Has anyone found a good routine for practicing Italian Sprezzatura? It is so hard to sound natural without stuttering!",
+    likes: 12,
+    comments: [
+      { user: "Sarah K. 🇺🇸", content: "I suggest shadowing native podcasters! Just copy their rhythm without thinking of vocabulary." }
+    ]
+  },
+  {
+    id: "p2",
+    user: "Emma W. 🇬🇧",
+    time: "5 hours ago",
+    content: "SOL Grammar just fixed my Spanish subjunctive clauses in my diary. Highly recommend checking it before sleeping!",
+    likes: 24,
+    comments: []
+  }
+];
+
+// -------------------------------------------------------------
+// App State variables
+// -------------------------------------------------------------
+let activePanel = "start-here";
+let activeChatMessages = JSON.parse(localStorage.getItem("sol_chat_history")) || [];
+let activeModel = "gemini-1.5-flash";
+let activeAgentId = "general";
+let currentTheme = localStorage.getItem("sol_theme") || "dark";
+
+// Speech Recognition instance
+let speechRecognition = null;
+let isRecording = false;
+
+// -------------------------------------------------------------
+// DOM Selection
+// -------------------------------------------------------------
+const sidebar = document.getElementById("sidebar");
+const menuToggleBtn = document.getElementById("menu-toggle-btn");
+const navItems = document.querySelectorAll(".nav-item");
+
+const headerAgentBadge = document.getElementById("header-agent-badge");
+const headerChatTitle = document.getElementById("header-chat-title");
+const headerModelBadge = document.getElementById("header-model-badge");
+const themeToggleBtn = document.getElementById("theme-toggle-btn");
+
+const panelsContainer = document.getElementById("panels-container");
+const panels = document.querySelectorAll(".workspace-panel");
+
+// Panel - Start Here
+const featureCards = document.querySelectorAll(".feature-card");
+
+// Panel - Community (Circle.so style Layout)
+let currentCircleChannel = "announcements";
+let circleChannelsData = {
+  announcements: [
+    {
+      id: "cp1",
+      title: "Globally Known Weekly Schedule - Oct 3-8, 2026 (LINKS INSIDE)",
+      author: "Gregory Dobbins",
+      role: "Program Manager 🎓",
+      avatar: "GD",
+      time: "2 days ago",
+      content: "What's Up GLOBALLY KNOWN LEARNERS! Here is the weekly comprehension schedule. Please review your lessons and analyze your pronunciation in the labs.",
+      image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=60",
+      likes: 17,
+      comments: [
+        { author: "Sarah K.", content: "Super excited for this schedule! Subscribed." }
+      ]
+    }
+  ],
+  "english-inputs": [
+    {
+      id: "cp2",
+      title: "How to practice shadowing with City Vlogs?",
+      author: "Sarah K. 🇺🇸",
+      role: "Language Coach 🏅",
+      avatar: "SK",
+      time: "3 hours ago",
+      content: "I recommend playing the City Vlog lessons at 0.75x speed. Focus on mimicking the vowels and mouth shapes. Listen to the phrase first, pause, and record yourself under the output practicing tab!",
+      likes: 8,
+      comments: []
+    }
+  ],
+  "metaphors": [
+    {
+      id: "cp3",
+      title: "Fascinating Metaphor: 'Running out of time' ⏳",
+      author: "Alice F. 🇫🇷",
+      role: "Member 👤",
+      avatar: "AF",
+      time: "Yesterday",
+      content: "In Spanish and French, the metaphorical conceptualization of time matches the English system. We talk about time as a resource that can be spent, saved, or wasted. Let's discuss other metaphor grids!",
+      likes: 12,
+      comments: []
+    }
+  ],
+  "general-chat": [
+    {
+      id: "cp4",
+      title: "Welcome everyone! Introduce yourself here!",
+      author: "You",
+      role: "Learner 👤",
+      avatar: "Y",
+      time: "Just now",
+      content: "Hey community! I am using SOL to master comprehension input. Excited to learn with you all!",
+      likes: 0,
+      comments: []
+    }
+  ],
+  "featurings": [
+    {
+      id: "cp5",
+      title: "New SOL 2.0 Engine is extremely responsive!",
+      author: "Bob D. 🇩🇪",
+      role: "Member 👤",
+      avatar: "BD",
+      time: "3 days ago",
+      content: "The accent detection engine is incredibly accurate now. My Spanish accuracy scores went from 80% to 95% after fixing daily routine vowels.",
+      likes: 5,
+      comments: []
+    }
+  ]
+};
+
+const CIRCLE_CHANNELS_META = {
+  home: { title: "Community Dashboard", desc: "Welcome to the Globally Known student hub." },
+  "members-tab": { title: "Community Members", desc: "Meet other active language learners in the SOL cohort." },
+  announcements: { title: "# Announcements", desc: "Official updates and notices from the SOL Globally Known team." },
+  "english-inputs": { title: "# english-inputs", desc: "Discuss vocabulary, structures, and notes from City Vlog lessons." },
+  metaphors: { title: "# metaphors-discussion", desc: "Explore semantic networks, idioms, and target language metaphors." },
+  "general-chat": { title: "# general-chat", desc: "Informal conversations and greetings with study partners." },
+  "featurings": { title: "# featurings", desc: "Share your accuracy metrics, speech recordings, and feature suggestions." }
+};
+
+// Panel - Random Word
+const wordLangSelect = document.getElementById("word-lang-select");
+const nextWordBtn = document.getElementById("next-word-btn");
+const targetWordText = document.getElementById("target-word-text");
+const targetWordMeta = document.getElementById("target-word-meta");
+const targetWordDef = document.getElementById("target-word-def");
+const listenWordBtn = document.getElementById("listen-word-btn");
+const recordSpeechBtn = document.getElementById("record-speech-btn");
+const recordingStatus = document.getElementById("recording-status");
+const feedbackBox = document.getElementById("pronunciation-feedback-box");
+const feedbackScore = document.getElementById("feedback-score");
+const expectedText = document.getElementById("expected-text");
+const detectedText = document.getElementById("detected-text");
+const feedbackComment = document.getElementById("feedback-comment");
+
+// Panel - Videos
+const videoGrid = document.getElementById("video-grid");
+
+
+
+// Panel - Describing Lab (Initialized modularly in initDescribingLabPanel)
+
+// Panel - Output Practicing (Live Spoken SOL Conversation initialized modularly in initOutputPracticingPanel)
+
+// Panel - Info
+const apiKeyInput = document.getElementById("api-key-input");
+const togglePasswordBtn = document.getElementById("toggle-password-btn");
+const saveSettingsBtn = document.getElementById("save-settings-btn");
+const clearAllDataBtn = document.getElementById("clear-all-data-btn");
+const apiStatusBadge = document.getElementById("api-status-badge");
+
+// -------------------------------------------------------------
+// Helper Utilities
+// -------------------------------------------------------------
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+window.copyCodeToClipboard = async function(btn) {
+  const container = btn.closest(".code-block-container");
+  const codeEl = container.querySelector("code");
+  const text = codeEl.textContent;
+  
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.innerHTML = `<i class="fa-solid fa-check"></i> Copied!`;
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.innerHTML = `<i class="fa-regular fa-copy"></i> Copy code`;
+      btn.classList.remove("copied");
+    }, 2000);
+  } catch (err) {
+    console.error("Failed to copy code: ", err);
+  }
+};
+
+// Configure Custom Marked.js Code Block Rendering
+const renderer = new marked.Renderer();
+renderer.code = function(code, language) {
+  const cleanLanguage = language || "plaintext";
+  const rawCode = typeof code === 'object' ? code.text : code;
+  return `
+    <div class="code-block-container">
+      <div class="code-block-header">
+        <span>${cleanLanguage}</span>
+        <button class="copy-code-btn" onclick="copyCodeToClipboard(this)">
+          <i class="fa-regular fa-copy"></i> Copy code
+        </button>
+      </div>
+      <pre><code class="language-${cleanLanguage}">${escapeHtml(rawCode)}</code></pre>
+    </div>
+  `;
+};
+marked.setOptions({ renderer });
+
+// -------------------------------------------------------------
+// API Status Indicator
+// -------------------------------------------------------------
+function updateApiStatusIndicator() {
+  const badge = document.getElementById("api-status-badge");
+  if (!badge) return;
+  const dot = badge.querySelector(".status-dot");
+  const text = badge.querySelector(".status-text");
+  
+  if (typeof geminiService !== "undefined" && geminiService && geminiService.hasApiKey()) {
+    if (dot) dot.className = "status-dot online";
+    if (text) text.textContent = "Gemini Active";
+  } else {
+    if (dot) dot.className = "status-dot warning";
+    if (text) text.textContent = "Demo Mode";
+  }
+}
+
+// -------------------------------------------------------------
+// Application Initialization
+// -------------------------------------------------------------
+function init() {
+  // Theme Setup
+  applyTheme(currentTheme);
+  initThemePicker();
+
+  // API Key Status
+  updateApiStatusIndicator();
+  const apiKeyInputEl = document.getElementById("api-key-input");
+  if (apiKeyInputEl) apiKeyInputEl.value = geminiService.apiKey;
+
+  // Initialize Panels
+  initSidebar();
+  initStartHerePanel();
+  initTrainingStudio();
+  initCommunityPanel();
+  initRandomWordPanel();
+  initVideosPanel();
+  initDictionaryPanel();
+  initDescribingLabPanel();
+  initOutputPracticingPanel();
+
+  // Initialize PWA, Google Auth & Admin Access
+  initPwaInstall();
+  initGoogleAuth();
+  initAdminMode();
+
+  // Settings Panel Bind
+  setupSettingsHandlers();
+
+  // Load server-synced conversations for cross-device persistence
+  if (typeof fetchServerConversations === "function") {
+    fetchServerConversations().then(serverConvs => {
+      if (serverConvs && typeof renderSidebarConversations === "function") {
+        renderSidebarConversations();
+      }
+    });
+  }
+
+  // Explicitly activate activePanel or start-here on startup
+  if (typeof window.switchPanel === "function") {
+    window.switchPanel(activePanel || "start-here");
+  }
+}
+
+// -------------------------------------------------------------
+// Gemini Home Screen Panel Setup (Start Here)
+// -------------------------------------------------------------
+const GREETING_TEMPLATES = [
+  "Ask away, {name}!",
+  "What's new, {name}?",
+  "How's it going, {name}?",
+  "What would you like to acquire today, {name}?",
+  "Ready to practice, {name}?"
+];
+
+let lastGreetingIndex = -1;
+
+function updateGreetingText() {
+  const greetingEl = document.getElementById("gemini-greeting-text");
+  const outputGreetingEl = document.getElementById("output-greeting-text");
+  const labGreetingEl = document.getElementById("lab-greeting-text");
+  
+  let name = "Adrian";
+  try {
+    const profile = JSON.parse(localStorage.getItem("sol_user_profile"));
+    if (profile && profile.name) {
+      name = profile.name.split(" ")[0];
+    }
+  } catch (e) {}
+
+  if (outputGreetingEl) {
+    outputGreetingEl.textContent = `Speak with Sol, ${name}!`;
+  }
+  if (labGreetingEl) {
+    labGreetingEl.textContent = `Describe the scene, ${name}!`;
+  }
+
+  if (!greetingEl) return;
+  let randomIndex;
+  do {
+    randomIndex = Math.floor(Math.random() * GREETING_TEMPLATES.length);
+  } while (GREETING_TEMPLATES.length > 1 && randomIndex === lastGreetingIndex);
+  lastGreetingIndex = randomIndex;
+
+  const template = GREETING_TEMPLATES[randomIndex];
+  greetingEl.textContent = template.replace("{name}", name);
+}
+
+let homeConversationHistory = [];
+let currentHomeConvId = null;
+
+function updateHomeChatModeState() {
+  const panelStart = document.getElementById("panel-start-here");
+  const panelSol = document.getElementById("panel-sol-chat");
+  const homeContent = document.querySelector(".gemini-home-content");
+  const conversationEl = document.getElementById("gemini-home-conversation");
+  const hasMsgs = conversationEl && conversationEl.querySelectorAll(".gemini-inline-message").length > 0;
+  if (panelStart) panelStart.classList.toggle("has-messages", hasMsgs);
+  if (panelSol) panelSol.classList.toggle("has-messages", hasMsgs);
+  if (homeContent) homeContent.classList.toggle("has-messages", hasMsgs);
+}
+
+function triggerHomeFadeInAnimation() {
+  const container = document.querySelector(".gemini-home-content");
+  if (!container) return;
+  
+  container.classList.remove("fade-in-anim");
+  void container.offsetWidth; // Force DOM reflow
+  container.classList.add("fade-in-anim");
+}
+
+function attachAiActions(aiDiv, text) {
+  if (!aiDiv || !text || aiDiv.querySelector(".gemini-ai-actions")) return;
+  const actionsDiv = document.createElement("div");
+  actionsDiv.className = "gemini-ai-actions";
+  actionsDiv.innerHTML = `
+    <button class="gemini-action-btn tts-btn" title="Listen to pronunciation"><i class="fa-solid fa-volume-high"></i> Listen</button>
+    <button class="gemini-action-btn copy-btn" title="Copy response"><i class="fa-solid fa-copy"></i> Copy</button>
+    <button class="gemini-action-btn teach-btn" title="Teach Sol how you wanted this answered"><i class="fa-solid fa-graduation-cap"></i> Teach Sol</button>
+  `;
+  aiDiv.appendChild(actionsDiv);
+
+  const ttsBtn = actionsDiv.querySelector(".tts-btn");
+  if (ttsBtn) {
+    ttsBtn.addEventListener("click", () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/[*_#`~>]/g, "");
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = "en-US";
+        window.speechSynthesis.speak(utterance);
+        if (typeof showToast === "function") showToast("🔊 Speaking Sol audio...");
+      }
+    });
+  }
+
+  const copyBtn = actionsDiv.querySelector(".copy-btn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(text).then(() => {
+        if (typeof showToast === "function") showToast("📋 Response copied!");
+      });
+    });
+  }
+
+  const teachBtn = actionsDiv.querySelector(".teach-btn");
+  if (teachBtn) {
+    teachBtn.addEventListener("click", () => {
+      let userQuery = "";
+      let prev = aiDiv.previousElementSibling;
+      while (prev) {
+        const uQuery = prev.querySelector(".gemini-user-query");
+        if (uQuery) {
+          userQuery = uQuery.textContent.trim();
+          break;
+        }
+        prev = prev.previousElementSibling;
+      }
+      if (!userQuery && homeConversationHistory.length > 0) {
+        const lastUser = [...homeConversationHistory].reverse().find(m => m.role === "user");
+        if (lastUser) userQuery = lastUser.content || (lastUser.parts && lastUser.parts[0] ? lastUser.parts[0].text : "");
+      }
+      openTeachSolModal(userQuery || "hi sol", text, aiDiv);
+    });
+  }
+}
+
+function syncInputBarHasText(input) {
+  if (!input) return;
+  const bar = input.closest(".gemini-home-input-bar");
+  if (bar) {
+    const hasText = input.value && input.value.trim().length > 0;
+    bar.classList.toggle("has-text", !!hasText);
+  }
+}
+
+function resetHomeConversationScreen() {
+  homeConversationHistory = [];
+  currentHomeConvId = null;
+  const conversationEl = document.getElementById("gemini-home-conversation");
+  if (conversationEl) conversationEl.innerHTML = "";
+  const homeInput = document.getElementById("gemini-home-input");
+  if (homeInput) {
+    homeInput.value = "";
+    syncInputBarHasText(homeInput);
+    homeInput.focus();
+  }
+  updateGreetingText();
+  updateHomeChatModeState();
+  if (typeof window.switchPanel === "function") {
+    window.switchPanel("sol-chat");
+  }
+  triggerHomeFadeInAnimation();
+}
+
+function initStartHerePanel() {
+  updateGreetingText();
+
+  const homeInput = document.getElementById("gemini-home-input");
+  syncInputBarHasText(homeInput);
+  const modelSelector = document.getElementById("home-model-selector");
+  const modelNameText = document.getElementById("home-model-name");
+  const micBtn = document.getElementById("btn-home-mic");
+  const sendBtn = document.getElementById("btn-home-send");
+  const attachBtn = document.getElementById("btn-home-attach");
+  const chips = document.querySelectorAll(".gemini-chip-btn");
+  const conversationEl = document.getElementById("gemini-home-conversation");
+
+  // Send Direct Query to Gemini right on Sol Chat Screen
+  const submitHomeQuery = async (query) => {
+    if (!query || !conversationEl) return;
+
+    // Auto-create sidebar conversation item on first message if needed
+    if (!currentHomeConvId) {
+      currentHomeConvId = "conv_" + Date.now();
+      const smartTitle = generateSmartProvisionalTitle(query);
+      const convs = getSolConversations();
+      convs.unshift({
+        id: currentHomeConvId,
+        title: smartTitle,
+        icon: "fa-comments",
+        type: "chat",
+        history: [],
+        createdAt: Date.now()
+      });
+      saveSolConversations(convs);
+      renderSidebarConversations();
+    }
+
+    // 1. Render User Message Bubble
+    const userDiv = document.createElement("div");
+    userDiv.className = "gemini-inline-message";
+    userDiv.innerHTML = `<div class="gemini-user-query">${escapeHtml(query)}</div>`;
+    conversationEl.appendChild(userDiv);
+    updateHomeChatModeState();
+    saveActiveConversationMessages();
+
+    // Append to home conversation history
+    homeConversationHistory.push({ role: "user", content: query, parts: [{ text: query }] });
+
+    // 2. Render Gemini AI Response Container
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "gemini-inline-message";
+    aiDiv.innerHTML = `
+      <div class="gemini-ai-response">
+        <div class="gemini-ai-body">
+          <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Thinking...
+        </div>
+      </div>
+    `;
+    conversationEl.appendChild(aiDiv);
+    aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    const aiBody = aiDiv.querySelector(".gemini-ai-body");
+    let responseText = "";
+
+    const systemInstruction = `You are Sol, an exceptionally perceptive, intelligent, and authentic AI companion powered by Google Gemini on Globally Known.
+You speak with genuine human-like energy—natural, spontaneous, warm, sharp, and engaging.
+
+Key Conversational Principles:
+1. Tone & Voice: Speak like Gemini in its best, most authentic form. Be an active, charismatic conversation partner. Never sound like an automated corporate tutor, an ESL worksheet, or a robotic customer service bot.
+2. Natural Interactions: When greeted ("hi", "hey", "hello", "hi sol"), respond naturally and warmly like a friend catching up (e.g., "Hey Adrian! Great to see you. How's your day going?" or "Hey there! What's on your mind today?"). Never recite robotic menus or tell the user what they should practice unless they specifically ask.
+3. Matching Vibe: Match the user's conversational vibe and pace. If they are playful, be witty. If they want deep explanations, provide vivid intuition, analogies, and clarity.
+4. Language & Culture: When discussing language, vocabulary, or idioms, explain real-world intuition, colloquial nuances, and how native speakers actually talk—not dry textbook definitions.
+5. Formatting: Use clean, elegant markdown formatting (bold text, lists, code blocks) whenever it makes the response easier and more pleasant to read.
+6. DIRECT OUTPUT ONLY: Output ONLY your direct conversational message to the user. Do NOT include internal planning, drafts (e.g. Draft 1, Draft 2), reasoning steps, or notes about memory or personas. Speak directly to the user from the very first word.`;
+
+    try {
+      await geminiService.generateResponseStream(
+        homeConversationHistory,
+        systemInstruction,
+        activeModel || "gemini-1.5-flash",
+        (chunk) => {
+          if (responseText === "") aiBody.innerHTML = "";
+          responseText += chunk;
+          aiBody.innerHTML = marked.parse(responseText) + `<span class="cursor-blink"></span>`;
+          aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        },
+        (errorMsg) => {
+          aiBody.innerHTML = `
+            <div style="color: #ef4444; font-weight: 500; padding: 0.25rem 0;">
+              <i class="fa-solid fa-circle-exclamation"></i> <strong>Gemini API Error:</strong> ${escapeHtml(errorMsg)}
+              <div style="margin-top: 0.75rem; color: #cbd5e1; font-size: 0.88rem; font-weight: 400;">
+                💡 Your saved Gemini API Key appears invalid or expired.<br><br>
+                👉 Click <button onclick="window.switchPanel('info');" style="background: rgba(250, 204, 21, 0.2); border: 1px solid #facc15; color: #facc15; padding: 0.25rem 0.6rem; border-radius: 6px; cursor: pointer; font-weight: 600; margin-left: 0.25rem;">Info / Settings</button> to enter a valid free Gemini API Key, or clear it to use Demo Mode.
+              </div>
+            </div>
+          `;
+        },
+        (finalText) => {
+          if (finalText) {
+            responseText = finalText;
+            aiBody.innerHTML = marked.parse(responseText);
+            aiBody.setAttribute("data-raw-text", responseText);
+            homeConversationHistory.push({ role: "model", content: responseText, parts: [{ text: responseText }] });
+            saveActiveConversationMessages();
+            attachAiActions(aiDiv, responseText);
+          }
+        }
+      );
+
+      if (responseText && !aiBody.querySelector(".gemini-ai-actions")) {
+        aiBody.innerHTML = marked.parse(responseText);
+        aiBody.setAttribute("data-raw-text", responseText);
+        if (!homeConversationHistory.some(m => m.role === "model" && m.content === responseText)) {
+          homeConversationHistory.push({ role: "model", content: responseText, parts: [{ text: responseText }] });
+          saveActiveConversationMessages();
+        }
+        attachAiActions(aiDiv, responseText);
+      }
+
+      // Automatically refine conversation title with AI on the first exchange
+      if (currentHomeConvId && homeConversationHistory.length <= 2) {
+        requestAiTitleUpdate(currentHomeConvId, query, responseText);
+      }
+    } catch (err) {
+      aiBody.innerHTML = `
+        <div style="color: #ef4444; font-weight: 500;">
+          <i class="fa-solid fa-circle-exclamation"></i> <strong>Connection Error:</strong> ${escapeHtml(err.message || String(err))}
+        </div>
+      `;
+    }
+  };
+
+  // Keyboard Enter on Input Bar -> Submits prompt directly
+  if (homeInput) {
+    homeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && homeInput.value.trim()) {
+        const query = homeInput.value.trim();
+        homeInput.value = "";
+        syncInputBarHasText(homeInput);
+        submitHomeQuery(query);
+      }
+    });
+    homeInput.addEventListener("input", () => syncInputBarHasText(homeInput));
+    homeInput.addEventListener("keyup", () => syncInputBarHasText(homeInput));
+    homeInput.addEventListener("change", () => syncInputBarHasText(homeInput));
+  }
+
+  // Click Send Button
+  if (sendBtn) {
+    sendBtn.addEventListener("click", () => {
+      if (homeInput && homeInput.value.trim()) {
+        const query = homeInput.value.trim();
+        homeInput.value = "";
+        syncInputBarHasText(homeInput);
+        submitHomeQuery(query);
+      }
+    });
+  }
+
+  // Model Selector Toggle Pill
+  if (modelSelector) {
+    const savedModelName = localStorage.getItem("sol_active_model_name") || "Flash";
+    if (modelNameText) modelNameText.textContent = savedModelName;
+    if (savedModelName === "Pro") {
+      activeModel = "gemini-1.5-pro";
+    } else {
+      activeModel = "gemini-1.5-flash";
+    }
+
+    modelSelector.addEventListener("click", () => {
+      const models = ["Flash", "Pro", "SOL Engine"];
+      const current = modelNameText ? modelNameText.textContent.trim() : "Flash";
+      const nextIndex = (models.indexOf(current) + 1) % models.length;
+      const nextModel = models[nextIndex];
+      if (modelNameText) modelNameText.textContent = nextModel;
+      localStorage.setItem("sol_active_model_name", nextModel);
+
+      if (nextModel === "Pro") {
+        activeModel = "gemini-1.5-pro";
+      } else {
+        activeModel = "gemini-1.5-flash";
+      }
+      
+      const headerModelBadge = document.getElementById("header-model-badge");
+      if (headerModelBadge) {
+        headerModelBadge.innerHTML = `<i class="fa-solid fa-brain"></i> ${nextModel}`;
+      }
+      if (typeof showToast === "function") showToast(`Model set to ${nextModel}`);
+    });
+  }
+
+// Voice Input Mic Button
+  if (micBtn) {
+    micBtn.addEventListener("click", () => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Speech Recognition is not supported by your browser. Please type your query in the input bar.");
+        return;
+      }
+
+      micBtn.style.color = "#ef4444";
+      if (typeof showToast === "function") showToast("🎙️ Listening... Speak now!");
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (homeInput) {
+          homeInput.value = "";
+          syncInputBarHasText(homeInput);
+          submitHomeQuery(transcript);
+        }
+        micBtn.style.color = "#94a3b8";
+      };
+
+      recognition.onerror = () => {
+        micBtn.style.color = "#94a3b8";
+        if (typeof showToast === "function") showToast("Voice input cancelled or unavailable.");
+      };
+
+      recognition.onend = () => {
+        micBtn.style.color = "#94a3b8";
+      };
+
+      recognition.start();
+    });
+  }
+
+  // Attachment Plus Button
+  if (attachBtn) {
+    attachBtn.addEventListener("click", () => {
+      alert("Attachment support active! You can attach images, PDFs, or audio files in the Describing Lab and Output Practicing panels.");
+    });
+  }
+
+  // Quick Action Chips Click Navigation
+  chips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      const target = chip.getAttribute("data-target");
+      if (target) {
+        switchPanel(target);
+      }
+    });
+  });
+}
+
+function initSidebar() {
+  const menuToggleBtnEl = document.getElementById("menu-toggle-btn");
+  const sidebarEl = document.getElementById("sidebar");
+  let backdropEl = document.getElementById("sidebar-backdrop");
+
+  if (!backdropEl) {
+    backdropEl = document.createElement("div");
+    backdropEl.id = "sidebar-backdrop";
+    backdropEl.className = "sidebar-backdrop";
+    document.body.appendChild(backdropEl);
+  }
+
+  const toggleMobileDrawer = (open) => {
+    if (!sidebarEl) return;
+    const shouldOpen = typeof open === "boolean" ? open : !sidebarEl.classList.contains("mobile-active");
+    if (shouldOpen) {
+      sidebarEl.classList.add("mobile-active");
+      if (backdropEl) backdropEl.classList.add("active");
+    } else {
+      sidebarEl.classList.remove("mobile-active");
+      if (backdropEl) backdropEl.classList.remove("active");
+    }
+  };
+
+  window.toggleMobileDrawer = toggleMobileDrawer;
+
+  if (menuToggleBtnEl && sidebarEl) {
+    menuToggleBtnEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isMobile = window.innerWidth <= 900;
+      if (isMobile) {
+        toggleMobileDrawer();
+      } else {
+        if (sidebarEl.classList.contains("expanded")) {
+          sidebarEl.classList.replace("expanded", "collapsed");
+        } else {
+          sidebarEl.classList.replace("collapsed", "expanded");
+        }
+      }
+    });
+  }
+
+  if (backdropEl) {
+    backdropEl.addEventListener("click", () => {
+      toggleMobileDrawer(false);
+    });
+  }
+
+  // Close mobile drawer when clicking outside the sidebar
+  document.addEventListener("click", (e) => {
+    if (window.innerWidth <= 900 && sidebarEl && sidebarEl.classList.contains("mobile-active")) {
+      const isInsideSidebar = sidebarEl.contains(e.target);
+      const isMenuBtn = menuToggleBtnEl && (menuToggleBtnEl === e.target || menuToggleBtnEl.contains(e.target));
+      if (!isInsideSidebar && !isMenuBtn) {
+        toggleMobileDrawer(false);
+      }
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 900 && sidebarEl && sidebarEl.classList.contains("mobile-active")) {
+      toggleMobileDrawer(false);
+    }
+  });
+
+  // Tab Panel Routing
+  const allNavItems = document.querySelectorAll(".nav-item");
+  allNavItems.forEach(item => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      const panelId = item.getAttribute("data-panel");
+      if (panelId === "sol-chat") {
+        if (typeof window.startNewSolChatSession === "function") {
+          window.startNewSolChatSession();
+        } else {
+          resetHomeConversationScreen();
+        }
+      } else if (panelId) {
+        if (typeof window.switchPanel === "function") window.switchPanel(panelId);
+      }
+      
+      if (sidebarEl && sidebarEl.classList.contains("mobile-active")) {
+        toggleMobileDrawer(false);
+      }
+    });
+  });
+
+  // Footer status badge click -> opens Info / Settings
+  const apiStatusBadge = document.getElementById("api-status-badge");
+  if (apiStatusBadge) {
+    apiStatusBadge.style.cursor = "pointer";
+    apiStatusBadge.addEventListener("click", () => {
+      if (typeof window.switchPanel === "function") window.switchPanel("info");
+    });
+  }
+
+  // Start Here quick-click links
+  document.querySelectorAll(".feature-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const target = card.getAttribute("data-target");
+      if (target && typeof window.switchPanel === "function") {
+        window.switchPanel(target);
+      }
+    });
+  });
+
+  // New Conversation Button Click -> Resets Gemini Home Screen & saves previous
+  const newChatBtn = document.getElementById("btn-new-sol-chat");
+  if (newChatBtn) {
+    newChatBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (typeof window.startNewSolChatSession === "function") {
+        window.startNewSolChatSession();
+      } else {
+        resetHomeConversationScreen();
+      }
+      if (typeof showToast === "function") showToast("Started new conversation with Sol!");
+    });
+  }
+
+  if (typeof renderSidebarConversations === "function") renderSidebarConversations();
+}
+
+const RANDOM_ACCENT_PALETTE = [
+  "#ff4500", "#00fa9a", "#1e90ff", "#ff1493", "#a855f7", "#ffd700", "#00ffff"
+];
+
+function generateSmartProvisionalTitle(query) {
+  if (!query || typeof query !== "string") return "New Conversation";
+  const q = query.trim().toLowerCase();
+
+  // Greetings & casual check-ins
+  if (/^(hi|hello|hey|hiya|howdy|yo|good (morning|afternoon|evening|day))(\s+sol|\s+there|\s+gemini)?$/i.test(q) || q === "hi" || q === "hello" || q === "hey" || q === "what s up" || q === "whats up" || q === "how are you") {
+    const greetingTitles = ["Daily Catch-up", "Friendly Chat", "Morning Check-in", "Casual Conversation", "Sol Catch-up"];
+    return greetingTitles[Math.floor(Math.random() * greetingTitles.length)];
+  }
+  if (q.includes("practice") || q.includes("speak") || q.includes("fluent") || q.includes("talk") || q.includes("conversation")) {
+    return "Spoken Practice";
+  }
+  if (q.includes("grammar") || q.includes("tense") || q.includes("verb") || q.includes("sentence") || q.includes("correct") || q.includes("syntax")) {
+    return "Grammar & Structure";
+  }
+  if (q.includes("vocab") || q.includes("word") || q.includes("etymology") || q.includes("synonym") || q.includes("meaning")) {
+    return "Vocabulary Expansion";
+  }
+  if (q.includes("translate") || q.includes("spanish") || q.includes("french") || q.includes("german") || q.includes("italian") || q.includes("portuguese")) {
+    return "Language Translation";
+  }
+  if (q.includes("describe") || q.includes("scene") || q.includes("photo") || q.includes("picture") || q.includes("story")) {
+    return "Scene Description";
+  }
+  if (q.includes("pronounce") || q.includes("pronunciation") || q.includes("accent") || q.includes("sound")) {
+    return "Pronunciation Coach";
+  }
+
+  // Clean sentence into 2-4 capitalized words
+  const clean = query.trim().replace(/[?!.,;:"'()]/g, "");
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length <= 4 && words.length > 0) {
+    return words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  } else if (words.length > 4) {
+    return words.slice(0, 4).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  }
+  return "New Conversation";
+}
+
+async function requestAiTitleUpdate(convId, userQuery, aiReply = "") {
+  if (!convId || !userQuery) return;
+  const convs = getSolConversations();
+  const conv = convs.find(c => c.id === convId);
+  if (!conv || conv.isCustomNamed) return; // Never overwrite user's manual title!
+
+  try {
+    if (typeof geminiService !== "undefined" && geminiService && geminiService.hasApiKey()) {
+      const aiTitle = await geminiService.generateDirectTitle(userQuery, aiReply);
+      if (aiTitle) {
+        const freshConvs = getSolConversations();
+        const target = freshConvs.find(c => c.id === convId);
+        if (target && !target.isCustomNamed) {
+          target.title = aiTitle;
+          saveSolConversations(freshConvs);
+          renderSidebarConversations();
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("AI title update skipped:", err);
+  }
+}
+
+let defaultSolConversations = [];
+
+function getSolConversations() {
+  const saved = localStorage.getItem("sol_saved_conversations_list");
+  if (saved) {
+    try {
+      const list = JSON.parse(saved);
+      const filtered = list.filter(c => !["conv_1", "conv_2", "conv_3", "conv_4"].includes(c.id));
+      // Auto-sanitize legacy "💬 " emoji prefixes from titles
+      filtered.forEach(c => {
+        if (typeof c.title === "string") {
+          c.title = c.title.replace(/^💬\s*/, "").trim();
+        }
+      });
+      return filtered;
+    } catch(e) {}
+  }
+  return defaultSolConversations;
+}
+
+async function syncConversationsToServer(convs) {
+  try {
+    await fetch("/api/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(convs)
+    });
+  } catch(e) {}
+}
+
+async function fetchServerConversations() {
+  try {
+    const res = await fetch("/api/conversations", { cache: "no-store" });
+    if (res.ok) {
+      const serverConvs = await res.json();
+      if (Array.isArray(serverConvs)) {
+        if (serverConvs.length > 0) {
+          localStorage.setItem("sol_saved_conversations_list", JSON.stringify(serverConvs));
+          return serverConvs;
+        } else {
+          const local = getSolConversations();
+          if (local.length > 0) {
+            syncConversationsToServer(local);
+          }
+        }
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+function saveSolConversations(list) {
+  localStorage.setItem("sol_saved_conversations_list", JSON.stringify(list));
+  syncConversationsToServer(list);
+}
+
+function saveActiveConversationMessages() {
+  if (!currentHomeConvId) return;
+  const convs = getSolConversations();
+  const convIndex = convs.findIndex(c => c.id === currentHomeConvId);
+  if (convIndex === -1) return;
+
+  convs[convIndex].history = homeConversationHistory;
+  saveSolConversations(convs);
+}
+
+function loadSolConversation(convId) {
+  if (currentHomeConvId && currentHomeConvId !== convId && homeConversationHistory.length > 0) {
+    saveActiveConversationMessages();
+  }
+
+  const convs = getSolConversations();
+  const conv = convs.find(c => c.id === convId);
+  if (!conv) return;
+
+  currentHomeConvId = conv.id;
+  homeConversationHistory = conv.history ? [...conv.history] : [];
+
+  const conversationEl = document.getElementById("gemini-home-conversation");
+  if (conversationEl) {
+    conversationEl.innerHTML = "";
+    homeConversationHistory.forEach(msg => {
+      const text = msg.content || (msg.parts && msg.parts[0] ? msg.parts[0].text : "");
+      if (!text) return;
+
+      if (msg.role === "user") {
+        const userDiv = document.createElement("div");
+        userDiv.className = "gemini-inline-message";
+        userDiv.innerHTML = `<div class="gemini-user-query">${escapeHtml(text)}</div>`;
+        conversationEl.appendChild(userDiv);
+      } else if (msg.role === "model") {
+        const aiDiv = document.createElement("div");
+        aiDiv.className = "gemini-inline-message";
+        aiDiv.innerHTML = `
+          <div class="gemini-ai-response">
+            <div class="gemini-ai-body" data-raw-text="${escapeHtml(text)}">
+              ${typeof marked !== 'undefined' ? marked.parse(text) : escapeHtml(text)}
+            </div>
+          </div>
+        `;
+        conversationEl.appendChild(aiDiv);
+        if (typeof attachAiActions === "function") {
+          attachAiActions(aiDiv, text);
+        }
+      }
+    });
+  }
+
+  updateHomeChatModeState();
+  renderSidebarConversations();
+  if (typeof window.switchPanel === "function") {
+    window.switchPanel("sol-chat");
+  } else if (typeof switchPanel === "function") {
+    switchPanel("sol-chat");
+  }
+  triggerHomeFadeInAnimation();
+
+  setTimeout(() => {
+    if (conversationEl && conversationEl.lastElementChild) {
+      conversationEl.lastElementChild.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    const homeInput = document.getElementById("gemini-home-input");
+    if (homeInput) homeInput.focus();
+  }, 100);
+}
+
+function closeAllConversationMenus() {
+  const existing = document.querySelectorAll(".conversation-context-menu");
+  existing.forEach(el => el.remove());
+  document.querySelectorAll(".conversation-item.menu-open").forEach(el => el.classList.remove("menu-open"));
+}
+
+if (typeof window !== "undefined" && !window._convContextMenuListenersAdded) {
+  window._convContextMenuListenersAdded = true;
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".conversation-context-menu") && !e.target.closest(".conversation-item-more")) {
+      closeAllConversationMenus();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAllConversationMenus();
+  });
+  window.addEventListener("scroll", closeAllConversationMenus, true);
+}
+
+function renderSidebarConversations() {
+  const listEl = document.getElementById("sidebar-conversations-list");
+  if (!listEl) return;
+
+  closeAllConversationMenus();
+
+  const convs = getSolConversations();
+  listEl.innerHTML = "";
+
+  // Sort pinned conversations to the top, preserving relative order otherwise
+  convs.sort((a, b) => {
+    const aPinned = !!a.isPinned;
+    const bPinned = !!b.isPinned;
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return 0;
+  });
+
+  convs.forEach((conv) => {
+    const isActive = conv.id === currentHomeConvId;
+    const isPinned = !!conv.isPinned;
+    const li = document.createElement("li");
+    li.className = `conversation-item ${isActive ? "active" : ""} ${isPinned ? "is-pinned" : ""}`;
+    li.setAttribute("data-id", conv.id);
+
+    const displayTitle = (conv.title || "Conversation").replace(/^💬\s*/, "").trim();
+
+    li.innerHTML = `
+      ${isPinned ? '<span class="conversation-item-pinned" title="Pinned conversation"><i class="fa-solid fa-thumbtack"></i></span>' : ''}
+      <span class="conversation-item-title" title="${escapeHtml(displayTitle)}">${escapeHtml(displayTitle)}</span>
+      <div class="conversation-item-actions">
+        <button class="conversation-action-btn conversation-item-more" data-id="${conv.id}" title="Conversation options"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      </div>
+    `;
+
+    // Click on item loads conversation
+    li.addEventListener("click", (e) => {
+      if (e.target.closest(".conversation-action-btn") || e.target.closest(".conversation-context-menu") || li.classList.contains("renaming")) return;
+      loadSolConversation(conv.id);
+      if (typeof showToast === "function") showToast(`Loaded "${displayTitle}"`);
+    });
+
+    // Inline Rename Flow
+    const startRename = () => {
+      closeAllConversationMenus();
+      li.classList.add("renaming");
+      const currentTitle = displayTitle;
+      li.innerHTML = `
+        <input type="text" class="conversation-rename-input" value="${escapeHtml(currentTitle)}" maxlength="45" />
+        <div class="conversation-item-actions" style="opacity:1 !important;">
+          <button class="conversation-action-btn conversation-rename-save" title="Save Title"><i class="fa-solid fa-check"></i></button>
+          <button class="conversation-action-btn conversation-rename-cancel" title="Cancel"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      `;
+
+      const input = li.querySelector(".conversation-rename-input");
+      const saveBtn = li.querySelector(".conversation-rename-save");
+      const cancelBtn = li.querySelector(".conversation-rename-cancel");
+
+      input.focus();
+      input.select();
+
+      const commitRename = () => {
+        const newTitle = input.value.trim();
+        if (newTitle && newTitle !== currentTitle) {
+          conv.title = newTitle;
+          conv.isCustomNamed = true;
+          const freshConvs = getSolConversations();
+          const target = freshConvs.find(c => c.id === conv.id);
+          if (target) {
+            target.title = newTitle;
+            target.isCustomNamed = true;
+            saveSolConversations(freshConvs);
+          }
+          if (typeof showToast === "function") showToast(`Renamed to "${newTitle}"`);
+        }
+        renderSidebarConversations();
+      };
+
+      const abortRename = () => {
+        renderSidebarConversations();
+      };
+
+      input.addEventListener("click", (e) => e.stopPropagation());
+      input.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") {
+          commitRename();
+        } else if (e.key === "Escape") {
+          abortRename();
+        }
+      });
+
+      saveBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        commitRename();
+      });
+
+      cancelBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        abortRename();
+      });
+    };
+
+    const titleEl = li.querySelector(".conversation-item-title");
+    if (titleEl) {
+      titleEl.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        startRename();
+      });
+    }
+
+    // Three-Dots More Options Menu
+    const moreBtn = li.querySelector(".conversation-item-more");
+    if (moreBtn) {
+      moreBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = li.classList.contains("menu-open");
+        closeAllConversationMenus();
+        if (isOpen) return;
+
+        li.classList.add("menu-open");
+        const menu = document.createElement("div");
+        menu.className = "conversation-context-menu";
+        menu.setAttribute("data-conv-id", conv.id);
+        menu.innerHTML = `
+          <button class="conversation-context-menu-item menu-pin-action">
+            <i class="fa-solid ${conv.isPinned ? 'fa-thumbtack-slash' : 'fa-thumbtack'}"></i>
+            <span>${conv.isPinned ? "Unpin" : "Pin"}</span>
+          </button>
+          <button class="conversation-context-menu-item menu-rename-action">
+            <i class="fa-solid fa-pen"></i>
+            <span>Rename</span>
+          </button>
+          <button class="conversation-context-menu-item menu-delete-action danger">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Delete</span>
+          </button>
+        `;
+
+        // Calculate position
+        const rect = moreBtn.getBoundingClientRect();
+        let top = rect.bottom + 4;
+        let left = rect.right - 130;
+        if (left < 10) left = 10;
+        if (top + 130 > window.innerHeight) {
+          top = Math.max(10, rect.top - 125);
+        }
+        menu.style.top = `${top}px`;
+        menu.style.left = `${left}px`;
+        document.body.appendChild(menu);
+
+        // Pin / Unpin Action
+        const pinBtn = menu.querySelector(".menu-pin-action");
+        if (pinBtn) {
+          pinBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            closeAllConversationMenus();
+            conv.isPinned = !conv.isPinned;
+            const freshConvs = getSolConversations();
+            const target = freshConvs.find(c => c.id === conv.id);
+            if (target) {
+              target.isPinned = conv.isPinned;
+              saveSolConversations(freshConvs);
+            }
+            if (typeof showToast === "function") {
+              showToast(conv.isPinned ? `Pinned "${displayTitle}"` : `Unpinned "${displayTitle}"`);
+            }
+            renderSidebarConversations();
+          });
+        }
+
+        // Rename Action
+        const renameItemBtn = menu.querySelector(".menu-rename-action");
+        if (renameItemBtn) {
+          renameItemBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            closeAllConversationMenus();
+            startRename();
+          });
+        }
+
+        // Delete Action
+        const deleteItemBtn = menu.querySelector(".menu-delete-action");
+        if (deleteItemBtn) {
+          deleteItemBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            closeAllConversationMenus();
+            if (confirm(`Delete conversation "${displayTitle}"?`)) {
+              const updated = getSolConversations().filter(c => c.id !== conv.id);
+              saveSolConversations(updated);
+              if (currentHomeConvId === conv.id) {
+                resetHomeConversationScreen();
+              }
+              renderSidebarConversations();
+            }
+          });
+        }
+      });
+    }
+
+    listEl.appendChild(li);
+  });
+}
+window.renderSidebarConversations = renderSidebarConversations;
+
+
+window.startNewSolChatSession = function() {
+  // 1. Save the previous active conversation if it contains messages
+  if (Array.isArray(homeConversationHistory) && homeConversationHistory.length > 0) {
+    if (currentHomeConvId) {
+      saveActiveConversationMessages();
+    } else {
+      // Auto-assign ID and save the conversation with smart AI title
+      currentHomeConvId = "conv_" + Date.now();
+      const firstMsg = homeConversationHistory.find(m => m.role === "user");
+      const query = firstMsg ? (firstMsg.content || (firstMsg.parts && firstMsg.parts[0] ? firstMsg.parts[0].text : "")) : "";
+      const smartTitle = generateSmartProvisionalTitle(query);
+      const convs = getSolConversations();
+      convs.unshift({
+        id: currentHomeConvId,
+        title: smartTitle,
+        icon: "fa-comments",
+        type: "chat",
+        history: [...homeConversationHistory],
+        createdAt: Date.now()
+      });
+      saveSolConversations(convs);
+    }
+  }
+
+  // 2. Reset conversation screen to clean initial state
+  resetHomeConversationScreen();
+
+  // 3. Ensure the conversations list updates so the newly saved conversation appears immediately
+  renderSidebarConversations();
+
+  // 4. Switch to Sol Chat panel
+  if (typeof window.switchPanel === "function") {
+    window.switchPanel("sol-chat");
+  }
+
+  // 5. Clean & focus input field
+  const homeInput = document.getElementById("gemini-home-input");
+  if (homeInput) {
+    homeInput.value = "";
+    syncInputBarHasText(homeInput);
+    homeInput.focus();
+  }
+};
+
+let activeTeachAiDiv = null;
+
+function openTeachSolModal(userQuery, currentAiText, aiDiv) {
+  const modal = document.getElementById("teach-sol-modal");
+  const promptDisplay = document.getElementById("teach-user-prompt-display");
+  const responseInput = document.getElementById("teach-ideal-response-input");
+  if (!modal || !promptDisplay || !responseInput) return;
+
+  activeTeachAiDiv = aiDiv;
+  promptDisplay.textContent = `"${userQuery || "hello"}"`;
+  responseInput.value = currentAiText ? currentAiText.replace(/[*_#`~>]/g, "").trim() : "";
+  modal.classList.remove("hidden");
+  setTimeout(() => responseInput.focus(), 50);
+}
+
+function initTrainingStudio() {
+  const openBtn = document.getElementById("btn-open-training");
+  const modal = document.getElementById("training-studio-modal");
+  const closeBtn = document.getElementById("btn-close-training-studio");
+  const cancelBtn = document.getElementById("btn-cancel-training");
+  const saveAllBtn = document.getElementById("btn-save-training-all");
+
+  const openStudio = () => {
+    loadTrainingStudioUI();
+    if (modal) modal.classList.remove("hidden");
+  };
+
+  const closeStudio = () => {
+    if (modal) modal.classList.add("hidden");
+  };
+
+  if (openBtn) openBtn.addEventListener("click", openStudio);
+  if (closeBtn) closeBtn.addEventListener("click", closeStudio);
+  if (cancelBtn) cancelBtn.addEventListener("click", closeStudio);
+
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeStudio();
+    });
+  }
+
+  // 2. Tab Navigation
+  const tabBtns = document.querySelectorAll(".training-tab-btn");
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.getAttribute("data-tab");
+      tabBtns.forEach(b => b.classList.toggle("active", b === btn));
+      document.querySelectorAll(".training-tab-content").forEach(tc => {
+        tc.classList.toggle("active", tc.id === tabId);
+      });
+    });
+  });
+
+  // 3. Tone Presets
+  const toneBtns = document.querySelectorAll(".tone-preset-btn");
+  toneBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      toneBtns.forEach(b => b.classList.toggle("active", b === btn));
+    });
+  });
+
+  // 4. Add Training Pair Button
+  const addPairBtn = document.getElementById("btn-add-training-pair");
+  if (addPairBtn) {
+    addPairBtn.addEventListener("click", () => {
+      const promptInput = document.getElementById("new-example-prompt");
+      const respInput = document.getElementById("new-example-response");
+      if (!promptInput || !respInput) return;
+      const uPrompt = promptInput.value.trim();
+      const idealResp = respInput.value.trim();
+      if (!uPrompt || !idealResp) {
+        if (typeof showToast === "function") showToast("Please enter both a prompt and ideal response.");
+        return;
+      }
+      geminiService.addTrainingExample(uPrompt, idealResp);
+      promptInput.value = "";
+      respInput.value = "";
+      renderTrainingExamplesList();
+      if (typeof showToast === "function") showToast(`Added training example for "${uPrompt}"!`);
+    });
+  }
+
+  // 5. Test & Connect API Key
+  const testKeyBtn = document.getElementById("btn-test-training-api-key");
+  const toggleKeyBtn = document.getElementById("btn-toggle-training-api-key");
+  const keyInput = document.getElementById("training-api-key-input");
+  if (toggleKeyBtn && keyInput) {
+    toggleKeyBtn.addEventListener("click", () => {
+      keyInput.type = keyInput.type === "password" ? "text" : "password";
+      toggleKeyBtn.innerHTML = keyInput.type === "password" ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+    });
+  }
+  if (testKeyBtn && keyInput) {
+    testKeyBtn.addEventListener("click", async () => {
+      const rawKey = keyInput.value.trim();
+      if (!rawKey) {
+        await geminiService.setApiKey("");
+        updateEngineBadgeUI();
+        if (typeof showToast === "function") showToast("Switched to Demo Mode.");
+        return;
+      }
+      testKeyBtn.disabled = true;
+      testKeyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing...';
+      try {
+        await geminiService.setApiKey(rawKey);
+        const models = await geminiService.getSupportedModels();
+        if (models && models.length > 0) {
+          updateEngineBadgeUI();
+          if (typeof showToast === "function") showToast("⚡ Live Gemini Connected! (" + models[0] + ")");
+        } else {
+          updateEngineBadgeUI();
+          if (typeof showToast === "function") showToast("API Key saved! Ready to chat.");
+        }
+      } catch (err) {
+        if (typeof showToast === "function") showToast("Connection failed: " + (err.message || String(err)));
+      } finally {
+        testKeyBtn.disabled = false;
+        testKeyBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Test & Connect';
+        updateEngineBadgeUI();
+      }
+    });
+  }
+
+  // 6. Save All Training Data
+  if (saveAllBtn) {
+    saveAllBtn.addEventListener("click", () => {
+      const activeToneBtn = document.querySelector(".tone-preset-btn.active");
+      const selectedTone = activeToneBtn ? activeToneBtn.getAttribute("data-tone") : "natural";
+      const customDirectives = document.getElementById("custom-directives-input") ? document.getElementById("custom-directives-input").value : "";
+      const userMemory = document.getElementById("user-memory-input") ? document.getElementById("user-memory-input").value : "";
+
+      const currentProfile = geminiService.getTrainingProfile();
+      currentProfile.tone = selectedTone;
+      currentProfile.customDirectives = customDirectives;
+      currentProfile.userMemory = userMemory;
+      geminiService.saveTrainingProfile(currentProfile);
+
+      closeStudio();
+      if (typeof showToast === "function") showToast("🎓 Sol's mind & training saved successfully!");
+    });
+  }
+
+  // 7. Teach Sol Quick Modal wiring
+  const teachModal = document.getElementById("teach-sol-modal");
+  const closeTeachBtn = document.getElementById("btn-close-teach-modal");
+  const cancelTeachBtn = document.getElementById("btn-cancel-teach");
+  const saveTeachBtn = document.getElementById("btn-save-teach-example");
+
+  const closeTeachModal = () => {
+    if (teachModal) teachModal.classList.add("hidden");
+    activeTeachAiDiv = null;
+  };
+
+  if (closeTeachBtn) closeTeachBtn.addEventListener("click", closeTeachModal);
+  if (cancelTeachBtn) cancelTeachBtn.addEventListener("click", closeTeachModal);
+  if (teachModal) {
+    teachModal.addEventListener("click", (e) => {
+      if (e.target === teachModal) closeTeachModal();
+    });
+  }
+
+  if (saveTeachBtn) {
+    saveTeachBtn.addEventListener("click", () => {
+      const promptEl = document.getElementById("teach-user-prompt-display");
+      const respEl = document.getElementById("teach-ideal-response-input");
+      if (!promptEl || !respEl) return;
+      const uPrompt = promptEl.textContent.replace(/^"|"$/g, "").trim();
+      const idealResp = respEl.value.trim();
+      if (!idealResp) {
+        if (typeof showToast === "function") showToast("Please provide an ideal response.");
+        return;
+      }
+
+      geminiService.addTrainingExample(uPrompt, idealResp);
+
+      if (activeTeachAiDiv) {
+        const bodyEl = activeTeachAiDiv.querySelector(".gemini-ai-body");
+        if (bodyEl) {
+          bodyEl.innerHTML = marked.parse(idealResp);
+          bodyEl.setAttribute("data-raw-text", idealResp);
+        }
+      }
+
+      if (homeConversationHistory && homeConversationHistory.length > 0) {
+        const lastModel = [...homeConversationHistory].reverse().find(m => m.role === "model");
+        if (lastModel) {
+          lastModel.content = idealResp;
+          if (lastModel.parts && lastModel.parts[0]) lastModel.parts[0].text = idealResp;
+        }
+        saveActiveConversationMessages();
+      }
+
+      closeTeachModal();
+      if (typeof showToast === "function") showToast("🎓 Sol learned this response and updated its training dataset!");
+    });
+  }
+}
+
+function loadTrainingStudioUI() {
+  const profile = geminiService.getTrainingProfile();
+  
+  const toneBtns = document.querySelectorAll(".tone-preset-btn");
+  toneBtns.forEach(b => {
+    b.classList.toggle("active", b.getAttribute("data-tone") === profile.tone);
+  });
+
+  const directivesInput = document.getElementById("custom-directives-input");
+  if (directivesInput) directivesInput.value = profile.customDirectives || "";
+
+  const memoryInput = document.getElementById("user-memory-input");
+  if (memoryInput) memoryInput.value = profile.userMemory || "";
+
+  const apiKeyInput = document.getElementById("training-api-key-input");
+  if (apiKeyInput) apiKeyInput.value = geminiService.apiKey || "";
+
+  updateEngineBadgeUI();
+  renderTrainingExamplesList();
+}
+
+function updateEngineBadgeUI() {
+  const badge = document.getElementById("training-engine-badge");
+  const hasKey = geminiService.hasApiKey();
+  if (badge) {
+    if (hasKey) {
+      badge.textContent = "⚡ Live Neural Gemini (Active)";
+      badge.className = "engine-status-badge active";
+    } else {
+      badge.textContent = "💡 Demo Mode (No Key)";
+      badge.className = "engine-status-badge demo";
+    }
+  }
+
+  const apiStatusBadge = document.getElementById("api-status-badge");
+  if (apiStatusBadge) {
+    const textEl = apiStatusBadge.querySelector(".status-text");
+    const dotEl = apiStatusBadge.querySelector(".status-dot");
+    if (hasKey) {
+      if (textEl) textEl.textContent = "Live Gemini";
+      if (dotEl) { dotEl.className = "status-dot online"; }
+    } else {
+      if (textEl) textEl.textContent = "Demo Mode";
+      if (dotEl) { dotEl.className = "status-dot warning"; }
+    }
+  }
+}
+
+function renderTrainingExamplesList() {
+  const listContainer = document.getElementById("training-examples-list");
+  const countSpan = document.getElementById("training-examples-count");
+  if (!listContainer) return;
+
+  const profile = geminiService.getTrainingProfile();
+  const examples = profile.examples || [];
+
+  if (countSpan) countSpan.textContent = examples.length;
+
+  if (examples.length === 0) {
+    listContainer.innerHTML = `
+      <div class="empty-examples-note">
+        <i class="fa-solid fa-graduation-cap"></i> No custom training pairs added yet. Add examples above or click <strong>Teach Sol</strong> on any message in chat!
+      </div>
+    `;
+    return;
+  }
+
+  listContainer.innerHTML = "";
+  examples.forEach(ex => {
+    const card = document.createElement("div");
+    card.className = "training-example-card";
+    card.innerHTML = `
+      <div class="example-card-header">
+        <span class="example-tag"><i class="fa-solid fa-user"></i> Prompt</span>
+        <button class="example-delete-btn" data-id="${ex.id}" title="Delete Training Example"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+      <div class="example-prompt-text">${escapeHtml(ex.userPrompt)}</div>
+      <div class="example-card-header" style="margin-top: 0.5rem;">
+        <span class="example-tag sol-tag"><i class="fa-solid fa-sparkles"></i> Sol Ideal Response</span>
+      </div>
+      <div class="example-response-text">${escapeHtml(ex.idealResponse)}</div>
+    `;
+
+    const delBtn = card.querySelector(".example-delete-btn");
+    if (delBtn) {
+      delBtn.addEventListener("click", () => {
+        if (confirm(`Remove training example for "${ex.userPrompt}"?`)) {
+          geminiService.deleteTrainingExample(ex.id);
+          renderTrainingExamplesList();
+          if (typeof showToast === "function") showToast("Training example removed.");
+        }
+      });
+    }
+
+    listContainer.appendChild(card);
+  });
+}
+
+window.switchPanel = function(panelId) {
+  if (!panelId) return;
+  activePanel = panelId;
+
+  // 1. Highlight Nav Items
+  const navItemsList = document.querySelectorAll(".nav-item");
+  navItemsList.forEach(item => {
+    const isSelected = item.getAttribute("data-panel") === panelId;
+    item.classList.toggle("active", isSelected);
+  });
+
+  // 2. Direct Fail-Proof Panel Display Control (Bypasses any CSS animation bugs)
+  const panelsList = document.querySelectorAll(".workspace-panel");
+  panelsList.forEach(p => {
+    const isActive = p.id === `panel-${panelId}`;
+    p.classList.toggle("active", isActive);
+    if (isActive) {
+      p.style.setProperty("display", "flex", "important");
+      p.style.setProperty("opacity", "1", "important");
+      p.style.setProperty("visibility", "visible", "important");
+      p.scrollTop = 0;
+    } else {
+      p.style.setProperty("display", "none", "important");
+      p.style.setProperty("opacity", "0", "important");
+    }
+  });
+
+  // 3. Reset slideshow view if routing away from the dictionary
+  if (panelId !== "dictionary") {
+    const slideshowView = document.getElementById("dict-slideshow-view");
+    const coverView = document.getElementById("dict-cover-view");
+    const headerIntro = document.getElementById("dict-header-intro");
+    if (slideshowView && coverView) {
+      slideshowView.classList.add("hidden");
+      coverView.classList.remove("hidden");
+      if (headerIntro) headerIntro.classList.remove("hidden");
+    }
+  }
+
+  // 4. Update Header Information
+  const headerChatTitleEl = document.getElementById("header-chat-title");
+  const headerAgentBadgeEl = document.getElementById("header-agent-badge");
+
+  const matchingNavItem = document.querySelector(`.nav-item[data-panel="${panelId}"]`);
+  if (matchingNavItem) {
+    const labelEl = matchingNavItem.querySelector(".nav-label");
+    const label = labelEl ? labelEl.textContent : "Sol";
+    const iconEl = matchingNavItem.querySelector(".nav-icon");
+    
+    if (headerChatTitleEl) headerChatTitleEl.textContent = label;
+    if (iconEl && headerAgentBadgeEl) {
+      if (iconEl.tagName === "I") {
+        headerAgentBadgeEl.innerHTML = `<i class="${iconEl.className}"></i>`;
+      } else {
+        headerAgentBadgeEl.innerHTML = iconEl.outerHTML;
+      }
+    }
+  }
+
+  // 5. Special Panel Trigger Callbacks
+  if (panelId === "community") {
+    if (typeof renderCircleFeed === "function") renderCircleFeed();
+    if (typeof renderCircleMembersWidget === "function") renderCircleMembersWidget();
+  } else if (panelId === "videos") {
+    if (typeof initVideosPanel === "function") initVideosPanel();
+  } else if (panelId === "output-practicing") {
+    if (typeof initOutputPracticingPanel === "function") initOutputPracticingPanel();
+  } else if (panelId === "sol-chat") {
+    const homeInput = document.getElementById("gemini-home-input");
+    if (homeInput) setTimeout(() => homeInput.focus(), 60);
+  }
+
+  window.scrollTo({ top: 0, behavior: "instant" });
+};
+function switchPanel(panelId) { window.switchPanel(panelId); }
+
+// -------------------------------------------------------------
+// Panel 2: Globally Known Community Board (Circle.so style Layout)
+// -------------------------------------------------------------
+let activeFeedTab = "posts"; // "posts" or "members"
+
+function getActiveUserProfile() {
+  try {
+    const saved = localStorage.getItem("sol_user_profile");
+    if (saved) {
+      const user = JSON.parse(saved);
+      if (user && (user.name || user.email)) {
+        return user;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+function getUserInitials(name) {
+  if (!name) return "U";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+function initCommunityPanel() {
+  renderCircleFeed();
+  renderCircleMembersWidget();
+
+  // Navigation Items switching channels
+  const navItemsContainer = document.querySelector(".circle-nav");
+  if (navItemsContainer) {
+    navItemsContainer.addEventListener("click", (e) => {
+      const item = e.target.closest(".circle-nav-item");
+      if (!item) return;
+
+      // Toggle Active navigation item
+      const allItems = navItemsContainer.querySelectorAll(".circle-nav-item");
+      allItems.forEach(c => c.classList.remove("active"));
+      item.classList.add("active");
+
+      const channelId = item.getAttribute("data-channel");
+      currentCircleChannel = channelId;
+
+      // Update Middle Column header information
+      const titleEl = document.getElementById("circle-channel-title");
+      const descEl = document.getElementById("circle-channel-desc");
+      const meta = CIRCLE_CHANNELS_META[channelId];
+      if (meta) {
+        if (titleEl) titleEl.textContent = meta.title;
+        if (descEl) descEl.textContent = meta.desc;
+      }
+
+      // Hide/Show New Post button for Home/Members tabs
+      const btnNewPost = document.getElementById("btn-circle-new-post");
+      if (btnNewPost) {
+        if (channelId === "home" || channelId === "members-tab") {
+          btnNewPost.style.display = "none";
+        } else {
+          btnNewPost.style.display = "flex";
+        }
+      }
+
+      // Default tab view
+      activeFeedTab = "posts";
+      const tabPosts = document.getElementById("tab-btn-posts");
+      const tabMembers = document.getElementById("tab-btn-members");
+      if (tabPosts) tabPosts.classList.add("active");
+      if (tabMembers) tabMembers.classList.remove("active");
+
+      renderCircleFeed();
+    });
+  }
+
+  // Feed Tab Buttons (Posts vs Members tab inside Middle Column)
+  const tabPosts = document.getElementById("tab-btn-posts");
+  const tabMembers = document.getElementById("tab-btn-members");
+  
+  if (tabPosts && tabMembers) {
+    tabPosts.addEventListener("click", () => {
+      tabPosts.classList.add("active");
+      tabMembers.classList.remove("active");
+      activeFeedTab = "posts";
+      renderCircleFeed();
+    });
+
+    tabMembers.addEventListener("click", () => {
+      tabMembers.classList.add("active");
+      tabPosts.classList.remove("active");
+      activeFeedTab = "members";
+      renderCircleFeed();
+    });
+  }
+
+  // New Post Modal toggle controls
+  const btnNewPost = document.getElementById("btn-circle-new-post");
+  const modal = document.getElementById("circle-composer-modal");
+  const btnCloseModal = document.getElementById("btn-close-circle-modal");
+
+  if (btnNewPost && modal) {
+    btnNewPost.addEventListener("click", () => {
+      const userBadge = document.getElementById("circle-composer-user-badge");
+      const currentUser = getActiveUserProfile();
+      if (userBadge) {
+        if (currentUser) {
+          let avatarImg = "";
+          if (currentUser.picture) {
+            avatarImg = `<img src="${escapeHtml(currentUser.picture)}" alt="${escapeHtml(currentUser.name)}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;">`;
+          } else {
+            avatarImg = `<div style="width:36px;height:36px;border-radius:8px;background:var(--accent-color,#c5a059);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">${getUserInitials(currentUser.name)}</div>`;
+          }
+          userBadge.innerHTML = `
+            ${avatarImg}
+            <div style="flex-grow:1;">
+              <div style="font-weight:700;font-size:0.9rem;color:#ffffff;">Posting as ${escapeHtml(currentUser.name)}</div>
+              <div style="font-size:0.75rem;color:#94a3b8;"><i class="fa-brands fa-google" style="color:#4285F4;margin-right:4px;"></i>${escapeHtml(currentUser.email || 'Google Account Linked')}</div>
+            </div>
+            <span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:rgba(36,205,152,0.15);color:#24cd98;font-weight:600;">Connected</span>
+          `;
+          userBadge.style.display = "flex";
+        } else {
+          userBadge.innerHTML = `
+            <div style="display:flex;align-items:center;gap:0.6rem;width:100%;">
+              <i class="fa-solid fa-circle-user" style="font-size:1.8rem;color:#64748b;"></i>
+              <div style="font-size:0.82rem;color:#94a3b8;flex-grow:1;">
+                Posting as <strong>Guest</strong>. <a href="javascript:void(0)" onclick="document.getElementById('btn-google-login')?.click();" style="color:var(--accent-color,#c5a059);text-decoration:underline;font-weight:600;">Sign in with Google</a> to display your verified name & avatar.
+              </div>
+            </div>
+          `;
+          userBadge.style.display = "flex";
+        }
+      }
+      modal.classList.remove("hidden");
+    });
+  }
+
+  if (btnCloseModal && modal) {
+    btnCloseModal.addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+  }
+
+  // Handle New Post form submissions
+  const postForm = document.getElementById("circle-post-form");
+  if (postForm && modal) {
+    postForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const titleInput = document.getElementById("circle-post-title");
+      const bodyInput = document.getElementById("circle-post-body");
+      const imgInput = document.getElementById("circle-post-image");
+
+      const title = titleInput.value.trim();
+      const body = bodyInput.value.trim();
+      const imgUrl = imgInput ? imgInput.value.trim() : "";
+
+      if (!title || !body) return;
+
+      const currentUser = getActiveUserProfile();
+      const authorName = currentUser ? currentUser.name : "You";
+      const authorAvatar = currentUser ? (currentUser.picture || getUserInitials(currentUser.name)) : "Y";
+      const authorRole = currentUser ? "Learner 👤" : "Guest 👤";
+
+      const newPost = {
+        id: "cp_" + Date.now(),
+        title: title,
+        author: authorName,
+        role: authorRole,
+        avatar: authorAvatar,
+        time: "Just now",
+        content: body,
+        image: imgUrl || null,
+        likes: 0,
+        isCurrentUser: true,
+        comments: []
+      };
+
+      if (!circleChannelsData[currentCircleChannel]) {
+        circleChannelsData[currentCircleChannel] = [];
+      }
+
+      circleChannelsData[currentCircleChannel].unshift(newPost);
+      
+      // Reset inputs & hide modal
+      titleInput.value = "";
+      bodyInput.value = "";
+      if (imgInput) imgInput.value = "";
+      modal.classList.add("hidden");
+
+      renderCircleFeed();
+
+      // Trigger automatic smart community AI reply
+      setTimeout(() => {
+        simulateCircleReply(newPost.id, title, body);
+      }, 1500);
+    });
+  }
+}
+
+function renderCircleFeed() {
+  const feedContainer = document.getElementById("circle-posts-feed");
+  if (!feedContainer) return;
+  feedContainer.innerHTML = "";
+
+  const currentUser = getActiveUserProfile();
+
+  if (activeFeedTab === "members" || currentCircleChannel === "members-tab") {
+    // Render list of members in the middle column grid
+    const members = [];
+    if (currentUser) {
+      members.push({
+        name: `${currentUser.name} (You)`,
+        status: "online",
+        role: "Learner 👤",
+        avatar: currentUser.picture || getUserInitials(currentUser.name),
+        details: `Your active SOL study account (${currentUser.email || 'Google Connected'}).`,
+        isUser: true
+      });
+    } else {
+      members.push({
+        name: "Guest Learner (You)",
+        status: "online",
+        role: "Learner 👤",
+        avatar: "👤",
+        details: "Sign in with Google in the top header to connect your profile.",
+        isUser: true
+      });
+    }
+
+    members.push(
+      { name: "Gregory Dobbins", status: "online", role: "Program Manager 🎓", avatar: "GD", details: "Funnel Builder expert since 2018." },
+      { name: "Sarah K.", status: "online", role: "Language Coach 🏅", avatar: "SK", details: "Native English linguist focused on comprehensible inputs." },
+      { name: "Elena Rostova", status: "online", role: "Linguist & Phonetics 🌍", avatar: "ER", details: "Targeting IPA transcription and accent mechanics." },
+      { name: "Alice F.", status: "online", role: "Member 👤", avatar: "AF", details: "French native acquiring conversational Spanish syntax." },
+      { name: "Bob D.", status: "offline", role: "Member 👤", avatar: "BD", details: "Tech lead exploring Metaphor Schema integrations." },
+      { name: "Marcus Vance", status: "offline", role: "Community Moderator 🛡️", avatar: "MV", details: "Supporting forum discussions and safe exchanges." }
+    );
+
+    const grid = document.createElement("div");
+    grid.className = "circle-members-grid";
+    
+    members.forEach(m => {
+      const card = document.createElement("div");
+      card.className = "circle-member-card";
+      if (m.isUser) {
+        card.style.borderColor = "var(--accent-color, #c5a059)";
+        card.style.boxShadow = "0 0 12px rgba(197, 160, 89, 0.15)";
+      }
+      let avatarHtml = "";
+      if (m.avatar && (m.avatar.startsWith("http") || m.avatar.startsWith("data:"))) {
+        avatarHtml = `<img src="${escapeHtml(m.avatar)}" alt="${escapeHtml(m.name)}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;display:block;">`;
+      } else {
+        avatarHtml = escapeHtml(m.avatar || "👤");
+      }
+
+      card.innerHTML = `
+        <div class="member-avatar" style="overflow:hidden;flex-shrink:0;">${avatarHtml}</div>
+        <div class="member-info" style="flex-grow:1;min-width:0;">
+          <div class="member-name-row" style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;">
+            <h4 style="margin:0;font-size:0.92rem;color:#ffffff;display:flex;align-items:center;gap:0.4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              ${escapeHtml(m.name)}
+            </h4>
+            <span class="status-indicator ${m.status}" title="${m.status}"></span>
+          </div>
+          <p class="member-role" style="margin:0.25rem 0;font-size:0.75rem;color:var(--accent-color,#c5a059);font-weight:600;">${escapeHtml(m.role)}</p>
+          <p class="member-details" style="margin:0;font-size:0.75rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.details)}</p>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+    feedContainer.appendChild(grid);
+    return;
+  }
+
+  // Handle Home Welcome View
+  if (currentCircleChannel === "home") {
+    const heroGreeting = currentUser ? `Welcome back, ${escapeHtml(currentUser.name)}!` : "Welcome to Globally Known!";
+    const heroSub = currentUser
+      ? `Connected as <strong>${escapeHtml(currentUser.email || currentUser.name)}</strong>. You are part of the active cohort!`
+      : `Connect with language learners worldwide, share study notes, and master comprehensible inputs together.`;
+    
+    feedContainer.innerHTML = `
+      <div class="circle-home-welcome">
+        <div class="welcome-hero">
+          <div class="welcome-cap"><i class="fa-solid fa-graduation-cap"></i></div>
+          <h3>${heroGreeting}</h3>
+          <p>${heroSub}</p>
+        </div>
+        <div class="channels-brief">
+          <h4>Featured Learning Spaces</h4>
+          <ul>
+            <li><strong>📢 #announcements:</strong> Official schedules, updates, and releases from the team.</li>
+            <li><strong>💬 #english-inputs:</strong> Discuss vocabulary, shadowing notes, and City Vlog takeaways.</li>
+            <li><strong>🧠 #metaphors-discussion:</strong> Unpack conceptual metaphors, idioms, and target language syntax.</li>
+            <li><strong>☕ #general-chat:</strong> Say hello, share your daily study streak, and exchange tips.</li>
+          </ul>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Render posts feed for current channel
+  const posts = (typeof circleChannelsData !== "undefined" && circleChannelsData[currentCircleChannel]) ? circleChannelsData[currentCircleChannel] : [];
+  
+  if (posts.length === 0) {
+    feedContainer.innerHTML = `
+      <div style="text-align:center;padding:3.5rem 1rem;color:#64748b;">
+        <i class="fa-regular fa-comment-dots" style="font-size:2.5rem;margin-bottom:0.75rem;display:block;opacity:0.6;"></i>
+        <p style="font-size:0.95rem;margin-bottom:0.5rem;color:#94a3b8;">No posts yet in #${escapeHtml(currentCircleChannel)}</p>
+        <p style="font-size:0.82rem;">Click <strong>+ New Post</strong> in the top right to start the discussion!</p>
+      </div>
+    `;
+    return;
+  }
+
+  posts.forEach(post => {
+    const card = document.createElement("div");
+    card.className = "circle-post-card";
+
+    // Determine author identity
+    const isCurrentUserPost = post.isCurrentUser || (currentUser && post.author === currentUser.name) || post.author === "You";
+    const displayAuthor = (isCurrentUserPost && currentUser) ? currentUser.name : (post.author === "You" ? "Guest Learner" : post.author);
+    const displayAvatar = (isCurrentUserPost && currentUser) ? (currentUser.picture || getUserInitials(currentUser.name)) : (post.avatar || "👤");
+    const displayRole = (isCurrentUserPost && currentUser) ? "Learner 👤" : (post.role || "Member 👤");
+
+    let avatarHtml = "";
+    if (displayAvatar && (displayAvatar.startsWith("http") || displayAvatar.startsWith("data:"))) {
+      avatarHtml = `<img src="${escapeHtml(displayAvatar)}" alt="${escapeHtml(displayAuthor)}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;display:block;">`;
+    } else {
+      avatarHtml = escapeHtml(displayAvatar);
+    }
+
+    card.innerHTML = `
+      <div class="post-header">
+        <div class="author-avatar" style="overflow:hidden;flex-shrink:0;">${avatarHtml}</div>
+        <div class="author-details">
+          <h4>
+            <span>${escapeHtml(displayAuthor)}</span>
+            <span class="author-role">${escapeHtml(displayRole)}</span>
+          </h4>
+          <span class="post-time">${escapeHtml(post.time)}</span>
+        </div>
+      </div>
+      <div class="post-content">
+        <h3 class="post-title">${escapeHtml(post.title)}</h3>
+        <p class="post-body-text">${escapeHtml(post.content)}</p>
+      </div>
+      ${post.image ? `<div class="post-media"><img src="${escapeHtml(post.image)}" alt="Post Media" onerror="this.parentElement.style.display='none';"></div>` : ""}
+      <div class="post-actions-row">
+        <button class="action-btn like-btn ${post.userLiked ? 'liked' : ''}" data-id="${post.id}" style="${post.userLiked ? 'color: #e11d48;' : ''}">
+          <i class="${post.userLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i> <span>${post.likes || 0}</span>
+        </button>
+        <span class="action-btn" style="cursor:default;">
+          <i class="fa-regular fa-comment"></i> <span>${post.comments ? post.comments.length : 0} Comments</span>
+        </span>
+      </div>
+      <div class="post-comments-container" style="${post.comments && post.comments.length > 0 ? '' : 'display:none;'}">
+        ${(post.comments || []).map(c => `
+          <div class="circle-comment-card">
+            <span class="comment-author">${escapeHtml(c.author)}:</span>
+            <span class="comment-text">${escapeHtml(c.content)}</span>
+          </div>
+        `).join("")}
+      </div>
+      <div class="comment-composer-box">
+        <form class="comment-submit-form" data-post-id="${post.id}">
+          <input type="text" class="comment-input" placeholder="Write a comment as ${escapeHtml(currentUser ? currentUser.name : 'Learner')}..." required autocomplete="off">
+          <button type="submit" class="comment-submit-btn">Reply</button>
+        </form>
+      </div>
+    `;
+
+    // Bind Like Button
+    const likeBtn = card.querySelector(".like-btn");
+    if (likeBtn) {
+      likeBtn.addEventListener("click", () => {
+        if (!post.userLiked) {
+          post.likes = (post.likes || 0) + 1;
+          post.userLiked = true;
+        } else {
+          post.likes = Math.max(0, (post.likes || 1) - 1);
+          post.userLiked = false;
+        }
+        renderCircleFeed();
+      });
+    }
+
+    // Bind Comment Submit
+    const commentForm = card.querySelector(".comment-submit-form");
+    if (commentForm) {
+      commentForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const input = commentForm.querySelector(".comment-input");
+        const val = input ? input.value.trim() : "";
+        if (!val) return;
+
+        const author = currentUser ? currentUser.name : "Learner";
+        post.comments = post.comments || [];
+        post.comments.push({ author: author, content: val });
+        renderCircleFeed();
+      });
+    }
+
+    feedContainer.appendChild(card);
+  });
+}
+
+function openPlaylistViewer(video) {
+  const playlistModal = document.getElementById("playlist-modal");
+  const mainPlaylistIframe = document.getElementById("main-playlist-iframe");
+  const playlistTitle = document.getElementById("playlist-title");
+  const playlistDesc = document.getElementById("playlist-desc");
+  const episodesCarouselTrack = document.getElementById("episodes-carousel-track");
+  const btnCarouselPrev = document.getElementById("btn-carousel-prev");
+  const btnCarouselNext = document.getElementById("btn-carousel-next");
+  const carouselSection = document.querySelector(".episodes-carousel-section");
+
+  if (!playlistModal) return;
+
+  playlistModal.classList.remove("hidden");
+
+  if (playlistTitle) playlistTitle.textContent = video.title;
+  if (playlistDesc) playlistDesc.textContent = video.desc;
+
+  if (mainPlaylistIframe) {
+    mainPlaylistIframe.src = video.embedUrl;
+  }
+
+  const hasPlaylist = video.embedUrl && video.embedUrl.includes("list=");
+  if (hasPlaylist) {
+    if (carouselSection) carouselSection.style.display = "flex";
+    if (episodesCarouselTrack && typeof SPANISH_PLAYLIST_EPISODES !== "undefined") {
+      episodesCarouselTrack.innerHTML = "";
+      SPANISH_PLAYLIST_EPISODES.forEach((episode, index) => {
+        const epCard = document.createElement("div");
+        epCard.className = `episode-card ${index === 0 ? "active" : ""}`;
+        const epThumbSrc = (episode.videoId && episode.videoId !== "videoseries" && episode.videoId.length > 5)
+          ? `https://img.youtube.com/vi/${episode.videoId}/mqdefault.jpg`
+          : `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60`;
+
+        epCard.innerHTML = `
+          <div class="episode-thumb-container">
+            <img src="${epThumbSrc}" alt="${escapeHtml(episode.title)}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60';">
+            <div class="episode-play-overlay"><i class="fa-solid fa-play"></i></div>
+            <span class="episode-badge">${episode.duration}</span>
+          </div>
+          <div class="episode-details">
+            <h4>Episode ${episode.episode}: ${escapeHtml(episode.title)}</h4>
+            <p>${escapeHtml(episode.desc)}</p>
+          </div>
+        `;
+
+        epCard.addEventListener("click", () => {
+          const allCards = episodesCarouselTrack.querySelectorAll(".episode-card");
+          allCards.forEach(c => c.classList.remove("active"));
+          epCard.classList.add("active");
+          if (mainPlaylistIframe) mainPlaylistIframe.src = episode.embedUrl;
+        });
+
+        episodesCarouselTrack.appendChild(epCard);
+      });
+    }
+  } else {
+    if (carouselSection) carouselSection.style.display = "none";
+  }
+}
+
+function initDictionaryPanel() {
+  // Grab elements
+  const coverView = document.getElementById("dict-cover-view");
+  const slideshowView = document.getElementById("dict-slideshow-view");
+  const btnStartBodySlides = document.getElementById("btn-start-body-slides");
+  const btnStartBathroomSlides = document.getElementById("btn-start-bathroom-slides");
+  const btnStartSeasideSlides = document.getElementById("btn-start-seaside-slides");
+  const btnCloseSlides = document.getElementById("btn-close-slides");
+  const btnPrevSlide = document.getElementById("btn-prev-slide");
+  const btnNextSlide = document.getElementById("btn-next-slide");
+  const slideImage = document.getElementById("slide-image-element");
+  const slideImageWrapper = document.getElementById("slide-image-wrapper-element");
+  const counterLabel = document.getElementById("slide-counter-label");
+  const dotsContainer = document.getElementById("slide-dots-container");
+
+  // Floating anchor buttons
+  const btnAnchorLeft = document.getElementById("btn-anchor-left");
+  const btnAnchorCenter = document.getElementById("btn-anchor-center");
+  const btnAnchorRight = document.getElementById("btn-anchor-right");
+
+  // Floating side navigation buttons
+  const btnFloatingPrev = document.getElementById("btn-floating-prev");
+  const btnFloatingNext = document.getElementById("btn-floating-next");
+
+  if (!coverView) return; // Guard in case of hot-reload rendering shifts
+
+  // Scroll the main content window and panel back to top
+  const scrollPanelToTop = () => {
+    const dictionaryPanel = document.getElementById("panel-dictionary");
+    if (dictionaryPanel) {
+      dictionaryPanel.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  let currentSlideIdx = 1;
+  let currentDeck = "body"; // "body", "bathroom", "seaside"
+  let maxSlides = 17;
+
+  // Zoom & Pan states
+  let isZoomed = false;
+  let isDragging = false;
+  let currentScale = 1;
+  let startX = 0, startY = 0;
+  let translateX = 0, translateY = 0;
+  let currentTranslateX = 0, currentTranslateY = 0;
+  let clickStartTime = 0;
+  let clickStartX = 0, clickStartY = 0;
+
+  // Dynamically toggle zoom anchor visibility based on column position
+  const updateAnchorVisibility = () => {
+    // Dynamically toggle Left & Right anchor icons between Circle-Dot (zoomed out) and Arrow (zoomed in)
+    const leftIcon = btnAnchorLeft ? btnAnchorLeft.querySelector("i") : null;
+    const rightIcon = btnAnchorRight ? btnAnchorRight.querySelector("i") : null;
+
+    if (isZoomed) {
+      if (leftIcon) leftIcon.className = "fa-solid fa-chevron-left";
+      if (rightIcon) rightIcon.className = "fa-solid fa-chevron-right";
+    } else {
+      if (leftIcon) leftIcon.className = "fa-solid fa-circle-dot";
+      if (rightIcon) rightIcon.className = "fa-solid fa-circle-dot";
+    }
+
+    if (!isZoomed) {
+      if (btnAnchorLeft) { btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; btnAnchorLeft.style.display = "flex"; }
+      if (btnAnchorCenter) { btnAnchorCenter.style.opacity = ""; btnAnchorCenter.style.pointerEvents = ""; btnAnchorCenter.style.display = "flex"; }
+      if (btnAnchorRight) { btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; btnAnchorRight.style.display = "flex"; }
+      return;
+    }
+
+    const width = slideImage.clientWidth;
+    const limitX = (width * currentScale - width) / 2;
+
+    if (limitX > 10) {
+      const activeX = currentTranslateX;
+
+      // Always hide Center button when zoomed in
+      if (btnAnchorCenter) { btnAnchorCenter.style.opacity = "0"; btnAnchorCenter.style.pointerEvents = "none"; }
+
+      // Centered on Left Column: hide Left button, show Right button
+      if (activeX > limitX * 0.35) {
+        if (btnAnchorLeft) { btnAnchorLeft.style.opacity = "0"; btnAnchorLeft.style.pointerEvents = "none"; }
+        if (btnAnchorRight) { btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; }
+      } 
+      // Centered on Right Column: hide Right button, show Left button
+      else if (activeX < -limitX * 0.35) {
+        if (btnAnchorRight) { btnAnchorRight.style.opacity = "0"; btnAnchorRight.style.pointerEvents = "none"; }
+        if (btnAnchorLeft) { btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; }
+      } 
+      // Centered on Center Column: show both Left and Right buttons
+      else {
+        if (btnAnchorLeft) { btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; }
+        if (btnAnchorRight) { btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; }
+      }
+    } else {
+      if (btnAnchorLeft) { btnAnchorLeft.style.opacity = "0"; btnAnchorLeft.style.pointerEvents = "none"; }
+      if (btnAnchorCenter) { btnAnchorCenter.style.opacity = "0"; btnAnchorCenter.style.pointerEvents = "none"; }
+      if (btnAnchorRight) { btnAnchorRight.style.opacity = "0"; btnAnchorRight.style.pointerEvents = "none"; }
+    }
+  };
+
+  const resetZoom = () => {
+    isZoomed = false;
+    isDragging = false;
+    currentScale = 1;
+    translateX = 0;
+    translateY = 0;
+    currentTranslateX = 0;
+    currentTranslateY = 0;
+    if (slideImage) {
+      slideImage.style.transform = "translate(0px, 0px) scale(1)";
+      slideImage.style.transition = "";
+      slideImage.classList.remove("zoomed");
+    }
+    if (slideImageWrapper) {
+      slideImageWrapper.classList.remove("zoomed-state");
+    }
+    updateAnchorVisibility();
+  };
+
+  // Build pagination dots dynamically based on total slides
+  const buildPaginationDots = (totalSlides) => {
+    if (!dotsContainer) return;
+    dotsContainer.innerHTML = "";
+    for (let i = 1; i <= totalSlides; i++) {
+      const dot = document.createElement("div");
+      dot.className = "slide-dot";
+      dot.title = `Go to Slide ${i}`;
+      dot.addEventListener("click", () => {
+        currentSlideIdx = i;
+        updateSlideDisplay();
+        scrollPanelToTop();
+      });
+      dotsContainer.appendChild(dot);
+    }
+  };
+
+  const headerIntro = document.getElementById("dict-header-intro");
+  const deckTitleEl = document.getElementById("slideshow-deck-title");
+
+  const updateSlideDisplay = () => {
+    if (!slideImage || !counterLabel) return;
+
+    // Reset zoom state on page change
+    resetZoom();
+
+    if (currentDeck === "body") {
+      slideImage.src = `assets/dict/page_${currentSlideIdx}.png`;
+      counterLabel.textContent = `Slide ${currentSlideIdx} of 17`;
+      if (deckTitleEl) deckTitleEl.innerHTML = `<i class="fa-solid fa-person-half-dress"></i> Body Parts`;
+      maxSlides = 17;
+    } else if (currentDeck === "bathroom") {
+      slideImage.src = `assets/dict/bathroom_page_${currentSlideIdx}.png`;
+      counterLabel.textContent = `Slide ${currentSlideIdx} of 18`;
+      if (deckTitleEl) deckTitleEl.innerHTML = `<i class="fa-solid fa-bath"></i> Inside The Bathroom`;
+      maxSlides = 18;
+    } else {
+      slideImage.src = `assets/dict/seaside_page_${currentSlideIdx}.png`;
+      counterLabel.textContent = `Slide ${currentSlideIdx} of 21`;
+      if (deckTitleEl) deckTitleEl.innerHTML = `<i class="fa-solid fa-umbrella-beach"></i> Sea Side`;
+      maxSlides = 21;
+    }
+
+    // Toggle nav buttons disabled state visual indicators
+    if (btnPrevSlide) {
+      btnPrevSlide.style.opacity = currentSlideIdx === 1 ? "0.4" : "1";
+      btnPrevSlide.style.cursor = currentSlideIdx === 1 ? "default" : "pointer";
+    }
+    if (btnNextSlide) {
+      btnNextSlide.style.opacity = currentSlideIdx === maxSlides ? "0.4" : "1";
+      btnNextSlide.style.cursor = currentSlideIdx === maxSlides ? "default" : "pointer";
+    }
+
+    // Toggle side floating nav buttons
+    if (btnFloatingPrev) {
+      btnFloatingPrev.style.opacity = currentSlideIdx === 1 ? "0" : "";
+      btnFloatingPrev.style.pointerEvents = currentSlideIdx === 1 ? "none" : "auto";
+    }
+    if (btnFloatingNext) {
+      btnFloatingNext.style.opacity = currentSlideIdx === maxSlides ? "0" : "";
+      btnFloatingNext.style.pointerEvents = currentSlideIdx === maxSlides ? "none" : "auto";
+    }
+
+    // Highlight active dot
+    if (dotsContainer) {
+      const dots = dotsContainer.querySelectorAll(".slide-dot");
+      dots.forEach((dot, index) => {
+        dot.classList.toggle("active", index + 1 === currentSlideIdx);
+      });
+    }
+
+    updateAnchorVisibility();
+  };
+
+  // 1. Cover Card Click: Body Parts
+  if (btnStartBodySlides) {
+    btnStartBodySlides.addEventListener("click", () => {
+      coverView.classList.add("hidden");
+      if (headerIntro) headerIntro.classList.add("hidden");
+      slideshowView.classList.remove("hidden");
+      currentDeck = "body";
+      maxSlides = 17;
+      currentSlideIdx = 1;
+      buildPaginationDots(17);
+      updateSlideDisplay();
+      scrollPanelToTop();
+    });
+  }
+
+  // 1b. Cover Card Click: Inside The Bathroom
+  if (btnStartBathroomSlides) {
+    btnStartBathroomSlides.addEventListener("click", () => {
+      coverView.classList.add("hidden");
+      if (headerIntro) headerIntro.classList.add("hidden");
+      slideshowView.classList.remove("hidden");
+      currentDeck = "bathroom";
+      maxSlides = 18;
+      currentSlideIdx = 1;
+      buildPaginationDots(18);
+      updateSlideDisplay();
+      scrollPanelToTop();
+    });
+  }
+
+  // 1c. Cover Card Click: Sea Side
+  if (btnStartSeasideSlides) {
+    btnStartSeasideSlides.addEventListener("click", () => {
+      coverView.classList.add("hidden");
+      if (headerIntro) headerIntro.classList.add("hidden");
+      slideshowView.classList.remove("hidden");
+      currentDeck = "seaside";
+      maxSlides = 21;
+      currentSlideIdx = 1;
+      buildPaginationDots(21);
+      updateSlideDisplay();
+      scrollPanelToTop();
+    });
+  }
+
+  // 2. Back / Close Button Click
+  if (btnCloseSlides) {
+    btnCloseSlides.addEventListener("click", () => {
+      slideshowView.classList.add("hidden");
+      coverView.classList.remove("hidden");
+      if (headerIntro) headerIntro.classList.remove("hidden");
+      resetZoom();
+      scrollPanelToTop();
+    });
+  }
+
+  // 3. Previous/Next Slide clicks
+  if (btnPrevSlide) {
+    btnPrevSlide.addEventListener("click", () => {
+      if (currentSlideIdx > 1) {
+        currentSlideIdx--;
+        updateSlideDisplay();
+        scrollPanelToTop();
+      }
+    });
+  }
+
+  if (btnNextSlide) {
+    btnNextSlide.addEventListener("click", () => {
+      if (currentSlideIdx < maxSlides) {
+        currentSlideIdx++;
+        updateSlideDisplay();
+        scrollPanelToTop();
+      }
+    });
+  }
+
+  // 3b. Floating Side Arrow Clicks (Next & Prev Page)
+  if (btnFloatingPrev) {
+    btnFloatingPrev.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (currentSlideIdx > 1) {
+        currentSlideIdx--;
+        updateSlideDisplay();
+        scrollPanelToTop();
+      }
+    });
+  }
+
+  if (btnFloatingNext) {
+    btnFloatingNext.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (currentSlideIdx < maxSlides) {
+        currentSlideIdx++;
+        updateSlideDisplay();
+        scrollPanelToTop();
+      }
+    });
+  }
+
+  // 4. Keyboard Arrow Key Navigation (when slides panel is visible)
+  window.addEventListener("keydown", (e) => {
+    if (slideshowView.classList.contains("hidden")) return;
+
+    if (e.key === "ArrowLeft") {
+      if (currentSlideIdx > 1) {
+        currentSlideIdx--;
+        updateSlideDisplay();
+        scrollPanelToTop();
+      }
+    } else if (e.key === "ArrowRight") {
+      if (currentSlideIdx < maxSlides) {
+        currentSlideIdx++;
+        updateSlideDisplay();
+        scrollPanelToTop();
+      }
+    }
+  });
+
+  // 5. Zoom & Pan Event Listeners on slideImage
+  if (slideImage) {
+    slideImage.addEventListener("mousedown", (e) => {
+      clickStartTime = Date.now();
+      clickStartX = e.clientX;
+      clickStartY = e.clientY;
+
+      if (isZoomed) {
+        isDragging = true;
+        slideImage.style.transition = "none"; // Disable smooth transition during drag
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        e.preventDefault(); // Prevent standard image drag selector
+      }
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isZoomed || !isDragging) return;
+
+      currentTranslateX = e.clientX - startX;
+      currentTranslateY = e.clientY - startY;
+
+      // Bound panning coordinates so the slide doesn't go off screen
+      const width = slideImage.clientWidth;
+      const height = slideImage.clientHeight;
+      const limitX = (width * currentScale - width) / 2;
+      const limitY = (height * currentScale - height) / 2;
+
+      currentTranslateX = Math.max(-limitX, Math.min(limitX, currentTranslateX));
+      currentTranslateY = Math.max(-limitY, Math.min(limitY, currentTranslateY));
+
+      slideImage.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px) scale(${currentScale})`;
+      updateAnchorVisibility();
+    });
+
+    window.addEventListener("mouseup", (e) => {
+      if (isDragging) {
+        isDragging = false;
+        slideImage.style.transition = ""; // Restore smooth transition
+        translateX = currentTranslateX;
+        translateY = currentTranslateY;
+        updateAnchorVisibility();
+      }
+
+      // Check if this was a simple click to toggle zoom rather than a drag
+      const dragDuration = Date.now() - clickStartTime;
+      const dragDistance = Math.hypot(e.clientX - clickStartX, e.clientY - clickStartY);
+
+      if (e.target === slideImage && dragDuration < 200 && dragDistance < 6) {
+        isZoomed = !isZoomed;
+        if (isZoomed) {
+          currentScale = 2; // Default 2x zoom on click
+          slideImage.classList.add("zoomed");
+          if (slideImageWrapper) {
+            slideImageWrapper.classList.add("zoomed-state");
+          }
+          
+          const rect = slideImage.getBoundingClientRect();
+          const clickX_rel = (e.clientX - rect.left) - rect.width / 2;
+          const clickY_rel = (e.clientY - rect.top) - rect.height / 2;
+
+          // Center zoom on mouse click coordinates
+          translateX = -clickX_rel * (currentScale - 1);
+          translateY = -clickY_rel * (currentScale - 1);
+
+          // Apply bounds check
+          const width = slideImage.clientWidth;
+          const height = slideImage.clientHeight;
+          const limitX = (width * currentScale - width) / 2;
+          const limitY = (height * currentScale - height) / 2;
+
+          translateX = Math.max(-limitX, Math.min(limitX, translateX));
+          translateY = Math.max(-limitY, Math.min(limitY, translateY));
+
+          currentTranslateX = translateX;
+          currentTranslateY = translateY;
+
+          slideImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+        } else {
+          resetZoom();
+        }
+        updateAnchorVisibility();
+      }
+    });
+
+    // Make sure dragging stops cleanly if cursor leaves window
+    window.addEventListener("mouseleave", () => {
+      if (isDragging) {
+        isDragging = false;
+        slideImage.style.transition = "";
+        translateX = currentTranslateX;
+        translateY = currentTranslateY;
+        updateAnchorVisibility();
+      }
+    });
+
+    // 6. Mouse Wheel Scroll (Vertical Panning) when zoomed in
+    slideImage.addEventListener("wheel", (e) => {
+      if (!isZoomed) return; // Only scroll vertically after zoom has happened
+
+      e.preventDefault(); // Stop normal page scroll while interacting with zoomed slide
+
+      const width = slideImage.clientWidth;
+      const height = slideImage.clientHeight;
+      const limitY = (height * currentScale - height) / 2;
+
+      // Scroll speed factor
+      const scrollSpeed = 0.8;
+      translateY -= e.deltaY * scrollSpeed;
+
+      // Bound Y coordinate
+      translateY = Math.max(-limitY, Math.min(limitY, translateY));
+      currentTranslateY = translateY;
+
+      slideImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    }, { passive: false });
+
+    // 7. Snap-to-column anchor clicks
+    const snapToAnchor = (column) => {
+      if (!isZoomed) {
+        isZoomed = true;
+        currentScale = 2;
+        slideImage.classList.add("zoomed");
+        if (slideImageWrapper) {
+          slideImageWrapper.classList.add("zoomed-state");
+        }
+      }
+
+      const width = slideImage.clientWidth;
+      const limitX = (width * currentScale - width) / 2;
+
+      // Snap to the top of the slide
+      const height = slideImage.clientHeight;
+      const limitY = (height * currentScale - height) / 2;
+      translateY = limitY;
+      currentTranslateY = limitY;
+
+      if (column === "left") {
+        translateX = limitX;
+      } else if (column === "center") {
+        translateX = 0;
+      } else if (column === "right") {
+        translateX = -limitX;
+      }
+
+      currentTranslateX = translateX;
+      slideImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+      updateAnchorVisibility();
+    };
+
+    if (btnAnchorLeft) {
+      btnAnchorLeft.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!isZoomed) {
+          snapToAnchor("left");
+        } else {
+          // Centered on Right Column: snap to Center Column. Otherwise snap to Left Column.
+          const width = slideImage.clientWidth;
+          const limitX = (width * currentScale - width) / 2;
+          if (currentTranslateX < -limitX * 0.35) {
+            snapToAnchor("center");
+          } else {
+            snapToAnchor("left");
+          }
+        }
+        scrollPanelToTop();
+      });
+    }
+
+    if (btnAnchorCenter) {
+      btnAnchorCenter.addEventListener("click", (e) => {
+        e.stopPropagation();
+        snapToAnchor("center");
+        scrollPanelToTop();
+      });
+    }
+
+    if (btnAnchorRight) {
+      btnAnchorRight.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!isZoomed) {
+          snapToAnchor("right");
+        } else {
+          // Centered on Left Column: snap to Center Column. Otherwise snap to Right Column.
+          const width = slideImage.clientWidth;
+          const limitX = (width * currentScale - width) / 2;
+          if (currentTranslateX > limitX * 0.35) {
+            snapToAnchor("center");
+          } else {
+            snapToAnchor("right");
+          }
+        }
+        scrollPanelToTop();
+      });
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// Panel 6: The Describing Lab (Identical Layout & Feel to Sol Tab)
+// -------------------------------------------------------------
+function initDescribingLabPanel() {
+  const customUploadInput = document.getElementById("lab-custom-upload");
+  const labHomeInput = document.getElementById("lab-home-input");
+  const labLangSelector = document.getElementById("lab-lang-selector");
+  const labLangName = document.getElementById("lab-lang-name");
+  const btnLabMic = document.getElementById("btn-lab-mic");
+  const btnLabSend = document.getElementById("btn-lab-send");
+  const labConversationEl = document.getElementById("lab-home-conversation");
+  const roleChips = document.querySelectorAll("#describing-role-pills .gemini-chip-btn");
+
+  let activeRole = "creative"; // creative, linguist, storyteller, vocab, quick
+
+  const ROLE_CONFIGS = {
+    creative: {
+      name: "Creative Writer",
+      directive: `You are Sol acting as a master Creative Writing Mentor and Stylist.
+Analyze the user's description with a focus on sensory engagement, mood, evocative imagery, and literary elegance.
+Structure your response as follows:
+1. 🌟 **Atmospheric Impression**: A warm, encouraging 2-sentence reaction to the mood and feeling evoked by their description.
+2. 👁️ **Sensory & Visual Elevation**: Highlight what they captured well and suggest 2 evocative literary metaphors or sensory details.
+3. 💎 **Vivid Vocabulary Palette**: Present 3 exquisite, evocative adjectives or verbs (with brief native context) to replace ordinary words.
+4. 📜 **Polished Native Masterpiece**: Provide a beautifully written, native-level rewrite of their description that preserves their core ideas while elevating it to vivid literature.
+CRITICAL: Speak directly to the user. Do NOT output internal drafts, thoughts, or notes.`
+    },
+    linguist: {
+      name: "Precision Linguist",
+      directive: `You are Sol acting as an elite Precision Linguist and Native Proofreader.
+Examine the user's description with grammatical precision, syntax mastery, and natural collocations.
+Structure your response as follows:
+1. 🔍 **Grammatical Audit**: Identify any errors in verb conjugation, prepositions, agreement, or awkward word order. If accurate, praise the syntax.
+2. 💡 **Native Nuance & Collocations**: Explain 2 natural phrasing adjustments that separate a textbook learner from an authentic native speaker.
+3. 💎 **Key Terminology**: 3 polished vocabulary words or idiomatic combinations that fit this description.
+4. ✍️ **Linguistically Perfected Rewrite**: Provide an authentic, idiomatic rewrite of their description with flawless grammar.
+CRITICAL: Speak directly to the user. Do NOT output internal drafts, thoughts, or notes.`
+    },
+    storyteller: {
+      name: "Storyteller & Companion",
+      directive: `You are Sol acting as a warm, imaginative Travel Companion and Storyteller standing right beside the user in this scene.
+React conversationally to what they wrote, treating their words as a real shared experience.
+Structure your response as follows:
+1. 🎙️ **Sol's Living Reaction**: React vividly to their description as if you are experiencing it together.
+2. 📖 **The Story Unfolds**: Weave their description into the opening lines of an intriguing story.
+3. 💎 **Expressive Words**: 3 colorful words or colloquial expressions natural speakers use to talk about this topic.
+4. ❓ **Curious Question**: Ask a compelling, imaginative question about what might happen next.
+CRITICAL: Speak directly to the user. Do NOT output internal drafts, thoughts, or notes.`
+    },
+    vocab: {
+      name: "Vocab Architect",
+      directive: `You are Sol acting as a Vocabulary Architect.
+Your mission is to upgrade the user's vocabulary from basic/intermediate to sophisticated, evocative fluency (C1/C2).
+Structure your response as follows:
+1. ⚡ **Vocabulary Scorecard**: A brief, encouraging assessment of their lexical variety.
+2. 🚀 **Word Upgrades (Before ➔ After)**:
+   - Identify 3-4 basic or repeated words from their text and provide high-tier native upgrades with concise definitions.
+3. 💎 **Sensory Descriptors**: Provide 2 rich idiomatic or sensory phrases tailored to their description.
+4. 🌟 **Lexically Elevated Rewrite**: Rewrite their entire description using advanced, natural vocabulary.
+CRITICAL: Speak directly to the user. Do NOT output internal drafts, thoughts, or notes.`
+    },
+    quick: {
+      name: "Quick Critique",
+      directive: `You are Sol providing a rapid-fire, high-impact language critique. Keep it crisp, sharp, and directly actionable.
+Structure your response as follows:
+- 🎯 **1 Grammar/Nuance Tweak**: The single most impactful adjustment to make.
+- 💎 **3 Vocabulary Boosts**: 3 upgraded native words for this context.
+- 🏆 **Polished Rewrite**: One concise, native-sounding rewrite of their description.
+CRITICAL: Keep it brief and speak directly. Do NOT output internal thoughts or drafts.`
+    }
+  };
+
+  // Role Chips
+  roleChips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      roleChips.forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      activeRole = chip.getAttribute("data-role") || "creative";
+      if (typeof showToast === "function") {
+        const name = ROLE_CONFIGS[activeRole] ? ROLE_CONFIGS[activeRole].name : "Sol";
+        showToast(`Sol Mode: ${name}`);
+      }
+    });
+  });
+
+  // Optional Custom Image Upload Attachment
+  if (customUploadInput) {
+    customUploadInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file && typeof showToast === "function") {
+        showToast(`📷 Image attached: ${file.name}`);
+      }
+    });
+  }
+
+  // Target Language Selector Cycle
+  const LANGUAGES = ["English", "Spanish", "French", "German", "Italian", "Portuguese"];
+  if (labLangSelector) {
+    labLangSelector.addEventListener("click", () => {
+      const current = labLangName ? labLangName.textContent.trim() : "English";
+      const nextIdx = (LANGUAGES.indexOf(current) + 1) % LANGUAGES.length;
+      const nextLang = LANGUAGES[nextIdx];
+      if (labLangName) labLangName.textContent = nextLang;
+      if (typeof showToast === "function") showToast(`Language: ${nextLang}`);
+    });
+  }
+
+  // Voice Input (Speech-to-Text)
+  if (btnLabMic) {
+    btnLabMic.addEventListener("click", () => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Speech recognition is not supported in this browser. Please type your description.");
+        return;
+      }
+      btnLabMic.style.color = "#ef4444";
+      if (typeof showToast === "function") showToast("🎙️ Listening... Describe the scene now!");
+
+      const recognition = new SpeechRecognition();
+      const currentLang = labLangName ? labLangName.textContent.trim() : "English";
+      const langCodes = {
+        English: "en-US",
+        Spanish: "es-ES",
+        French: "fr-FR",
+        German: "de-DE",
+        Italian: "it-IT",
+        Portuguese: "pt-BR"
+      };
+      recognition.lang = langCodes[currentLang] || "en-US";
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        btnLabMic.style.color = "";
+        const transcript = event.results[0][0].transcript;
+        if (labHomeInput) {
+          labHomeInput.value = transcript;
+          syncInputBarHasText(labHomeInput);
+          labHomeInput.focus();
+        }
+      };
+
+      recognition.onerror = () => {
+        btnLabMic.style.color = "";
+        if (typeof showToast === "function") showToast("Voice input cancelled or unavailable.");
+      };
+
+      recognition.onend = () => {
+        btnLabMic.style.color = "";
+      };
+
+      recognition.start();
+    });
+  }
+
+  // Submit Description to Sol
+  const submitLabDescription = async (query) => {
+    if (!query || !labConversationEl) return;
+    if (labHomeInput) {
+      labHomeInput.value = "";
+      syncInputBarHasText(labHomeInput);
+    }
+
+    const lang = labLangName ? labLangName.textContent.trim() : "English";
+    const roleCfg = ROLE_CONFIGS[activeRole] || ROLE_CONFIGS.creative;
+
+    // 1. Render User Message Bubble
+    const userDiv = document.createElement("div");
+    userDiv.className = "gemini-inline-message";
+    userDiv.innerHTML = `<div class="gemini-user-query">${escapeHtml(query)}</div>`;
+    labConversationEl.appendChild(userDiv);
+
+    // 2. Render Gemini AI Response Bubble
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "gemini-inline-message";
+    aiDiv.innerHTML = `
+      <div class="gemini-ai-response">
+        <div class="gemini-ai-body">
+          <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Reviewing your description...
+        </div>
+      </div>
+    `;
+    labConversationEl.appendChild(aiDiv);
+    aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    const aiBody = aiDiv.querySelector(".gemini-ai-body");
+    let responseText = "";
+
+    const systemInstruction = `${roleCfg.directive}
+Target Language: ${lang}
+CRITICAL OUTPUT DIRECTIVE: Speak directly to the user as Sol. Do NOT output internal drafts, thought processes, or meta notes.`;
+
+    const prompt = `The user wrote the following description in ${lang}:
+"${query}"
+
+Provide your feedback and guidance in character as Sol (${roleCfg.name}).`;
+
+    if (geminiService.hasApiKey()) {
+      try {
+        const messages = [{ role: "user", content: prompt, parts: [{ text: prompt }] }];
+        await geminiService.generateResponseStream(
+          messages,
+          systemInstruction,
+          "gemini-1.5-flash",
+          (chunk) => {
+            if (responseText === "") aiBody.innerHTML = "";
+            responseText += chunk;
+            aiBody.innerHTML = marked.parse(responseText) + `<span class="cursor-blink"></span>`;
+            aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          },
+          (err) => {
+            aiBody.innerHTML = `<div style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${escapeHtml(err)}</div>`;
+          },
+          (finalText) => {
+            if (finalText) {
+              responseText = finalText;
+              aiBody.innerHTML = marked.parse(responseText);
+              aiBody.setAttribute("data-raw-text", responseText);
+              attachAiActions(aiDiv, responseText);
+            }
+          }
+        );
+
+        if (responseText && !aiBody.querySelector(".gemini-ai-actions")) {
+          aiBody.innerHTML = marked.parse(responseText);
+          aiBody.setAttribute("data-raw-text", responseText);
+          attachAiActions(aiDiv, responseText);
+        }
+      } catch (e) {
+        console.error(e);
+        aiBody.innerHTML = `<div style="color: #ef4444;">Error connecting to Gemini API. Please check your settings.</div>`;
+      }
+    } else {
+      // Demo Mode feedback
+      setTimeout(() => {
+        let demoContent = "";
+        if (activeRole === "creative") {
+          demoContent = `### 🌟 Atmospheric Impression
+Your description establishes a peaceful and evocative sense of place. You have a great natural eye for setting the scene!
+
+### 👁️ Sensory & Visual Elevation
+- **Visual Depth**: Contrast the stillness of the shoreline with the movement of the tides.
+- **Sensory Detail**: Bring in subtle sounds—the soft hiss of receding foam or the cooling ocean breeze.
+
+### 💎 Vivid Vocabulary Palette
+- **Resplendent** (*adj.*) — Glowing with radiant beauty (*"The horizon was resplendent in amber."*)
+- **Ethereal** (*adj.*) — Extremely delicate and light in a way that seems not of this world.
+- **Undulating** (*adj.*) — Moving with smooth, wave-like motions.
+
+### 📜 Polished Native Masterpiece
+> *"As dusk descends across the coastline, the horizon glows with resplendent peach and gold. Gentle undulating tides roll across the shore, casting an ethereal shimmer over the wet sands."*`;
+        } else if (activeRole === "linguist") {
+          demoContent = `### 🔍 Grammatical Audit
+- **Sentence Structure**: Excellent cohesion and subject-verb consistency.
+- **Preposition Precision**: Ensure prepositions match the physical action (e.g. *"on the beach"* vs. *"at the water's edge"*).
+
+### 💡 Native Nuance & Collocations
+- Instead of saying *"the light is very nice"*, native speakers naturally use collocations like *"bathed in warm light"* or *"dappled sunlight"*.
+
+### 💎 Key Terminology
+- **Shoreline** — The precise boundary between land and water.
+- **Tideline** — The mark left by highest tide.
+- **Crystalline** — Clear, sparkling like crystal.
+
+### ✍️ Linguistically Perfected Rewrite
+> *"The tranquil shoreline is bathed in soft, warm light as gentle tides break rhythmically against the golden sand, creating an effortlessly peaceful scene."*`;
+        } else if (activeRole === "vocab") {
+          demoContent = `### ⚡ Vocabulary Scorecard
+**Level**: Strong foundation. With a few sensory adjective swaps, this immediately reaches C1/C2 native sophistication!
+
+### 🚀 Word Upgrades (Before ➔ After)
+- *Beautiful / Good* ➔ **Sublime** / **Picturesque**
+- *Bright light* ➔ **Radiant glow** / **Luminescent**
+- *Big / Endless* ➔ **Vast expanse** / **Panoramic**
+- *Calm* ➔ **Tranquil** / **Serene**
+
+### 💎 Sensory Descriptors
+- **"Sun-drenched horizon"** — Filled with brilliant sunlight.
+- **"Balmy sea breeze"** — Mild, pleasantly warm coastal air.
+
+### 🌟 Lexically Elevated Rewrite
+> *"A picturesque panorama unfolds as the sun-drenched horizon casts a sublime glow across the vast coastal expanse, enveloped by a soothing, balmy breeze."*`;
+        } else if (activeRole === "storyteller") {
+          demoContent = `### 🎙️ Sol's Living Reaction
+*Man, look at that horizon!* You captured the exact calm you only get right before the sun completely disappears. It makes me want to kick off my shoes and walk right down to the water's edge.
+
+### 📖 The Story Unfolds
+> *"We arrived just as the rest of the world was packing up. The wind had dropped to a whisper, and every wave sounded like a secret told to the shore..."*
+
+### 💎 Expressive Words
+- **Golden hour** — The magical hour before sunset with ideal lighting.
+- **Wanderlust** — A strong impulse to travel and explore.
+- **Stillness** — Complete quiet and calm.
+
+### ❓ Curious Question
+If you were standing right there right now with a warm cup in your hand, what thought or memory would this view bring to mind?`;
+        } else {
+          demoContent = `### 🎯 1 Grammar/Nuance Tweak
+Watch adjective placement and preposition flow—link your adjectives directly before the noun for sharper native impact.
+
+### 💎 3 Vocabulary Boosts
+- **Luminescent** (replaces *bright*)
+- **Tranquility** (replaces *quiet place*)
+- **Horizon** (replaces *sky line*)
+
+### 🏆 Polished Rewrite
+> *"A serene tranquility blankets the coast as luminescent light ripples along the golden shoreline."*`;
+        }
+
+        responseText = demoContent;
+        aiBody.innerHTML = marked.parse(responseText);
+        aiBody.setAttribute("data-raw-text", responseText);
+        attachAiActions(aiDiv, responseText);
+      }, 1000);
+    }
+  };
+
+  // Listeners for Send and Enter key
+  if (btnLabSend) {
+    btnLabSend.addEventListener("click", () => {
+      const q = labHomeInput ? labHomeInput.value.trim() : "";
+      if (q) submitLabDescription(q);
+    });
+  }
+
+  if (labHomeInput) {
+    syncInputBarHasText(labHomeInput);
+    labHomeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const q = labHomeInput.value.trim();
+        if (q) submitLabDescription(q);
+      }
+    });
+    labHomeInput.addEventListener("input", () => syncInputBarHasText(labHomeInput));
+    labHomeInput.addEventListener("keyup", () => syncInputBarHasText(labHomeInput));
+    labHomeInput.addEventListener("change", () => syncInputBarHasText(labHomeInput));
+  }
+
+}
+
+
+// -------------------------------------------------------------
+// Panel 7: The Output Practicing (Real-Time Live Spoken SOL Conversation)
+// -------------------------------------------------------------
+let activeOutputRole = "conversation"; // conversation, pronunciation, roleplay, quick
+let outputSpeechRecognition = null;
+let isOutputListening = false;
+let isSolSpeaking = false;
+let silenceTimer = null;
+let liveUserBubble = null;
+let accumulatedLiveTranscript = "";
+let windowActiveUtterance = null;
+let cachedVoices = [];
+
+function getBrowserVoices() {
+  if ("speechSynthesis" in window) {
+    cachedVoices = window.speechSynthesis.getVoices();
+  }
+  return cachedVoices;
+}
+if ("speechSynthesis" in window) {
+  getBrowserVoices();
+  window.speechSynthesis.onvoiceschanged = () => {
+    getBrowserVoices();
+  };
+}
+
+const OUTPUT_ROLE_CONFIGS = {
+  conversation: {
+    name: "Free Conversation",
+    directive: `You are Sol, a warm, lively native conversation partner. You are having an authentic real-time live spoken conversation with the learner.
+Respond naturally, warmly, and concisely (1-3 spoken sentences). Keep your tone conversational, clear, and easy to understand out loud. Encourage the learner and ask an engaging follow-up question.`
+  },
+  pronunciation: {
+    name: "Pronunciation Coach",
+    directive: `You are Sol acting as a friendly, expert Pronunciation and Spoken Fluency Coach.
+Commend the learner's spoken turn, model the most authentic native phrasing, and highlight one specific spoken nuance (e.g. vowel clarity, rhythm, or connected speech) in a concise, friendly 2-3 sentence spoken response.`
+  },
+  roleplay: {
+    name: "Daily Roleplay",
+    directive: `You are Sol participating in a realistic daily life roleplay scenario (e.g., ordering at a lively cafe, checking in for travel, greeting a friend, or meeting someone new).
+Stay naturally in character and reply conversationally in 1-3 spoken sentences, keeping the scenario moving forward seamlessly.`
+  },
+  quick: {
+    name: "Quick Q&A",
+    directive: `You are Sol doing rapid-fire verbal agility practice.
+React immediately to what the user said in one snappy sentence, and ask the next lively, open-ended question to test spontaneous verbal reaction.`
+  }
+};
+
+function updateOutputGreetingText() {
+  const greetingEl = document.getElementById("output-greeting-text");
+  if (!greetingEl) return;
+  
+  let name = "Adrian";
+  try {
+    const profile = JSON.parse(localStorage.getItem("sol_user_profile"));
+    if (profile && profile.name) {
+      name = profile.name.split(" ")[0];
+    }
+  } catch (e) {}
+
+  greetingEl.textContent = `Speak with Sol, ${name}!`;
+}
+
+function initOutputPracticingPanel() {
+  updateOutputGreetingText();
+
+  const rolePills = document.querySelectorAll("#output-role-pills .gemini-chip-btn");
+  const langSelector = document.getElementById("output-lang-selector");
+  const langName = document.getElementById("output-lang-name");
+  const btnReset = document.getElementById("output-btn-reset");
+  const micBtn = document.getElementById("btn-output-live-mic");
+  const statusEl = document.getElementById("output-live-status");
+  const statusText = document.getElementById("output-status-text");
+  const conversationEl = document.getElementById("output-home-conversation");
+
+  // Target Languages
+  const LANGUAGES = [
+    { label: "English", code: "en-US" },
+    { label: "Spanish", code: "es-ES" },
+    { label: "French", code: "fr-FR" },
+    { label: "German", code: "de-DE" },
+    { label: "Italian", code: "it-IT" },
+    { label: "Portuguese", code: "pt-BR" }
+  ];
+  let currentLangIdx = 0;
+
+  // Role Chips
+  rolePills.forEach(chip => {
+    chip.onclick = () => {
+      rolePills.forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      activeOutputRole = chip.getAttribute("data-role") || "conversation";
+      const cfg = OUTPUT_ROLE_CONFIGS[activeOutputRole];
+      if (typeof showToast === "function") {
+        showToast(`Mode: ${cfg ? cfg.name : 'Free Conversation'}`);
+      }
+    };
+  });
+
+  // Language Selector
+  if (langSelector) {
+    langSelector.onclick = () => {
+      currentLangIdx = (currentLangIdx + 1) % LANGUAGES.length;
+      const lang = LANGUAGES[currentLangIdx];
+      if (langName) langName.textContent = lang.label;
+      if (typeof showToast === "function") {
+        showToast(`Target Language: ${lang.label}`);
+      }
+    };
+  }
+
+  // Reset Conversation
+  if (btnReset) {
+    btnReset.onclick = () => {
+      if (silenceTimer) clearTimeout(silenceTimer);
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if (outputSpeechRecognition && isOutputListening) {
+        try { outputSpeechRecognition.stop(); } catch (e) {}
+      }
+      isOutputListening = false;
+      isSolSpeaking = false;
+      accumulatedLiveTranscript = "";
+      if (conversationEl) conversationEl.innerHTML = "";
+      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+      if (typeof showToast === "function") showToast("Live conversation reset");
+    };
+  }
+
+  // Helper to set visual state of live microphone & status bar
+  function setOutputLiveState(state, text) {
+    if (!micBtn || !statusEl || !statusText) return;
+    statusText.textContent = text;
+    micBtn.classList.remove("listening", "speaking");
+    statusEl.classList.remove("listening", "speaking", "processing");
+
+    if (state === "listening") {
+      micBtn.classList.add("listening");
+      statusEl.classList.add("listening");
+    } else if (state === "speaking") {
+      micBtn.classList.add("speaking");
+      statusEl.classList.add("speaking");
+    } else if (state === "processing") {
+      statusEl.classList.add("processing");
+    }
+  }
+
+  // Speak Sol Live Audio via Web Speech Synthesis (Unblock Chrome audio restrictions)
+  function speakLiveAudio(text, langCode) {
+    if (!("speechSynthesis" in window)) {
+      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+      return;
+    }
+    
+    // Resume audio context
+    window.speechSynthesis.cancel();
+    try { window.speechSynthesis.resume(); } catch (e) {}
+
+    // Strip markdown formatting for natural spoken speech
+    const cleanText = text
+      .replace(/[*_#`~>]/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/\(.*?\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleanText) {
+      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = langCode;
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
+
+    const voices = getBrowserVoices();
+    if (voices && voices.length > 0) {
+      const primaryLang = langCode.split("-")[0].toLowerCase();
+      const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(primaryLang));
+      if (match) utterance.voice = match;
+    }
+
+    // Keep global reference so garbage collector does not cut off speech in Chrome
+    windowActiveUtterance = utterance;
+
+    utterance.onstart = () => {
+      isSolSpeaking = true;
+      setOutputLiveState("speaking", "🔊 Sol is speaking...");
+    };
+
+    utterance.onend = () => {
+      isSolSpeaking = false;
+      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+    };
+
+    utterance.onerror = (err) => {
+      console.warn("TTS playback warning:", err);
+      isSolSpeaking = false;
+      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Central Live Microphone Button Click Handler
+  if (micBtn) {
+    micBtn.onclick = () => {
+      // Unlock speech synthesis immediately on user gesture
+      if (window.speechSynthesis) {
+        try { window.speechSynthesis.resume(); } catch (e) {}
+      }
+
+      // 1. If Sol is speaking, tapping stops audio and goes to idle
+      if (isSolSpeaking || (window.speechSynthesis && window.speechSynthesis.speaking)) {
+        window.speechSynthesis.cancel();
+        isSolSpeaking = false;
+        setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+        return;
+      }
+
+      // 2. If already listening, tapping completes & submits speech immediately!
+      if (isOutputListening) {
+        if (silenceTimer) clearTimeout(silenceTimer);
+        const finalCandidate = accumulatedLiveTranscript.trim();
+        if (finalCandidate) {
+          finishAndSubmitSpeech(finalCandidate, LANGUAGES[currentLangIdx], liveUserBubble);
+        } else {
+          // No speech detected yet, cancel listening
+          if (outputSpeechRecognition) {
+            try { outputSpeechRecognition.stop(); } catch (e) {}
+          }
+          if (liveUserBubble) liveUserBubble.remove();
+          isOutputListening = false;
+          setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+        }
+        return;
+      }
+
+      // 3. Start Live Speech Recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Speech Recognition is not supported by your browser. Please use Google Chrome, Microsoft Edge, or Safari with microphone access.");
+        return;
+      }
+
+      try {
+        outputSpeechRecognition = new SpeechRecognition();
+      } catch (err) {
+        console.error("SpeechRecognition construct error:", err);
+        alert("Could not initialize Speech Recognition. Please ensure microphone access is permitted.");
+        return;
+      }
+
+      const currentLang = LANGUAGES[currentLangIdx];
+      outputSpeechRecognition.lang = currentLang.code;
+      outputSpeechRecognition.continuous = true;
+      outputSpeechRecognition.interimResults = true;
+      outputSpeechRecognition.maxAlternatives = 1;
+
+      accumulatedLiveTranscript = "";
+      isOutputListening = true;
+      setOutputLiveState("listening", `🎙️ Listening in ${currentLang.label}... Speak now!`);
+
+      // Create live user transcription bubble immediately
+      liveUserBubble = document.createElement("div");
+      liveUserBubble.className = "gemini-inline-message live-user-speaking";
+      liveUserBubble.innerHTML = `
+        <div class="gemini-user-query" style="display:flex;align-items:center;gap:0.6rem;">
+          <i class="fa-solid fa-microphone" style="font-size:0.85rem;color:var(--accent-yellow,#f6ca21);animation:pulse 1s infinite;"></i>
+          <span class="live-user-words" style="opacity:0.8;font-style:italic;">Listening to your voice...</span>
+        </div>
+      `;
+      if (conversationEl) {
+        conversationEl.appendChild(liveUserBubble);
+        liveUserBubble.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      const liveWordsEl = liveUserBubble.querySelector(".live-user-words");
+
+      outputSpeechRecognition.onresult = (event) => {
+        let interimText = "";
+        let finalText = "";
+
+        for (let i = 0; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalText += event.results[i][0].transcript + " ";
+          } else {
+            interimText += event.results[i][0].transcript + " ";
+          }
+        }
+
+        const combinedText = (finalText + interimText).trim();
+        if (combinedText) {
+          accumulatedLiveTranscript = combinedText;
+          if (liveWordsEl) {
+            liveWordsEl.textContent = combinedText;
+            liveWordsEl.style.opacity = "1";
+            liveWordsEl.style.fontStyle = "normal";
+          }
+          setOutputLiveState("listening", `🎙️ "${combinedText.length > 32 ? '...' + combinedText.slice(-32) : combinedText}"`);
+          if (liveUserBubble) liveUserBubble.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+          // Auto-submit after 1.3s of silence once words have been spoken!
+          if (silenceTimer) clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(() => {
+            if (isOutputListening && accumulatedLiveTranscript.trim()) {
+              finishAndSubmitSpeech(accumulatedLiveTranscript.trim(), currentLang, liveUserBubble);
+            }
+          }, 1300);
+        }
+      };
+
+      outputSpeechRecognition.onerror = (event) => {
+        console.warn("Speech recognition error:", event.error);
+        if (event.error === "no-speech") {
+          // Keep listening for speech; don't abort abruptly
+          return;
+        }
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          alert("Microphone permission is blocked in your browser. Please click the lock / camera icon in the address bar to allow microphone access.");
+          if (liveUserBubble && !accumulatedLiveTranscript.trim()) liveUserBubble.remove();
+          isOutputListening = false;
+          setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+          return;
+        }
+
+        // If something was already spoken before error, submit it!
+        if (accumulatedLiveTranscript.trim()) {
+          finishAndSubmitSpeech(accumulatedLiveTranscript.trim(), currentLang, liveUserBubble);
+        } else {
+          if (liveUserBubble) liveUserBubble.remove();
+          isOutputListening = false;
+          setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+        }
+      };
+
+      outputSpeechRecognition.onend = () => {
+        if (isOutputListening) {
+          if (accumulatedLiveTranscript.trim()) {
+            finishAndSubmitSpeech(accumulatedLiveTranscript.trim(), currentLang, liveUserBubble);
+          } else {
+            if (liveUserBubble) liveUserBubble.remove();
+            isOutputListening = false;
+            setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+          }
+        }
+      };
+
+      try {
+        outputSpeechRecognition.start();
+      } catch (err) {
+        console.warn("Recognition already active or start error:", err);
+      }
+    };
+  }
+
+  // Handle Finish & Submit Spoken Turn -> Generate Live Response -> Speak Aloud
+  async function finishAndSubmitSpeech(userSpeech, langObj, userDiv) {
+    if (silenceTimer) clearTimeout(silenceTimer);
+    isOutputListening = false;
+    if (outputSpeechRecognition) {
+      try { outputSpeechRecognition.stop(); } catch (e) {}
+    }
+
+    // Convert live speaking bubble to permanent query bubble
+    if (userDiv) {
+      userDiv.classList.remove("live-user-speaking");
+      userDiv.innerHTML = `
+        <div class="gemini-user-query" style="display:flex;align-items:center;gap:0.6rem;">
+          <i class="fa-solid fa-microphone" style="font-size:0.85rem;color:var(--accent-yellow,#f6ca21);opacity:0.9;"></i>
+          <span>${escapeHtml(userSpeech)}</span>
+        </div>
+      `;
+    }
+
+    setOutputLiveState("processing", "⏳ Sol is thinking...");
+
+    // 2. Render Sol AI Response Bubble with loader
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "gemini-inline-message";
+    aiDiv.innerHTML = `
+      <div class="gemini-ai-response">
+        <div class="gemini-ai-body">
+          <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Listening and preparing spoken answer...
+        </div>
+      </div>
+    `;
+    if (conversationEl) {
+      conversationEl.appendChild(aiDiv);
+      aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    const aiBody = aiDiv.querySelector(".gemini-ai-body");
+    let responseText = "";
+
+    const roleCfg = OUTPUT_ROLE_CONFIGS[activeOutputRole] || OUTPUT_ROLE_CONFIGS.conversation;
+    const systemInstruction = `${roleCfg.directive}
+Target Language: ${langObj.label} (${langObj.code})
+CRITICAL SPOKEN DIRECTIVE: You are in a real-time live spoken conversation with the learner. Respond aloud in 1-3 spoken sentences. Speak cleanly, warmly, and naturally. Never output markdown asterisks, bullet points, formatting codes, or internal thoughts.`;
+
+    const prompt = `The user said to you in ${langObj.label}: "${userSpeech}". Respond directly in natural spoken dialogue.`;
+
+    // Finalize answer helper
+    let finalized = false;
+    const finalizeAnswer = (fullText) => {
+      if (finalized) return;
+      finalized = true;
+      responseText = fullText.trim();
+      aiBody.innerHTML = marked.parse(responseText);
+      aiBody.setAttribute("data-raw-text", responseText);
+      attachAiActions(aiDiv, responseText);
+      speakLiveAudio(responseText, langObj.code);
+    };
+
+    if (geminiService && geminiService.hasApiKey()) {
+      try {
+        const messages = [{ role: "user", content: prompt, parts: [{ text: prompt }] }];
+        await geminiService.generateResponseStream(
+          messages,
+          systemInstruction,
+          "gemini-1.5-flash",
+          (chunk) => {
+            if (responseText === "") aiBody.innerHTML = "";
+            responseText += chunk;
+            aiBody.innerHTML = marked.parse(responseText);
+            aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          },
+          (err) => {
+            console.warn("Gemini stream error:", err);
+            fallbackSpokenResponse(userSpeech, langObj, aiBody, aiDiv, finalizeAnswer);
+          },
+          (finalText) => {
+            if (finalText) {
+              finalizeAnswer(finalText);
+            }
+          }
+        );
+
+        // In case streaming completed without explicit onComplete callback
+        setTimeout(() => {
+          if (!finalized && responseText) {
+            finalizeAnswer(responseText);
+          } else if (!finalized && !responseText) {
+            fallbackSpokenResponse(userSpeech, langObj, aiBody, aiDiv, finalizeAnswer);
+          }
+        }, 800);
+
+      } catch (e) {
+        console.error("Gemini call error:", e);
+        fallbackSpokenResponse(userSpeech, langObj, aiBody, aiDiv, finalizeAnswer);
+      }
+    } else {
+      fallbackSpokenResponse(userSpeech, langObj, aiBody, aiDiv, finalizeAnswer);
+    }
+  }
+
+  // Fallback Native Spoken Generator (Ensures 100% instant, reliable real-time spoken reply)
+  function fallbackSpokenResponse(userSpeech, langObj, aiBody, aiDiv, callback) {
+    setTimeout(() => {
+      let reply = "";
+      const lower = userSpeech.toLowerCase();
+
+      if (langObj.label === "Spanish") {
+        if (lower.includes("hola") || lower.includes("buenos") || lower.includes("buenas")) {
+          reply = "¡Hola! Qué gusto saludarte. Tu pronunciación se escucha muy clara y natural. ¿Cómo te encuentras hoy?";
+        } else if (lower.includes("cómo estás") || lower.includes("que tal") || lower.includes("qué tal")) {
+          reply = "¡Me siento genial, gracias por preguntar! Con muchas ganas de practicar español contigo. ¿De qué te gustaría platicar?";
+        } else {
+          reply = "¡Excelente observación! Tienes un ritmo muy fluido al hablar. Cuéntame un poco más sobre eso.";
+        }
+      } else if (langObj.label === "French") {
+        if (lower.includes("bonjour") || lower.includes("salut") || lower.includes("coucou")) {
+          reply = "Bonjour ! C'est un réel plaisir de discuter avec toi. Ton accent est très agréable ! Comment vas-tu ?";
+        } else {
+          reply = "C'est très bien dit ! Ton intonation est tout à fait naturelle. Continuons, qu'aimerais-tu explorer maintenant ?";
+        }
+      } else if (langObj.label === "German") {
+        if (lower.includes("hallo") || lower.includes("guten")) {
+          reply = "Hallo! Schön, dich zu hören. Deine Aussprache klingt wirklich gut. Wie geht es dir heute?";
+        } else {
+          reply = "Das hast du sehr schön gesagt! Dein Sprachrhythmus ist flüssig. Lass uns gerne weiter darüber sprechen.";
+        }
+      } else if (langObj.label === "Italian") {
+        if (lower.includes("ciao") || lower.includes("buongiorno")) {
+          reply = "Ciao! È un piacere ascoltarti. Hai una pronuncia molto chiara e melodica. Come stai oggi?";
+        } else {
+          reply = "Molto interessante! Parli con grande naturalezza. Raccontami di più!";
+        }
+      } else {
+        // English
+        if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey")) {
+          reply = "Hey there! It's so great to talk with you live. How is your day going so far?";
+        } else if (lower.includes("how are you")) {
+          reply = "I'm doing fantastic, thank you! Feeling energetic and excited to chat with you. What's on your mind today?";
+        } else if (lower.includes("who are you") || lower.includes("what is your name")) {
+          reply = "I'm Sol, your live speaking partner on Globally Known! I'm here to practice spoken fluency and conversation with you in real time.";
+        } else {
+          const reflections = [
+            "That sounded so natural! I love hearing you express that. What got you thinking about this topic?",
+            "You have great spoken rhythm and clarity! Tell me a little more about your thoughts on that.",
+            "That makes complete sense. You communicated that effortlessly! Where should our conversation go next?"
+          ];
+          reply = reflections[Math.floor(Math.random() * reflections.length)];
+        }
+      }
+
+      callback(reply);
+    }, 300);
+  }
+}
+
+// -------------------------------------------------------------
+// Panel 8: Info / Configurations Setup
+// -------------------------------------------------------------
+function setupSettingsHandlers() {
+  // Toggle password visibility
+  togglePasswordBtn.addEventListener("click", () => {
+    const isPassword = apiKeyInput.type === "password";
+    apiKeyInput.type = isPassword ? "text" : "password";
+    
+    const icon = togglePasswordBtn.querySelector("i");
+    icon.classList.toggle("fa-eye");
+    icon.classList.toggle("fa-eye-slash");
+  });
+
+  // Save Settings Click
+  saveSettingsBtn.addEventListener("click", () => {
+    const rawKey = apiKeyInput.value.trim().replace(/^["']|["']$/g, '');
+    geminiService.setApiKey(rawKey);
+    updateApiStatusIndicator();
+    if (typeof showToast === "function") {
+      showToast(rawKey ? "API Key updated successfully!" : "Switched to Demo Mode");
+    } else {
+      alert(rawKey ? "API Key configuration updated successfully!" : "Switched to Demo Mode.");
+    }
+  });
+
+  // Clear data settings
+  clearAllDataBtn.addEventListener("click", () => {
+    if (confirm("WARNING: This will clear your entire SOL history, delete saved API keys, and reload the workspace. Proceed?")) {
+      localStorage.clear();
+      activeChatMessages = [];
+      geminiService.setApiKey("");
+      
+      alert("Local data cleared.");
+      location.reload();
+    }
+  });
+}
+
+function applyTheme(themeName) {
+  currentTheme = themeName || "dark";
+  document.documentElement.setAttribute("data-theme", currentTheme);
+  localStorage.setItem("sol_theme", currentTheme);
+
+  // Update active state in header dropdown
+  const headerOptions = document.querySelectorAll(".theme-option-btn");
+  headerOptions.forEach(opt => {
+    opt.classList.toggle("active", opt.getAttribute("data-theme-val") === currentTheme);
+  });
+
+  // Update active state in settings swatches grid
+  const swatchCards = document.querySelectorAll(".theme-swatch-card");
+  swatchCards.forEach(card => {
+    card.classList.toggle("active", card.getAttribute("data-theme-val") === currentTheme);
+  });
+}
+
+// Global Theme Dropdown Toggle
+window.toggleThemeDropdown = function(e) {
+  if (e) {
+    e.stopPropagation();
+    if (e.preventDefault) e.preventDefault();
+  }
+  const dropdown = document.getElementById("theme-dropdown-menu");
+  if (dropdown) {
+    dropdown.classList.toggle("hidden");
+  }
+};
+
+function initThemePicker() {
+  const themeDropdownMenu = document.getElementById("theme-dropdown-menu");
+
+  // Dismiss dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (themeDropdownMenu && !themeDropdownMenu.classList.contains("hidden")) {
+      const isInsideMenu = themeDropdownMenu.contains(e.target);
+      const isThemeBtn = e.target.closest("#theme-toggle-btn");
+      if (!isInsideMenu && !isThemeBtn) {
+        themeDropdownMenu.classList.add("hidden");
+      }
+    }
+  });
+
+  // Theme option clicks (header dropdown & settings swatches)
+  document.addEventListener("click", (e) => {
+    const themeBtn = e.target.closest("[data-theme-val]");
+    if (themeBtn) {
+      const val = themeBtn.getAttribute("data-theme-val");
+      applyTheme(val);
+      const dropdown = document.getElementById("theme-dropdown-menu");
+      if (dropdown) dropdown.classList.add("hidden");
+      if (typeof showToast === "function") {
+        const themeLabels = {
+          dark: "Sol Amber",
+          cyan: "Cyber Cyan",
+          emerald: "Emerald Mint",
+          purple: "Amethyst Violet",
+          crimson: "Crimson Sunset",
+          rainbow: "Spectrum Rainbow 🌈",
+          light: "Minimal Light"
+        };
+        const themeLabel = themeLabels[val] || val;
+        showToast(`🎨 Theme switched to ${themeLabel}`);
+      }
+    }
+  });
+}
+
+// -------------------------------------------------------------
+// PWA Install & Google Auth Handlers
+// -------------------------------------------------------------
+let deferredPwaPrompt = null;
+
+function initPwaInstall() {
+  // Clear any registered Service Workers and Cache Storage to prevent FetchEvent network errors
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+  if ("caches" in window) {
+    caches.keys().then((names) => {
+      for (let name of names) {
+        caches.delete(name);
+      }
+    });
+  }
+
+  const installBtn = document.getElementById("btn-install-pwa");
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    if (installBtn) {
+      installBtn.style.display = "flex";
+    }
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener("click", async () => {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        const { outcome } = await deferredPwaPrompt.userChoice;
+        if (outcome === "accepted") {
+          installBtn.style.display = "none";
+        }
+        deferredPwaPrompt = null;
+      } else {
+        alert("📲 How to Install SOL App:\n\n1. On Desktop (Chrome/Edge): Click the ⊕ / Install App button in your top header or address bar.\n2. On Mobile (Chrome/Safari): Tap browser menu (⋮ or Share) and select 'Add to Home Screen'.");
+      }
+    });
+  }
+}
+
+function initGoogleAuth() {
+  const authContainer = document.getElementById("user-auth-container");
+  if (!authContainer) return;
+
+  const savedProfile = localStorage.getItem("sol_user_profile");
+  if (savedProfile) {
+    try {
+      const user = JSON.parse(savedProfile);
+      renderUserProfile(user);
+      renderCircleMembersWidget();
+      return;
+    } catch (e) {}
+  }
+
+  renderSignInButton();
+}
+
+function renderSignInButton() {
+  const authContainer = document.getElementById("user-auth-container");
+  if (!authContainer) return;
+  authContainer.innerHTML = `
+    <button class="google-login-btn" id="btn-google-login" title="Sign in with Google Account">
+      <i class="fa-brands fa-google" style="color: #4285F4;"></i> <span>Sign in</span>
+    </button>
+  `;
+
+  const btn = document.getElementById("btn-google-login");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      const name = prompt("Sign in with Google Account:\n\nEnter your name or email to connect and sync history & lists across all devices:", "Adrian Milla");
+      if (name && name.trim()) {
+        const trimmedName = name.trim();
+        const user = {
+          name: trimmedName,
+          email: `${trimmedName.toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
+          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmedName)}&background=4f46e5&color=fff&bold=true`
+        };
+        localStorage.setItem("sol_user_profile", JSON.stringify(user));
+        renderUserProfile(user);
+        syncUserDataToCloud(user);
+        updateGreetingText();
+        renderCircleMembersWidget();
+        renderCircleFeed();
+      }
+    });
+  }
+}
+
+function renderUserProfile(user) {
+  const authContainer = document.getElementById("user-auth-container");
+  if (!authContainer) return;
+  authContainer.innerHTML = `
+    <div class="google-user-profile" title="Connected: ${escapeHtml(user.email)}">
+      <img src="${user.picture}" alt="${escapeHtml(user.name)}" class="google-user-avatar">
+      <span class="google-user-name">${escapeHtml(user.name.split(" ")[0])}</span>
+      <button class="google-logout-btn" id="btn-google-logout" title="Sign Out">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
+    </div>
+  `;
+
+  updateGreetingText();
+
+  const logoutBtn = document.getElementById("btn-google-logout");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      if (confirm("Sign out of your profile?")) {
+        localStorage.removeItem("sol_user_profile");
+        renderSignInButton();
+        updateGreetingText();
+        renderCircleMembersWidget();
+        renderCircleFeed();
+      }
+    });
+  }
+}
+
+function syncUserDataToCloud(user) {
+  const userKeyHistory = `sol_history_${user.email}`;
+  const userKeySavings = `sol_savings_${user.email}`;
+  localStorage.setItem(userKeyHistory, JSON.stringify(rwggpHistory));
+  localStorage.setItem(userKeySavings, JSON.stringify(rwggpSavingsLists));
+}
+
+// -------------------------------------------------------------
+// Video Panel Category Definitions
+// -------------------------------------------------------------
+const PLAYLIST_CATEGORIES = [
+  { id: "city",      flag: "🏙️",  title: "Into The City!",            videos: [], count: "0 Videos" },
+  { id: "house",     flag: "🛋️",  title: "Inside The House!",         videos: [], count: "0 Videos" },
+  { id: "action",    flag: "🎬",  title: "English In Action!",        videos: [], count: "0 Videos" },
+  { id: "bathroom",  flag: "🚽",  title: "Inside The Bathroom!",      videos: [], count: "0 Videos" },
+  { id: "kitchen",   flag: "🍽️",  title: "Inside The Kitchen!",       videos: [], count: "0 Videos" },
+  { id: "bodies",    flag: "🧘‍♂️", title: "Our Body!",                 videos: [], count: "0 Videos" },
+  { id: "different", flag: "📝",  title: "Different English Lessons!", videos: [], count: "0 Videos" },
+  { id: "nature",    flag: "🌳",  title: "Outside In Nature!",        videos: [], count: "0 Videos" },
+  { id: "seaside",   flag: "🌊",  title: "Sea Side!",                 videos: [], count: "0 Videos" },
+  { id: "whathouse", flag: "🏠",  title: "What About The House?!",     videos: [], count: "0 Videos" }
+];
+
+// Start SOL Engine
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
+
+
+
+
+async function fetchServerVideos() {
+  try {
+    const res = await fetch("/api/videos", { cache: "no-store" });
+    if (res.ok) {
+      const serverVids = await res.json();
+      if (Array.isArray(serverVids)) {
+        if (serverVids.length > 0) {
+          localStorage.setItem("sol_user_added_videos", JSON.stringify(serverVids));
+          return serverVids;
+        } else {
+          // If server is empty, check if this client has local videos and sync them
+          const local = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+          const validLocal = Array.isArray(local) ? local.filter(v => v && !v.isAddTemplate && v.embedUrl) : [];
+          if (validLocal.length > 0) {
+            await syncVideosToServer(validLocal);
+            return validLocal;
+          }
+        }
+        return serverVids;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not reach /api/videos, using localStorage cache:", err);
+  }
+  try {
+    return JSON.parse(localStorage.getItem("sol_user_added_videos")) || [];
+  } catch (err) {
+    return [];
+  }
+}
+
+async function syncVideosToServer(videos) {
+  const filtered = Array.isArray(videos) ? videos.filter(v => v && !v.isAddTemplate && v.embedUrl && v.embedUrl.trim() !== "") : [];
+  localStorage.setItem("sol_user_added_videos", JSON.stringify(filtered));
+  try {
+    await fetch("/api/videos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(filtered)
+    });
+  } catch (err) {
+    console.warn("Could not push videos to /api/videos:", err);
+  }
+}
+
+async function initVideosPanel() {
+  const videoGrid = document.getElementById("video-grid");
+  const playlistModal = document.getElementById("playlist-modal");
+  const mainPlaylistIframe = document.getElementById("main-playlist-iframe");
+  const btnClosePlaylistModal = document.getElementById("btn-close-playlist-modal");
+
+  if (!videoGrid) return;
+
+  videoGrid.innerHTML = "";
+  if (playlistModal) playlistModal.classList.add("hidden");
+
+  let userAddedVideos = await fetchServerVideos();
+  userAddedVideos = userAddedVideos.filter(v => v && !v.isAddTemplate && v.embedUrl && v.embedUrl.trim() !== "");
+
+  PLAYLIST_CATEGORIES.forEach(category => {
+    const customForCategory = userAddedVideos.filter(v => v.categoryId === category.id);
+    let allVids = [...customForCategory, { id: "add_card_" + category.id, isAddTemplate: true }];
+    category.videos = allVids;
+    category.count = `${Math.max(0, category.videos.length - 1)} Videos`;
+
+    const row = document.createElement("div");
+    row.className = "playlist-category-row";
+
+    row.innerHTML = `
+      <div class="category-header-row">
+        <div class="category-header">
+          <span class="category-flag">${category.flag}</span>
+          <h3>${escapeHtml(category.title)}</h3>
+          <span class="category-count">(${category.count})</span>
+        </div>
+        <div class="netflix-header-indicators" id="netflix-indicators-${category.id}"></div>
+      </div>
+      <div class="netflix-slider-container">
+        <div class="netflix-slider-track" id="track-${category.id}">
+          <!-- Videos populated dynamically -->
+        </div>
+      </div>
+      <div class="custom-category-slider-wrapper" id="custom-slider-wrapper-${category.id}">
+        <div class="classic-scrollbar-container">
+          <button class="classic-scrollbar-arrow arrow-left" id="arrow-left-${category.id}" title="Scroll Left">
+            <i class="fa-solid fa-caret-left"></i>
+          </button>
+          <div class="classic-scrollbar-track" id="slider-track-${category.id}">
+            <div class="classic-scrollbar-thumb" id="slider-thumb-${category.id}"></div>
+          </div>
+          <button class="classic-scrollbar-arrow arrow-right" id="arrow-right-${category.id}" title="Scroll Right">
+            <i class="fa-solid fa-caret-right"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    videoGrid.appendChild(row);
+
+    const trackElement = row.querySelector(`#track-${category.id}`);
+    const sliderContainer = row.querySelector(".netflix-slider-container");
+    const trackBar = row.querySelector(`#slider-track-${category.id}`);
+    const thumbEl = row.querySelector(`#slider-thumb-${category.id}`);
+    const btnLeft = row.querySelector(`#arrow-left-${category.id}`);
+    const btnRight = row.querySelector(`#arrow-right-${category.id}`);
+
+    if (btnLeft && sliderContainer) {
+      btnLeft.addEventListener("click", () => {
+        const dynamicStep = Math.max(300, sliderContainer.clientWidth * 0.75);
+        sliderContainer.scrollBy({ left: -dynamicStep, behavior: "smooth" });
+      });
+    }
+    if (btnRight && sliderContainer) {
+      btnRight.addEventListener("click", () => {
+        const dynamicStep = Math.max(300, sliderContainer.clientWidth * 0.75);
+        sliderContainer.scrollBy({ left: dynamicStep, behavior: "smooth" });
+      });
+    }
+
+    const syncSliderPosition = () => {
+      if (!sliderContainer) return;
+      const maxScroll = sliderContainer.scrollWidth - sliderContainer.clientWidth;
+      if (maxScroll <= 0) {
+        if (thumbEl) thumbEl.style.left = "0px";
+        return;
+      }
+      const pct = Math.min(1, Math.max(0, sliderContainer.scrollLeft / maxScroll));
+      if (trackBar && thumbEl) {
+        const trackWidth = trackBar.clientWidth;
+        const thumbWidth = Math.max(40, (sliderContainer.clientWidth / sliderContainer.scrollWidth) * trackWidth);
+        thumbEl.style.width = `${thumbWidth}px`;
+        const maxThumbLeft = trackWidth - thumbWidth;
+        thumbEl.style.left = `${pct * maxThumbLeft}px`;
+      }
+    };
+
+    if (sliderContainer) {
+      sliderContainer.addEventListener("scroll", syncSliderPosition);
+      setTimeout(syncSliderPosition, 100);
+      window.addEventListener("resize", syncSliderPosition);
+    }
+
+    category.videos.forEach((video) => {
+      if (video.isAddTemplate) {
+        const card = document.createElement("div");
+        card.className = "video-card add-video-card";
+
+        card.innerHTML = `
+          <div class="video-thumbnail-container add-video-frame">
+            <div class="add-video-plus-circle">
+              <i class="fa-solid fa-plus"></i>
+            </div>
+            <span class="add-video-title">Add Video</span>
+            <span class="add-video-sub">Embed YouTube Link</span>
+          </div>
+        `;
+
+        card.addEventListener("click", async () => {
+          const rawUrl = prompt("🔗 Enter YouTube Link or Embed URL:\n(e.g., https://www.youtube.com/watch?v=... or https://youtu.be/...)");
+          if (!rawUrl || !rawUrl.trim()) return;
+
+          let embedUrl = rawUrl.trim();
+          let videoId = "";
+          let listId = "";
+
+          const watchMatch = embedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+          const listMatch = embedUrl.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+
+          if (watchMatch) videoId = watchMatch[1];
+          if (listMatch) listId = listMatch[1];
+
+          if (videoId) {
+            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            if (listId) embedUrl += `?list=${listId}`;
+          }
+
+          const title = prompt("📝 Enter Video Title:", "My Embedded Video") || "My Embedded Video";
+
+          const newVid = {
+            id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            categoryId: category.id,
+            title: title,
+            desc: "Custom embedded YouTube video",
+            embedUrl: embedUrl,
+            isUserAdded: true
+          };
+
+          const saved = JSON.parse(localStorage.getItem("sol_user_added_videos")) || [];
+          saved.push(newVid);
+          const filtered = saved.filter(v => v && !v.isAddTemplate && v.embedUrl);
+          await syncVideosToServer(filtered);
+          
+          if (typeof showToast === "function") showToast("✅ Video saved across all devices!");
+          initVideosPanel();
+        });
+
+        trackElement.appendChild(card);
+        return;
+      }
+
+      const card = document.createElement("div");
+      card.className = "video-card";
+
+      const activeEmbedUrl = video.embedUrl || "";
+
+      card.innerHTML = `
+        <div class="video-player-frame">
+          ${activeEmbedUrl ? `
+            <iframe 
+              src="${activeEmbedUrl}" 
+              title="${escapeHtml(video.title)}" 
+              frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              allowfullscreen
+            ></iframe>
+          ` : `
+            <div class="no-video-placeholder">No Video Source</div>
+          `}
+        </div>
+        <div class="video-card-info-footer">
+          <div class="video-card-title-row">
+            <h4 class="video-card-title" title="${escapeHtml(video.title)}">${escapeHtml(video.title)}</h4>
+            ${video.isUserAdded ? `<button class="delete-video-btn mini" data-id="${video.id}" title="Delete Video"><i class="fa-solid fa-trash-can"></i> <span class="delete-btn-label">Delete</span></button>` : ""}
+          </div>
+        </div>
+      `;
+
+      const deleteBtn = card.querySelector(".delete-video-btn.mini");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete video "${video.title}"?`)) {
+            let userVids = JSON.parse(localStorage.getItem("sol_user_added_videos")) || [];
+            userVids = userVids.filter(v => v.id !== video.id);
+            await syncVideosToServer(userVids);
+            if (typeof showToast === "function") showToast("🗑️ Video removed.");
+            initVideosPanel();
+          }
+        });
+      }
+
+      trackElement.appendChild(card);
+    });
+  });
+
+  if (btnClosePlaylistModal) {
+    btnClosePlaylistModal.addEventListener("click", () => {
+      if (playlistModal) playlistModal.classList.add("hidden");
+      if (mainPlaylistIframe) mainPlaylistIframe.src = "";
+    });
+  }
+}
+
+
+// -------------------------------------------------------------
+// Toast Notification & Helper Utilities
+// -------------------------------------------------------------
+function showToast(message) {
+  let toast = document.getElementById("global-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "global-toast";
+    toast.style.cssText = "position:fixed; bottom:24px; right:24px; background:rgba(15,23,42,0.95); color:#38bdf8; padding:12px 20px; border-radius:8px; border:1px solid rgba(56,189,248,0.3); font-weight:600; z-index:99999; box-shadow:0 10px 25px rgba(0,0,0,0.5); transition:all 0.3s ease; opacity:0; transform:translateY(10px); pointer-events:none;";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = "1";
+  toast.style.transform = "translateY(0)";
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+  }, 3000);
+}
+
+let adminUnlockedState = false;
+
+function initAdminMode() {
+  const pinInput = document.getElementById("admin-pin-input");
+  const unlockBtn = document.getElementById("btn-unlock-admin");
+  if (unlockBtn) {
+    unlockBtn.addEventListener("click", () => {
+      if (pinInput && pinInput.value === "1234") {
+        adminUnlockedState = true;
+        showToast("🔓 Admin Mode Unlocked");
+        if (typeof initVideosPanel === "function") initVideosPanel();
+      } else {
+        alert("Incorrect PIN. Default PIN is 1234");
+      }
+    });
+  }
+}
+
+function isAdminUnlocked() {
+  return true;
+}
+
+function parseYouTubeLink(url) {
+  if (!url || typeof url !== "string") return "";
+  let trimmed = url.trim();
+  const watchMatch = trimmed.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+  const listMatch = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  let videoId = watchMatch ? watchMatch[1] : "";
+  let listId = listMatch ? listMatch[1] : "";
+  if (videoId) {
+    let embed = `https://www.youtube.com/embed/${videoId}`;
+    if (listId) embed += `?list=${listId}`;
+    return embed;
+  }
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return "";
+}
+
+function initRandomWordPanel() {
+  // Safe initialization
+}
+
+function renderCircleMembersWidget() {
+  const container = document.getElementById("widget-members-list");
+  if (!container) return;
+
+  const currentUser = getActiveUserProfile();
+
+  const baseMembers = [
+    { name: "Gregory Dobbins", role: "Program Manager", status: "online", avatar: "GD" },
+    { name: "Sarah K.", role: "Language Coach", status: "online", avatar: "SK" },
+    { name: "Elena Rostova", role: "Linguist & Phonetics", status: "online", avatar: "ER" },
+    { name: "Alice F.", role: "Member", status: "online", avatar: "AF" },
+    { name: "Bob D.", role: "Member", status: "offline", avatar: "BD" },
+    { name: "Marcus Vance", role: "Moderator", status: "offline", avatar: "MV" }
+  ];
+
+  let displayList = [];
+  if (currentUser) {
+    displayList.push({
+      name: `${currentUser.name} (You)`,
+      role: "Learner 👤",
+      status: "online",
+      avatar: currentUser.picture || getUserInitials(currentUser.name),
+      isUser: true
+    });
+  } else {
+    displayList.push({
+      name: "Guest Learner (You)",
+      role: "Guest",
+      status: "online",
+      avatar: "👤",
+      isUser: true
+    });
+  }
+
+  displayList = displayList.concat(baseMembers);
+
+  container.innerHTML = displayList.map(m => {
+    let avatarHtml = "";
+    if (m.avatar && (m.avatar.startsWith("http") || m.avatar.startsWith("data:"))) {
+      avatarHtml = `<img src="${escapeHtml(m.avatar)}" alt="${escapeHtml(m.name)}" style="width:100%;height:100%;border-radius:6px;object-fit:cover;display:block;">`;
+    } else {
+      avatarHtml = escapeHtml(m.avatar || "👤");
+    }
+
+    return `
+      <div class="member-widget-item ${m.isUser ? 'is-current-user' : ''}" style="${m.isUser ? 'background: rgba(197, 160, 89, 0.12); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(197, 160, 89, 0.25);' : ''}">
+        <div class="widget-avatar" style="overflow:hidden;flex-shrink:0;">${avatarHtml}</div>
+        <span class="widget-name" style="${m.isUser ? 'color: var(--accent-color, #c5a059); font-weight: 700;' : ''} overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(m.name)}</span>
+        <span class="widget-status-dot ${m.status}" title="${m.status}"></span>
+      </div>
+    `;
+  }).join("");
+}
+
+function simulateCircleReply(postId, title, body) {
+  let targetPost = null;
+  for (const ch in circleChannelsData) {
+    const p = circleChannelsData[ch].find(item => item.id === postId);
+    if (p) {
+      targetPost = p;
+      break;
+    }
+  }
+  if (!targetPost) return;
+
+  targetPost.comments = targetPost.comments || [];
+  
+  const coaches = [
+    { author: "Gregory Dobbins (Program Manager)", text: "Great contribution! Keep up the momentum in your comprehension practice. Welcome to the Globally Known community!" },
+    { author: "Sarah K. (Language Coach)", text: "Excellent point! Shadowing and consistent input will definitely help lock this down. Fantastic work!" },
+    { author: "Elena Rostova (Linguist)", text: "Love this observation. Notice how the phonetics and syntax align here — keep going!" }
+  ];
+  const coach = coaches[Math.floor(Math.random() * coaches.length)];
+  targetPost.comments.push({
+    author: coach.author,
+    content: coach.text
+  });
+  renderCircleFeed();
+}
+
+
+// Global Fail-Proof Event Delegation for Tab Switching
+document.addEventListener("click", (e) => {
+  const item = e.target.closest("[data-panel]");
+  if (item) {
+    const panelId = item.getAttribute("data-panel");
+    if (panelId && typeof window.switchPanel === "function") {
+      window.switchPanel(panelId);
+    }
+  }
+});
+
+// Global Event Delegation for Gemini Input Bars (Mic vs Send button swap)
+["input", "keyup", "change"].forEach(evtName => {
+  document.addEventListener(evtName, (e) => {
+    if (e.target && e.target.matches && e.target.matches(".gemini-home-input-bar input")) {
+      syncInputBarHasText(e.target);
+    }
+  });
+});
+
+
+

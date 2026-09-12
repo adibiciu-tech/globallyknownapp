@@ -1,0 +1,221 @@
+/* ==========================================================================
+   DESKTOP PRESENTATION LAYER
+   Active strictly on screen widths 901px and above (Laptops, Monitors, Desktops)
+   ========================================================================== */
+
+/* 1. Desktop Workspace Panels Layout */
+.workspace-panel {
+  padding: 2rem 5% !important;
+}
+
+#panel-start-here {
+  padding: 2rem 1.5rem !important;
+  display: none;
+  align-items: center;
+  justify-content: flex-start !important;
+  height: 100%;
+}
+
+#panel-start-here.active {
+  display: flex !important;
+  flex-direction: column;
+}
+
+#panel-dictionary {
+  padding: 1.5rem 3% 3rem 3% !important;
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+#panel-videos {
+  padding: 1.2rem 2.5% !important;
+}
+
+#panel-sol-chat,
+#panel-describing-lab {
+  padding: 2rem 5% !important;
+}
+
+#panel-output-practicing {
+  padding: 0 !important;
+}
+
+/* 2. Desktop Success Path Timeline & Staggered 520px Cards */
+.success-path-container {
+  width: 100%;
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.success-path-hero {
+  max-width: 1050px;
+  margin: 0 auto 3.5rem auto;
+  text-align: center;
+  position: relative;
+  padding: 3rem 1.5rem 2.5rem 1.5rem;
+}
+
+.success-path-timeline {
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  position: relative;
+  padding: 2rem 0;
+}
+
+.success-path-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  background: linear-gradient(180deg, 
+    rgba(246, 202, 33, 0.8) 0%, 
+    rgba(0, 229, 255, 0.6) 50%, 
+    rgba(246, 202, 33, 0.8) 100%);
+  border-radius: 4px;
+  box-shadow: 0 0 16px rgba(246, 202, 33, 0.5);
+  z-index: 1;
+}
+
+.path-module-row {
+  display: flex;
+  width: 100%;
+  position: relative;
+  margin-bottom: 3.5rem;
+  align-items: center;
+}
+
+.path-module-row.left {
+  justify-content: flex-start;
+}
+
+.path-module-row.right {
+  justify-content: flex-end;
+}
+
+.path-module-card {
+  width: calc(50% - 46px);
+  max-width: 520px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 1.5rem;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  gap: 1.25rem;
+}
+
+.path-node-marker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 2px solid #f6ca21;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  box-shadow: 0 0 20px rgba(246, 202, 33, 0.4);
+}
+
+/* 3. Desktop Visual Dictionary Layout (3-Deck Side-by-Side Grid & Wide Viewer) */
+.dict-cover-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+  justify-content: center;
+  align-items: stretch;
+  padding: 2.5rem 0 3.5rem 0;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dict-cover-card {
+  width: 100%;
+  min-height: 270px;
+}
+
+.slide-image-wrapper {
+  width: 100%;
+  max-width: 1120px;
+  height: clamp(420px, 68vh, 650px);
+  aspect-ratio: 16 / 9;
+  margin: 0 auto;
+}
+
+/* 4. Desktop Sidebar & Header */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 72px;
+  min-width: 72px;
+}
+
+.chat-header {
+  padding: 0.75rem 1.5rem;
+}
+
+/* 5. Desktop Sol Chat - Remove Sol & Greeting when conversation begins */
+#panel-sol-chat.has-messages .sol-eye-icon-wrapper,
+#panel-sol-chat.has-messages .gemini-home-greeting,
+#panel-sol-chat:has(.gemini-inline-message) .sol-eye-icon-wrapper,
+#panel-sol-chat:has(.gemini-inline-message) .gemini-home-greeting,
+.gemini-home-content.has-messages .sol-eye-icon-wrapper,
+.gemini-home-content.has-messages .gemini-home-greeting,
+.gemini-home-content:has(.gemini-inline-message) .sol-eye-icon-wrapper,
+.gemini-home-content:has(.gemini-inline-message) .gemini-home-greeting {
+  display: none !important;
+}
+
+#panel-sol-chat.has-messages .gemini-home-content,
+#panel-sol-chat:has(.gemini-inline-message) .gemini-home-content,
+.gemini-home-content.has-messages,
+.gemini-home-content:has(.gemini-inline-message) {
+  justify-content: flex-start !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  padding: 1.5rem 0 !important;
+}
+
+#panel-sol-chat.has-messages .gemini-home-conversation,
+#panel-sol-chat:has(.gemini-inline-message) .gemini-home-conversation,
+.gemini-home-content.has-messages .gemini-home-conversation,
+.gemini-home-content:has(.gemini-inline-message) .gemini-home-conversation {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  max-width: 780px !important;
+  overflow-y: auto !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.5rem !important;
+  order: 1 !important;
+}
+
+#panel-sol-chat.has-messages .gemini-input-wrapper,
+#panel-sol-chat:has(.gemini-inline-message) .gemini-input-wrapper,
+.gemini-home-content.has-messages .gemini-input-wrapper,
+.gemini-home-content:has(.gemini-inline-message) .gemini-input-wrapper {
+  order: 2 !important;
+  width: 100% !important;
+  max-width: 780px !important;
+  margin-top: auto !important;
+  margin-bottom: 1rem !important;
+}

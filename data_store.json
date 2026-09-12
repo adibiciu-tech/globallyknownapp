@@ -1,0 +1,107 @@
+{
+  "videos": [
+    {
+      "id": "vid_test_123",
+      "categoryId": "city",
+      "title": "Episode 1",
+      "desc": "Custom embedded YouTube video",
+      "embedUrl": "https://www.youtube.com/embed/gCWYp2zJpB8",
+      "isUserAdded": true
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv_1789039283916",
+      "title": "Test 1",
+      "icon": "fa-comments",
+      "type": "chat",
+      "history": [
+        {
+          "role": "user",
+          "content": "test 1",
+          "parts": [
+            {
+              "text": "test 1"
+            }
+          ]
+        },
+        {
+          "role": "model",
+          "content": "Loud and clear! Test 1 successful. 😉 \n\nHow am I looking so far? Everything coming through okay on your end? Ready to dive into something real, or are we still in the calibration phase?",
+          "parts": [
+            {
+              "text": "Loud and clear! Test 1 successful. 😉 \n\nHow am I looking so far? Everything coming through okay on your end? Ready to dive into something real, or are we still in the calibration phase?"
+            }
+          ]
+        }
+      ],
+      "createdAt": 1789039283917
+    },
+    {
+      "id": "conv_1789038439511",
+      "title": "🗣️ Testing Out Conversation",
+      "icon": "fa-comments",
+      "type": "chat",
+      "history": [
+        {
+          "role": "user",
+          "content": "hello sol! How's it going?",
+          "parts": [
+            {
+              "text": "hello sol! How's it going?"
+            }
+          ]
+        },
+        {
+          "role": "model",
+          "content": "Hey Adrian! It's going great, thanks for asking. I'm feeling sharp and ready to roll. How about you? How's your day treating you so far?",
+          "parts": [
+            {
+              "text": "Hey Adrian! It's going great, thanks for asking. I'm feeling sharp and ready to roll. How about you? How's your day treating you so far?"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": "Really good! I'm whorking on this platform while at work!",
+          "parts": [
+            {
+              "text": "Really good! I'm whorking on this platform while at work!"
+            }
+          ]
+        },
+        {
+          "role": "model",
+          "content": "Haha, living life on the edge, I see! Don't let your boss catch you! 😉 \n\nI'm glad you're having a good day, though. Is it one of those \"slow\" days where you can actually sneak in a little chat, or are you just a master of multitasking?",
+          "parts": [
+            {
+              "text": "Haha, living life on the edge, I see! Don't let your boss catch you! 😉 \n\nI'm glad you're having a good day, though. Is it one of those \"slow\" days where you can actually sneak in a little chat, or are you just a master of multitasking?"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": "using this platform to make sure everything works well and if there something to fix or improve to be aware of it!",
+          "parts": [
+            {
+              "text": "using this platform to make sure everything works well and if there something to fix or improve to be aware of it!"
+            }
+          ]
+        },
+        {
+          "role": "model",
+          "content": "Ah, I see! So you're basically on a secret mission to stress-test the system. I love that energy! 🕵️‍♂️\n\nConsider me your partner-in-crime for this. If anything feels clunky, if my tone gets a bit too \"robotic,\" or if you spot any weird glitches, just call me out on it. I'm all about that continuous improvement life.\n\nIs there anything specific you're keeping an eye on right now—like how I handle complex questions or my conversational flow—or are you just throwing things at me to see how I react?",
+          "parts": [
+            {
+              "text": "Ah, I see! So you're basically on a secret mission to stress-test the system. I love that energy! 🕵️‍♂️\n\nConsider me your partner-in-crime for this. If anything feels clunky, if my tone gets a bit too \"robotic,\" or if you spot any weird glitches, just call me out on it. I'm all about that continuous improvement life.\n\nIs there anything specific you're keeping an eye on right now—like how I handle complex questions or my conversational flow—or are you just throwing things at me to see how I react?"
+            }
+          ]
+        }
+      ],
+      "createdAt": 1789038439511,
+      "isCustomNamed": true,
+      "isPinned": true
+    }
+  ],
+  "progress": {}
+}

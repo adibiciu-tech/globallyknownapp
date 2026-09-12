@@ -1,0 +1,504 @@
+/* ==========================================================================
+   MOBILE PRESENTATION LAYER
+   Active strictly on screen widths 900px and below (Smartphones, Small Tablets)
+   ========================================================================== */
+
+/* 1. Mobile Root & Global Spacing */
+html, body {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.workspace-panel {
+  padding: 1.25rem 1rem 3rem 1rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+#panel-start-here {
+  padding: 1rem 0.75rem 3.5rem 0.75rem !important;
+  align-items: stretch !important;
+}
+
+#panel-dictionary {
+  padding: 1rem 0.85rem 3.5rem 0.85rem !important;
+  width: 100% !important;
+}
+
+#panel-videos {
+  padding: 1rem 0.75rem 3rem 0.75rem !important;
+}
+
+#panel-sol-chat,
+#panel-describing-lab {
+  padding: 1.25rem 0.85rem 3rem 0.85rem !important;
+}
+
+#panel-output-practicing {
+  padding: 0 0.5rem 2rem 0.5rem !important;
+}
+
+/* 2. Mobile Drawer Navigation & Touch Header */
+.sidebar,
+.sidebar.collapsed,
+.sidebar.expanded {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 280px !important;
+  max-width: 85vw !important;
+  z-index: 9999 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.8) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background-color: #e5e5ea !important;
+  color: #121214 !important;
+  border-right: 1px solid #c7c7cc !important;
+}
+
+.sidebar.mobile-active {
+  transform: translateX(0) !important;
+}
+
+/* Ensure all sidebar contents are fully visible and readable on mobile */
+.sidebar.collapsed .brand-text,
+.sidebar .brand-text {
+  display: block !important;
+}
+
+.sidebar.collapsed .brand,
+.sidebar .brand {
+  justify-content: flex-start !important;
+}
+
+.sidebar.collapsed .nav-label,
+.sidebar .nav-label {
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.sidebar.collapsed .nav-item,
+.sidebar .nav-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0.85rem 1.15rem !important;
+  gap: 0.85rem !important;
+}
+
+.sidebar.collapsed .sidebar-divider,
+.sidebar .sidebar-divider {
+  display: block !important;
+  margin: 0.5rem 1rem !important;
+}
+
+.sidebar.collapsed .sidebar-conversations-section,
+.sidebar .sidebar-conversations-section {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.sidebar .conversation-item-actions {
+  opacity: 0.85 !important;
+}
+
+
+.sidebar.collapsed .sidebar-footer,
+.sidebar .sidebar-footer {
+  display: flex !important;
+}
+
+.sidebar.collapsed .status-text,
+.sidebar .status-text {
+  display: inline !important;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.active {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+.menu-toggle-btn {
+  display: flex !important;
+  cursor: pointer;
+}
+
+.app-container {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.chat-workspace {
+  width: 100% !important;
+  max-width: 100vw !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+}
+
+.panels-container {
+  width: 100% !important;
+  max-width: 100vw !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+}
+
+.chat-header {
+  width: 100% !important;
+  max-width: 100vw !important;
+  padding: 0.6rem 0.75rem !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+  gap: 0.5rem !important;
+}
+
+.header-left {
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
+}
+
+.current-chat-title-container {
+  min-width: 0 !important;
+}
+
+.chat-title-text {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-actions {
+  gap: 0.35rem !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Compact header buttons on mobile */
+.install-app-btn .install-text,
+.train-agent-btn .train-btn-text,
+#admin-toggle-text {
+  display: none !important;
+}
+
+#header-model-badge {
+  display: none !important;
+}
+
+.admin-toggle-btn, .install-app-btn, .sign-in-btn, .train-agent-btn, .header-btn {
+  font-size: 0.74rem !important;
+  padding: 0 0.5rem !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 3. Mobile Success Path Timeline (Single-Column Left Track & Full-Width Cards) */
+.success-path-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0.5rem 0 2rem 0 !important;
+}
+
+.success-path-hero {
+  padding: 2rem 1.25rem 1.75rem 1.25rem !important;
+  margin-bottom: 2rem !important;
+  border-radius: 18px !important;
+}
+
+.success-path-title {
+  font-size: 1.9rem !important;
+  line-height: 1.2 !important;
+}
+
+.success-path-subtitle {
+  font-size: 0.95rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.success-path-stats-row {
+  gap: 1rem !important;
+}
+
+.success-path-stat-card {
+  padding: 0.75rem 1rem !important;
+  min-width: 120px !important;
+}
+
+.success-path-timeline {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 1.5rem 0 !important;
+  position: relative;
+}
+
+.success-path-timeline::before {
+  left: 20px !important;
+  transform: none !important;
+  width: 3px !important;
+}
+
+.path-module-row {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  padding-left: 48px !important;
+  box-sizing: border-box !important;
+  margin-bottom: 2rem !important;
+  position: relative !important;
+}
+
+.path-module-row.left,
+.path-module-row.right {
+  justify-content: flex-start !important;
+}
+
+.path-module-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 1.2rem !important;
+  border-radius: 16px !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+}
+
+.module-thumb-box {
+  width: 100% !important;
+  height: 160px !important;
+  border-radius: 12px !important;
+}
+
+.path-node-marker {
+  left: 20px !important;
+  top: 1.5rem !important;
+  transform: translateX(-50%) !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 0.85rem !important;
+}
+
+/* 4. Mobile Visual Dictionary (Stacked Decks & Full-Width Viewer) */
+.dict-cover-container {
+  grid-template-columns: 1fr !important;
+  gap: 1.25rem !important;
+  padding: 1.5rem 0 !important;
+  width: 100% !important;
+}
+
+.dict-cover-card {
+  min-height: 220px !important;
+  padding: 1.5rem !important;
+  border-radius: 16px !important;
+}
+
+.dict-cover-card h2 {
+  font-size: 1.4rem !important;
+}
+
+.dict-slideshow-container {
+  gap: 1rem !important;
+}
+
+.slideshow-header {
+  flex-wrap: wrap !important;
+  gap: 0.6rem !important;
+}
+
+.slide-image-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  border-radius: 12px !important;
+}
+
+.slide-floating-nav {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 0.85rem !important;
+  opacity: 0.7 !important;
+}
+
+.slide-floating-nav.next {
+  right: 0.5rem !important;
+}
+
+.slide-floating-nav.prev {
+  left: 0.5rem !important;
+}
+
+/* 5. Mobile Video Library & Touch Carousels */
+.video-grid {
+  grid-template-columns: 1fr !important;
+  gap: 1.25rem !important;
+}
+
+.netflix-slider-track .video-card {
+  flex: 0 0 85vw !important;
+}
+
+/* 6. Mobile Sol Chat & Describing Lab */
+#panel-sol-chat {
+  padding: 0.75rem 0.85rem 0.85rem 0.85rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#panel-sol-chat .gemini-home-content {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin: 0 auto !important;
+  padding: 0.5rem 0 0.25rem 0 !important;
+  box-sizing: border-box !important;
+}
+
+#panel-sol-chat .sol-eye-icon-wrapper {
+  order: 1 !important;
+  margin-top: auto !important;
+  margin-bottom: 0.85rem !important;
+  width: 130px !important;
+  height: 140px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  transition: all 0.3s ease !important;
+}
+
+#panel-sol-chat .gemini-home-greeting {
+  order: 2 !important;
+  font-size: 1.75rem !important;
+  line-height: 1.25 !important;
+  margin-bottom: auto !important;
+  padding: 0 0.5rem !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Hide empty conversation so Sol and greeting center vertically */
+#panel-sol-chat .gemini-home-conversation:empty {
+  display: none !important;
+}
+
+#panel-sol-chat .gemini-home-conversation {
+  order: 3 !important;
+  width: 100% !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  margin: 0.5rem 0 !important;
+  padding: 0 0.25rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.85rem !important;
+}
+
+#panel-sol-chat .gemini-input-wrapper {
+  order: 4 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.5rem !important;
+  position: relative !important;
+  z-index: 50 !important;
+  flex-shrink: 0 !important;
+}
+
+#panel-sol-chat .gemini-home-input-bar {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 54px !important;
+  padding: 0 0.6rem !important;
+  gap: 0.45rem !important;
+  box-sizing: border-box !important;
+  border-radius: 28px !important;
+}
+
+#panel-sol-chat .gemini-home-input-bar input {
+  min-width: 0 !important;
+  font-size: 0.95rem !important;
+}
+
+#panel-sol-chat .gemini-home-model-selector {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.76rem !important;
+  flex-shrink: 0 !important;
+}
+
+#panel-sol-chat .gemini-bar-icon-btn {
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 1rem !important;
+  flex-shrink: 0 !important;
+}
+
+#panel-sol-chat .gemini-home-glow-bg {
+  width: 260px !important;
+  height: 90px !important;
+}
+
+/* When conversation starts with messages, make Sol and greeting disappear */
+#panel-sol-chat.has-messages .sol-eye-icon-wrapper,
+#panel-sol-chat.has-messages .gemini-home-greeting,
+#panel-sol-chat:has(.gemini-inline-message) .sol-eye-icon-wrapper,
+#panel-sol-chat:has(.gemini-inline-message) .gemini-home-greeting,
+#panel-sol-chat .gemini-home-content.has-messages .sol-eye-icon-wrapper,
+#panel-sol-chat .gemini-home-content.has-messages .gemini-home-greeting,
+#panel-sol-chat .gemini-home-content:has(.gemini-inline-message) .sol-eye-icon-wrapper,
+#panel-sol-chat .gemini-home-content:has(.gemini-inline-message) .gemini-home-greeting {
+  display: none !important;
+}
+
+#panel-sol-chat.has-messages .gemini-home-conversation,
+#panel-sol-chat:has(.gemini-inline-message) .gemini-home-conversation,
+#panel-sol-chat .gemini-home-content.has-messages .gemini-home-conversation,
+#panel-sol-chat .gemini-home-content:has(.gemini-inline-message) .gemini-home-conversation {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 0.75rem 0.25rem 0.5rem 0.25rem !important;
+  margin: 0 !important;
+  order: 1 !important;
+}
+
+#panel-sol-chat.has-messages .gemini-input-wrapper,
+#panel-sol-chat:has(.gemini-inline-message) .gemini-input-wrapper,
+#panel-sol-chat .gemini-home-content.has-messages .gemini-input-wrapper,
+#panel-sol-chat .gemini-home-content:has(.gemini-inline-message) .gemini-input-wrapper {
+  order: 2 !important;
+  margin-top: auto !important;
+  margin-bottom: 0.5rem !important;
+}
