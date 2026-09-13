@@ -1649,6 +1649,20 @@
     </div>
   </div>
 
+  <!-- Synchronous pre-paint check: if authenticated, hide modal instantly before first paint (prevents 1ms flash) -->
+  <script>
+    (function() {
+      try {
+        var token = localStorage.getItem("sol_auth_token");
+        var profile = localStorage.getItem("sol_user_profile");
+        if (token && profile) {
+          var m = document.getElementById("auth-modal");
+          if (m) m.classList.add("hidden");
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Service Worker Registration for PWA Installation (Desktop & Mobile) -->
   <script>
     if ("serviceWorker" in navigator) {
@@ -1669,6 +1683,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35023"></script>
+  <script type="module" src="app.js?v=35024"></script>
 </body>
 </html>

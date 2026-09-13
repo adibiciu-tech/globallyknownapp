@@ -3902,11 +3902,16 @@ function initAuthSystem() {
     btnGoogleModal.addEventListener("click", handleGoogleSignIn);
   }
 
+  // Clear any legacy persistent guest flag from sessionStorage
+  try {
+    sessionStorage.removeItem("sol_guest_mode");
+  } catch (e) {}
+
   // Continue as Guest button
   const btnContinueGuest = document.getElementById("btn-continue-guest");
   if (btnContinueGuest) {
     btnContinueGuest.addEventListener("click", () => {
-      sessionStorage.setItem("sol_guest_mode", "true");
+      window.solGuestMode = true;
       if (authModal) authModal.classList.add("hidden");
       renderGuestProfile();
       if (typeof showToast === "function") {
@@ -3921,9 +3926,11 @@ function initAuthSystem() {
 
 function checkActiveSession() {
   const authModal = document.getElementById("auth-modal");
+  const savedToken = localStorage.getItem("sol_auth_token");
   const savedProfile = localStorage.getItem("sol_user_profile");
 
-  if (savedProfile) {
+  // Only consider authenticated if BOTH an auth token and user profile exist
+  if (savedToken && savedProfile) {
     try {
       const user = JSON.parse(savedProfile);
       if (user && user.email) {
@@ -3932,18 +3939,20 @@ function checkActiveSession() {
         renderCircleMembersWidget();
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      localStorage.removeItem("sol_user_profile");
+      localStorage.removeItem("sol_auth_token");
+    }
   }
 
-  // Check Guest Mode in current session
-  const isGuest = sessionStorage.getItem("sol_guest_mode") === "true";
-  if (isGuest) {
+  // Check in-memory Guest Mode in current browsing session
+  if (window.solGuestMode === true) {
     if (authModal) authModal.classList.add("hidden");
     renderGuestProfile();
     return;
   }
 
-  // Mandatory: if no active profile and not guest, show Auth Modal
+  // Mandatory: if no active authenticated session and not guest, KEEP Auth Modal open
   if (authModal) {
     authModal.classList.remove("hidden");
   }
@@ -3964,6 +3973,7 @@ function renderGuestProfile() {
   const btnSignIn = document.getElementById("btn-guest-sign-in");
   if (btnSignIn) {
     btnSignIn.addEventListener("click", () => {
+      window.solGuestMode = false;
       const authModal = document.getElementById("auth-modal");
       if (authModal) authModal.classList.remove("hidden");
     });
@@ -3971,7 +3981,10 @@ function renderGuestProfile() {
 }
 
 function loginUserSuccess(user, token, isNew = false) {
-  sessionStorage.removeItem("sol_guest_mode");
+  window.solGuestMode = false;
+  try {
+    sessionStorage.removeItem("sol_guest_mode");
+  } catch (e) {}
   if (token) localStorage.setItem("sol_auth_token", token);
   localStorage.setItem("sol_user_profile", JSON.stringify(user));
 
@@ -4067,6 +4080,8 @@ function renderUserProfile(user) {
       if (confirm("Sign out of your account?")) {
         localStorage.removeItem("sol_user_profile");
         localStorage.removeItem("sol_auth_token");
+        try { sessionStorage.removeItem("sol_guest_mode"); } catch(e) {}
+        window.solGuestMode = false;
         checkActiveSession();
         updateGreetingText();
         renderCircleMembersWidget();
