@@ -3902,6 +3902,19 @@ function initAuthSystem() {
     btnGoogleModal.addEventListener("click", handleGoogleSignIn);
   }
 
+  // Continue as Guest button
+  const btnContinueGuest = document.getElementById("btn-continue-guest");
+  if (btnContinueGuest) {
+    btnContinueGuest.addEventListener("click", () => {
+      sessionStorage.setItem("sol_guest_mode", "true");
+      if (authModal) authModal.classList.add("hidden");
+      renderGuestProfile();
+      if (typeof showToast === "function") {
+        showToast("🧭 Browsing in Guest Preview mode. Sign in anytime!");
+      }
+    });
+  }
+
   // Check saved session
   checkActiveSession();
 }
@@ -3922,14 +3935,43 @@ function checkActiveSession() {
     } catch (e) {}
   }
 
-  // Mandatory: if no active profile, show Auth Modal
+  // Check Guest Mode in current session
+  const isGuest = sessionStorage.getItem("sol_guest_mode") === "true";
+  if (isGuest) {
+    if (authModal) authModal.classList.add("hidden");
+    renderGuestProfile();
+    return;
+  }
+
+  // Mandatory: if no active profile and not guest, show Auth Modal
   if (authModal) {
     authModal.classList.remove("hidden");
   }
   renderSignInButton();
 }
 
+function renderGuestProfile() {
+  const authContainer = document.getElementById("user-auth-container");
+  if (!authContainer) return;
+  authContainer.innerHTML = `
+    <div class="guest-user-chip" id="guest-profile-chip" title="Browsing in Guest Preview Mode">
+      <i class="fa-solid fa-compass" style="color:var(--accent-color, #4f46e5);"></i>
+      <span>Guest</span>
+      <button type="button" class="header-login-prompt-btn" id="btn-guest-sign-in" title="Sign In or Create Account">Sign In</button>
+    </div>
+  `;
+
+  const btnSignIn = document.getElementById("btn-guest-sign-in");
+  if (btnSignIn) {
+    btnSignIn.addEventListener("click", () => {
+      const authModal = document.getElementById("auth-modal");
+      if (authModal) authModal.classList.remove("hidden");
+    });
+  }
+}
+
 function loginUserSuccess(user, token, isNew = false) {
+  sessionStorage.removeItem("sol_guest_mode");
   if (token) localStorage.setItem("sol_auth_token", token);
   localStorage.setItem("sol_user_profile", JSON.stringify(user));
 
