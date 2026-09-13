@@ -25,7 +25,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=35034">
+  <link rel="stylesheet" href="styles.css?v=35035">
   <link rel="stylesheet" href="desktop.css?v=1004" media="(min-width: 901px)">
   <link rel="stylesheet" href="mobile.css?v=1011" media="(max-width: 900px)">
   <!-- CodeMirror CSS for Code Editor -->
@@ -1528,6 +1528,119 @@
     </div>
   </div>
 
+  <!-- Mandatory Authentication Modal -->
+  <div class="auth-modal-backdrop" id="auth-modal">
+    <div class="auth-modal-card">
+      <div class="auth-modal-header">
+        <div class="auth-logo-badge">
+          <img src="logo_transparent.png" alt="Globally Known" class="auth-logo-img">
+        </div>
+        <h2 class="auth-brand-title">Globally Known</h2>
+        <p class="auth-brand-subtitle">Master English with Sol & Comprehensible Input</p>
+      </div>
+
+      <!-- Auth Tabs: Sign In / Create Account -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab-btn active" id="tab-btn-login">Sign In</button>
+        <button type="button" class="auth-tab-btn" id="tab-btn-register">Create Account</button>
+      </div>
+
+      <!-- Error / Success Alert Box -->
+      <div class="auth-alert hidden" id="auth-alert"></div>
+
+      <!-- One-Click Google Auth -->
+      <div class="auth-google-wrapper">
+        <button type="button" class="google-oauth-btn" id="btn-modal-google-login">
+          <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </div>
+
+      <div class="auth-divider">
+        <span>or continue with email</span>
+      </div>
+
+      <!-- Sign In Form -->
+      <form class="auth-form" id="form-auth-login">
+        <div class="auth-field-group">
+          <label for="login-email">Email Address</label>
+          <div class="auth-input-wrapper">
+            <i class="fa-solid fa-envelope auth-field-icon"></i>
+            <input type="email" id="login-email" placeholder="name@example.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="auth-field-group">
+          <label for="login-password">Password</label>
+          <div class="auth-input-wrapper">
+            <i class="fa-solid fa-lock auth-field-icon"></i>
+            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="auth-toggle-pwd" data-target="login-password" title="Show/Hide Password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="auth-submit-btn" id="btn-submit-login">
+          <span class="btn-text">Sign In</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <!-- Create Account Form -->
+      <form class="auth-form hidden" id="form-auth-register">
+        <div class="auth-field-group">
+          <label for="register-name">Full Name</label>
+          <div class="auth-input-wrapper">
+            <i class="fa-solid fa-user auth-field-icon"></i>
+            <input type="text" id="register-name" placeholder="Adrian Milla" required autocomplete="name">
+          </div>
+        </div>
+
+        <div class="auth-field-group">
+          <label for="register-email">Email Address</label>
+          <div class="auth-input-wrapper">
+            <i class="fa-solid fa-envelope auth-field-icon"></i>
+            <input type="email" id="register-email" placeholder="name@example.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="auth-field-group">
+          <label for="register-password">Password (min 6 characters)</label>
+          <div class="auth-input-wrapper">
+            <i class="fa-solid fa-lock auth-field-icon"></i>
+            <input type="password" id="register-password" placeholder="At least 6 characters" minlength="6" required autocomplete="new-password">
+            <button type="button" class="auth-toggle-pwd" data-target="register-password" title="Show/Hide Password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-field-group">
+          <label for="register-confirm-password">Confirm Password</label>
+          <div class="auth-input-wrapper">
+            <i class="fa-solid fa-shield-halved auth-field-icon"></i>
+            <input type="password" id="register-confirm-password" placeholder="Confirm your password" minlength="6" required autocomplete="new-password">
+          </div>
+        </div>
+
+        <button type="submit" class="auth-submit-btn" id="btn-submit-register">
+          <span class="btn-text">Create Free Account</span>
+          <i class="fa-solid fa-user-plus"></i>
+        </button>
+      </form>
+
+      <div class="auth-footer-notice">
+        <i class="fa-solid fa-lock"></i> Secure & private. Syncs across desktop & mobile.
+      </div>
+    </div>
+  </div>
+
   <!-- Service Worker Registration for PWA Installation (Desktop & Mobile) -->
   <script>
     if ("serviceWorker" in navigator) {
@@ -1548,6 +1661,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35022"></script>
+  <script type="module" src="app.js?v=35023"></script>
 </body>
 </html>

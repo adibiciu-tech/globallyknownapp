@@ -103,5 +103,25 @@
       "isPinned": true
     }
   ],
-  "progress": {}
+  "progress": {},
+  "users": [
+    {
+      "id": "usr_a2942620730e",
+      "name": "Adrian Milla",
+      "email": "adrian@globallyknown.app",
+      "passwordHash": "b8c65992dcfcb0e25093b834c4472a9a:a35fa381b64b0685e431241cbfa144578ddebb081761813db102f1443cbbe384",
+      "picture": "https://ui-avatars.com/api/?name=Adrian%20Milla&background=4f46e5&color=fff&bold=true",
+      "role": "free",
+      "createdAt": 1789288148262
+    },
+    {
+      "id": "usr_g_7ab895a45a",
+      "name": "Adrian Google",
+      "email": "adrian.google@gmail.com",
+      "picture": "https://ui-avatars.com/api/?name=Adrian%20Google&background=4285F4&color=fff&bold=true",
+      "role": "free",
+      "authProvider": "google",
+      "createdAt": 1789288194046
+    }
+  ]
 }

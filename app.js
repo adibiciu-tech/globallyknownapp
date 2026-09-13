@@ -3712,49 +3712,257 @@ function initPwaInstall() {
 }
 
 function initGoogleAuth() {
-  const authContainer = document.getElementById("user-auth-container");
-  if (!authContainer) return;
+  initAuthSystem();
+}
 
+function initAuthSystem() {
+  const authModal = document.getElementById("auth-modal");
+  const tabLogin = document.getElementById("tab-btn-login");
+  const tabRegister = document.getElementById("tab-btn-register");
+  const formLogin = document.getElementById("form-auth-login");
+  const formRegister = document.getElementById("form-auth-register");
+  const alertBox = document.getElementById("auth-alert");
+  const btnGoogleModal = document.getElementById("btn-modal-google-login");
+
+  const showAlert = (msg, type = "error") => {
+    if (!alertBox) return;
+    alertBox.className = `auth-alert ${type}`;
+    alertBox.innerHTML = `${type === "error" ? '<i class="fa-solid fa-circle-exclamation"></i>' : '<i class="fa-solid fa-circle-check"></i>'} <span>${escapeHtml(msg)}</span>`;
+    alertBox.classList.remove("hidden");
+  };
+
+  const hideAlert = () => {
+    if (alertBox) alertBox.classList.add("hidden");
+  };
+
+  // Tab Switching
+  if (tabLogin && tabRegister && formLogin && formRegister) {
+    tabLogin.addEventListener("click", () => {
+      tabLogin.classList.add("active");
+      tabRegister.classList.remove("active");
+      formLogin.classList.remove("hidden");
+      formRegister.classList.add("hidden");
+      hideAlert();
+    });
+
+    tabRegister.addEventListener("click", () => {
+      tabRegister.classList.add("active");
+      tabLogin.classList.remove("active");
+      formRegister.classList.remove("hidden");
+      formLogin.classList.add("hidden");
+      hideAlert();
+    });
+  }
+
+  // Show/Hide Password Toggles
+  document.querySelectorAll(".auth-toggle-pwd").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.getAttribute("data-target");
+      const input = document.getElementById(targetId);
+      if (input) {
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        btn.innerHTML = isPassword ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+      }
+    });
+  });
+
+  // Login Form Submission
+  if (formLogin) {
+    formLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideAlert();
+      const email = document.getElementById("login-email")?.value.trim();
+      const password = document.getElementById("login-password")?.value;
+      const submitBtn = document.getElementById("btn-submit-login");
+
+      if (!email || !password) {
+        showAlert("Please enter your email and password.");
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Signing in...</span>`;
+      }
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Login failed. Please try again.");
+        }
+
+        loginUserSuccess(data.user, data.token);
+      } catch (err) {
+        showAlert(err.message || "Invalid credentials.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span class="btn-text">Sign In</span> <i class="fa-solid fa-arrow-right"></i>`;
+        }
+      }
+    });
+  }
+
+  // Register Form Submission
+  if (formRegister) {
+    formRegister.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideAlert();
+      const name = document.getElementById("register-name")?.value.trim();
+      const email = document.getElementById("register-email")?.value.trim();
+      const password = document.getElementById("register-password")?.value;
+      const confirmPassword = document.getElementById("register-confirm-password")?.value;
+      const submitBtn = document.getElementById("btn-submit-register");
+
+      if (!name || !email || !password) {
+        showAlert("Please fill in all required fields.");
+        return;
+      }
+      if (password.length < 6) {
+        showAlert("Password must be at least 6 characters.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        showAlert("Passwords do not match.");
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Creating account...</span>`;
+      }
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Could not create account.");
+        }
+
+        loginUserSuccess(data.user, data.token, true);
+      } catch (err) {
+        showAlert(err.message || "Could not create account.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span class="btn-text">Create Free Account</span> <i class="fa-solid fa-user-plus"></i>`;
+        }
+      }
+    });
+  }
+
+  // Google Sign-In button
+  const handleGoogleSignIn = async () => {
+    hideAlert();
+    const defaultName = "Adrian Milla";
+    const name = prompt("Continue with Google:\n\nEnter your name or Google email to connect:", defaultName);
+    if (!name || !name.trim()) return;
+
+    const trimmed = name.trim();
+    const email = trimmed.includes("@") ? trimmed : `${trimmed.toLowerCase().replace(/\s+/g, ".")}@gmail.com`;
+
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmed,
+          email: email,
+          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmed)}&background=4285F4&color=fff&bold=true`
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        loginUserSuccess(data.user, data.token);
+      } else {
+        throw new Error(data.error || "Google sign-in failed.");
+      }
+    } catch (err) {
+      const localUser = {
+        name: trimmed,
+        email: email,
+        picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmed)}&background=4285F4&color=fff&bold=true`,
+        role: "free"
+      };
+      loginUserSuccess(localUser, "tok_local");
+    }
+  };
+
+  if (btnGoogleModal) {
+    btnGoogleModal.addEventListener("click", handleGoogleSignIn);
+  }
+
+  // Check saved session
+  checkActiveSession();
+}
+
+function checkActiveSession() {
+  const authModal = document.getElementById("auth-modal");
   const savedProfile = localStorage.getItem("sol_user_profile");
+
   if (savedProfile) {
     try {
       const user = JSON.parse(savedProfile);
-      renderUserProfile(user);
-      renderCircleMembersWidget();
-      return;
+      if (user && user.email) {
+        if (authModal) authModal.classList.add("hidden");
+        renderUserProfile(user);
+        renderCircleMembersWidget();
+        return;
+      }
     } catch (e) {}
   }
 
+  // Mandatory: if no active profile, show Auth Modal
+  if (authModal) {
+    authModal.classList.remove("hidden");
+  }
   renderSignInButton();
+}
+
+function loginUserSuccess(user, token, isNew = false) {
+  if (token) localStorage.setItem("sol_auth_token", token);
+  localStorage.setItem("sol_user_profile", JSON.stringify(user));
+
+  const authModal = document.getElementById("auth-modal");
+  if (authModal) {
+    authModal.classList.add("hidden");
+  }
+
+  renderUserProfile(user);
+  syncUserDataToCloud(user);
+  updateGreetingText();
+  renderCircleMembersWidget();
+  renderCircleFeed();
+
+  if (typeof showToast === "function") {
+    showToast(isNew ? `🎉 Welcome to Globally Known, ${user.name.split(" ")[0]}!` : `👋 Welcome back, ${user.name.split(" ")[0]}!`);
+  }
 }
 
 function renderSignInButton() {
   const authContainer = document.getElementById("user-auth-container");
   if (!authContainer) return;
   authContainer.innerHTML = `
-    <button class="google-login-btn" id="btn-google-login" title="Sign in with Google Account">
-      <i class="fa-brands fa-google" style="color: #4285F4;"></i> <span>Sign in</span>
+    <button class="google-login-btn" id="btn-google-login" title="Sign In / Create Account">
+      <i class="fa-solid fa-arrow-right-to-bracket"></i> <span>Sign In</span>
     </button>
   `;
 
   const btn = document.getElementById("btn-google-login");
   if (btn) {
     btn.addEventListener("click", () => {
-      const name = prompt("Sign in with Google Account:\n\nEnter your name or email to connect and sync history & lists across all devices:", "Adrian Milla");
-      if (name && name.trim()) {
-        const trimmedName = name.trim();
-        const user = {
-          name: trimmedName,
-          email: `${trimmedName.toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
-          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmedName)}&background=4f46e5&color=fff&bold=true`
-        };
-        localStorage.setItem("sol_user_profile", JSON.stringify(user));
-        renderUserProfile(user);
-        syncUserDataToCloud(user);
-        updateGreetingText();
-        renderCircleMembersWidget();
-        renderCircleFeed();
-      }
+      const authModal = document.getElementById("auth-modal");
+      if (authModal) authModal.classList.remove("hidden");
     });
   }
 }
@@ -3762,24 +3970,62 @@ function renderSignInButton() {
 function renderUserProfile(user) {
   const authContainer = document.getElementById("user-auth-container");
   if (!authContainer) return;
+
+  const firstName = escapeHtml((user.name || "User").split(" ")[0]);
+  const roleLabel = user.role === "premium" ? "🌟 Premium" : "Free Member";
+  const avatarUrl = user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "U")}&background=4f46e5&color=fff&bold=true`;
+
   authContainer.innerHTML = `
-    <div class="google-user-profile" title="Connected: ${escapeHtml(user.email)}">
-      <img src="${user.picture}" alt="${escapeHtml(user.name)}" class="google-user-avatar">
-      <span class="google-user-name">${escapeHtml(user.name.split(" ")[0])}</span>
-      <button class="google-logout-btn" id="btn-google-logout" title="Sign Out">
-        <i class="fa-solid fa-right-from-bracket"></i>
-      </button>
+    <div class="google-user-profile" id="user-profile-chip" title="Account: ${escapeHtml(user.email || "")}">
+      <img src="${avatarUrl}" alt="${escapeHtml(user.name || "")}" class="google-user-avatar">
+      <span class="google-user-name">${firstName}</span>
+      <span class="user-profile-badge">${roleLabel}</span>
+      <i class="fa-solid fa-chevron-down" style="font-size:0.65rem; color:#94a3b8; margin-left:2px;"></i>
+
+      <!-- Profile Dropdown Menu -->
+      <div class="user-profile-dropdown hidden" id="user-profile-dropdown">
+        <div class="dropdown-user-header">
+          <span class="dropdown-user-name">${escapeHtml(user.name || "")}</span>
+          <span class="dropdown-user-email">${escapeHtml(user.email || "")}</span>
+        </div>
+        <button type="button" class="dropdown-item" id="dropdown-status-btn">
+          <i class="fa-solid fa-crown" style="color:#eab308;"></i>
+          <span>Plan: <strong>${roleLabel}</strong></span>
+        </button>
+        <button type="button" class="dropdown-item danger" id="btn-user-logout">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
     </div>
   `;
 
   updateGreetingText();
 
-  const logoutBtn = document.getElementById("btn-google-logout");
+  const chip = document.getElementById("user-profile-chip");
+  const dropdown = document.getElementById("user-profile-dropdown");
+  const logoutBtn = document.getElementById("btn-user-logout");
+
+  if (chip && dropdown) {
+    chip.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!chip.contains(e.target)) {
+        dropdown.classList.add("hidden");
+      }
+    });
+  }
+
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      if (confirm("Sign out of your profile?")) {
+    logoutBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (confirm("Sign out of your account?")) {
         localStorage.removeItem("sol_user_profile");
-        renderSignInButton();
+        localStorage.removeItem("sol_auth_token");
+        checkActiveSession();
         updateGreetingText();
         renderCircleMembersWidget();
         renderCircleFeed();
