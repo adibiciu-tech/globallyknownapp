@@ -84,6 +84,26 @@ const VIDEOS_LIBRARY = [
 ];
 
 // -------------------------------------------------------------
+// Random Word Generator With Guided Pronunciation (RWGGP) State
+// -------------------------------------------------------------
+let rwggpWords = [];
+let rwggpCategories = [];
+let rwggpSavingLists = [];
+let rwggpHistory = [];
+let rwggpActiveWord = null;
+let rwggpSaveTargetWord = null;
+
+// Global Metronome State
+let metAudioCtx = null;
+let metIsPlaying = false;
+let metBpm = 120;
+let metTimeSig = { beats: 4, noteValue: 4 };
+let metSound = "click";
+let metNextNoteTime = 0;
+let metCurrentBeat = 0;
+let metTimerId = null;
+
+// -------------------------------------------------------------
 // Simulated Community Board Data
 // -------------------------------------------------------------
 let communityPosts = [
@@ -1711,6 +1731,8 @@ window.switchPanel = function(panelId) {
     if (typeof initVideosPanel === "function") initVideosPanel();
   } else if (panelId === "output-practicing") {
     if (typeof initOutputPracticingPanel === "function") initOutputPracticingPanel();
+  } else if (panelId === "random-word") {
+    if (typeof initRandomWordPanel === "function") initRandomWordPanel();
   } else if (panelId === "sol-chat") {
     const homeInput = document.getElementById("gemini-home-input");
     if (homeInput) setTimeout(() => homeInput.focus(), 60);
@@ -4095,7 +4117,7 @@ function syncUserDataToCloud(user) {
   const userKeyHistory = `sol_history_${user.email}`;
   const userKeySavings = `sol_savings_${user.email}`;
   localStorage.setItem(userKeyHistory, JSON.stringify(rwggpHistory));
-  localStorage.setItem(userKeySavings, JSON.stringify(rwggpSavingsLists));
+  localStorage.setItem(userKeySavings, JSON.stringify(rwggpSavingLists));
 }
 
 // -------------------------------------------------------------
@@ -4439,8 +4461,943 @@ function parseYouTubeLink(url) {
   return "";
 }
 
+// =============================================================
+// Panel 3: Random Word Generator With Guided Pronunciation
+// =============================================================
+
+const MET_TEMPO_PRESETS = [
+  { bpm: 40, name: "Grave" },
+  { bpm: 46, name: "Largo" },
+  { bpm: 52, name: "Lento" },
+  { bpm: 56, name: "Larghetto" },
+  { bpm: 60, name: "Adagio" },
+  { bpm: 66, name: "Adagietto" },
+  { bpm: 72, name: "Andante" },
+  { bpm: 80, name: "Andantino" },
+  { bpm: 88, name: "Maestoso" },
+  { bpm: 96, name: "Moderato" },
+  { bpm: 108, name: "Allegretto" },
+  { bpm: 120, name: "Animato" },
+  { bpm: 132, name: "Allegro" },
+  { bpm: 160, name: "Vivace" },
+  { bpm: 184, name: "Presto" },
+  { bpm: 192, name: "Vivacissimo" },
+  { bpm: 208, name: "Prestissimo" }
+];
+
+function getMetTempoName(bpm) {
+  let closest = MET_TEMPO_PRESETS[0];
+  let minDiff = Math.abs(bpm - MET_TEMPO_PRESETS[0].bpm);
+  for (const p of MET_TEMPO_PRESETS) {
+    const diff = Math.abs(bpm - p.bpm);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = p;
+    }
+  }
+  return closest.name;
+}
+
 function initRandomWordPanel() {
-  // Safe initialization
+  const panel = document.getElementById("panel-random-word");
+  if (!panel) return;
+  if (panel.dataset.initialized) {
+    if (!rwggpWords.length) loadRwggpData();
+    return;
+  }
+  panel.dataset.initialized = "true";
+
+  // 1. Load Data (Categories, Words, and Saved Lists)
+  loadRwggpData();
+
+  // 2. Setup Generate & Analyze Buttons
+  const btnGenerate = document.getElementById("btn-generate-random-word");
+  if (btnGenerate) {
+    btnGenerate.addEventListener("click", () => generateRandomWord());
+  }
+
+  const formAnalyze = document.getElementById("rwggp-analyze-form");
+  const inputAnalyze = document.getElementById("rwggp-analyze-input");
+  if (formAnalyze && inputAnalyze) {
+    formAnalyze.addEventListener("submit", (e) => {
+      e.preventDefault();
+      analyzeWordQuery(inputAnalyze.value.trim());
+    });
+  }
+
+  // 3. Audio pronunciation on active word
+  const btnListen = document.getElementById("btn-listen-pronunciation");
+  if (btnListen) {
+    btnListen.addEventListener("click", () => {
+      if (rwggpActiveWord) speakRwggpWord(rwggpActiveWord.word);
+    });
+  }
+
+  // 4. Bookmark save button on active word
+  const btnSaveActive = document.getElementById("btn-save-current-word");
+  if (btnSaveActive) {
+    btnSaveActive.addEventListener("click", () => {
+      if (rwggpActiveWord) openSaveWordModal(rwggpActiveWord);
+    });
+  }
+
+  // 5. Category Name click on active word -> Open Category Words Modal
+  const catNameEl = document.getElementById("rwggp-category-name");
+  if (catNameEl) {
+    catNameEl.addEventListener("click", () => {
+      if (rwggpActiveWord && rwggpActiveWord.colorCategory) {
+        openCategoryWordsModal(rwggpActiveWord.colorCategory);
+      }
+    });
+  }
+
+  // 6. Clear History Button
+  const btnClearHistory = document.getElementById("btn-clear-history");
+  if (btnClearHistory) {
+    btnClearHistory.addEventListener("click", () => {
+      rwggpHistory = [];
+      try { localStorage.removeItem("sol_rwggp_history"); } catch(e) {}
+      renderRwggpHistory();
+    });
+  }
+
+  // 7. Savings Trigger New List
+  const btnCreateListTrigger = document.getElementById("btn-create-saving-list-trigger");
+  if (btnCreateListTrigger) {
+    btnCreateListTrigger.addEventListener("click", () => {
+      const name = prompt("Enter new list name (e.g. Challenging Sounds):");
+      if (name && name.trim()) {
+        createNewSavingList(name.trim());
+      }
+    });
+  }
+
+  // 8. Setup Metronome UI and controls
+  setupMetronomeControls();
+
+  // 9. Setup Category Words Modal Close handlers
+  const catModalOverlay = document.getElementById("category-words-modal-overlay");
+  const btnCloseCatModal = document.getElementById("btn-close-cat-modal");
+  if (btnCloseCatModal && catModalOverlay) {
+    btnCloseCatModal.addEventListener("click", () => catModalOverlay.classList.add("hidden"));
+    catModalOverlay.addEventListener("click", (e) => {
+      if (e.target === catModalOverlay) catModalOverlay.classList.add("hidden");
+    });
+  }
+
+  // 10. Setup Save Word Modal Close and Create handlers
+  setupSaveWordModalControls();
+}
+window.initRandomWordPanel = initRandomWordPanel;
+
+async function loadRwggpData() {
+  try {
+    // Categories
+    const catRes = await fetch("data/categories.json");
+    if (catRes.ok) rwggpCategories = await catRes.json();
+  } catch (e) {
+    console.warn("Could not load categories.json:", e);
+  }
+
+  try {
+    // Words
+    const wordsRes = await fetch("data/words.json");
+    if (wordsRes.ok) rwggpWords = await wordsRes.json();
+  } catch (e) {
+    console.warn("Could not load words.json:", e);
+  }
+
+  // Saved Lists: check localStorage first, else fetch default
+  let loadedLists = null;
+  try {
+    const local = localStorage.getItem("sol_savings_lists");
+    if (local) loadedLists = JSON.parse(local);
+  } catch (e) {}
+
+  if (!loadedLists || !loadedLists.length) {
+    try {
+      const savRes = await fetch("data/saving_lists.json");
+      if (savRes.ok) {
+        loadedLists = await savRes.json();
+        loadedLists.forEach((l, idx) => { if (!l.id) l.id = `list_${idx + 1}`; });
+      }
+    } catch (e) {
+      console.warn("Could not load saving_lists.json:", e);
+    }
+  }
+
+  rwggpSavingLists = loadedLists || [];
+  persistRwggpSavingLists();
+  renderRwggpSavingsAccordion();
+
+  // History from localStorage
+  try {
+    const hist = localStorage.getItem("sol_rwggp_history");
+    if (hist) rwggpHistory = JSON.parse(hist);
+  } catch (e) {}
+  renderRwggpHistory();
+
+  // Automatically show the first word from history or a random word
+  if (rwggpHistory.length > 0) {
+    displayRwggpWord(rwggpHistory[0], false);
+  }
+}
+
+function getRwggpCategory(categoryName) {
+  if (!categoryName) return null;
+  const nameNorm = categoryName.trim().toUpperCase();
+  return rwggpCategories.find(c => c.name.toUpperCase() === nameNorm) || null;
+}
+
+function getRwggpCategoryColor(categoryName) {
+  const cat = getRwggpCategory(categoryName);
+  return cat ? cat.color : "#4f46e5";
+}
+
+function formatWordUnderline(wordData, color) {
+  const word = wordData.word;
+  const stressed = wordData.stressedVowel || "";
+  let pos = typeof wordData.vowelPosition === "number" ? wordData.vowelPosition : word.toLowerCase().indexOf(stressed.toLowerCase());
+  if (pos < 0 || !stressed) {
+    return `<span style="color:${color};">${escapeHtml(word)}</span>`;
+  }
+  const before = word.slice(0, pos);
+  const stressedPart = word.slice(pos, pos + stressed.length);
+  const after = word.slice(pos + stressed.length);
+  return `<span style="color:${color};">${escapeHtml(before)}<span class="stressed-vowel-underline" style="text-decoration:underline; text-decoration-color:${color}; text-decoration-thickness:3px; text-underline-offset:6px;">${escapeHtml(stressedPart)}</span>${escapeHtml(after)}</span>`;
+}
+
+function isWordSavedInAnyList(wordStr) {
+  if (!wordStr) return false;
+  const target = wordStr.toLowerCase();
+  return rwggpSavingLists.some(list => (list.words || []).some(w => (w.word || "").toLowerCase() === target));
+}
+
+function displayRwggpWord(wordData, pushHistory = true) {
+  if (!wordData) return;
+  rwggpActiveWord = wordData;
+
+  const card = document.getElementById("rwggp-word-card");
+  const titleEl = document.getElementById("rwggp-word-title");
+  const phoneticEl = document.getElementById("rwggp-phonetic");
+  const catNameEl = document.getElementById("rwggp-category-name");
+  const defEl = document.getElementById("rwggp-definition");
+  const bookmarkIcon = document.getElementById("current-word-bookmark-icon");
+
+  const cat = getRwggpCategory(wordData.colorCategory);
+  const color = cat ? cat.color : "#4f46e5";
+  const sound = cat ? cat.sound : "";
+
+  if (titleEl) {
+    titleEl.innerHTML = formatWordUnderline(wordData, color);
+  }
+  if (phoneticEl) {
+    phoneticEl.textContent = sound;
+    phoneticEl.style.color = color;
+  }
+  if (catNameEl) {
+    catNameEl.textContent = wordData.colorCategory;
+    catNameEl.style.color = color;
+  }
+  if (defEl) {
+    defEl.textContent = wordData.definition || "Definition not available";
+  }
+
+  // Update bookmark icon state on active card
+  if (bookmarkIcon) {
+    const isSaved = isWordSavedInAnyList(wordData.word);
+    bookmarkIcon.className = isSaved ? "fa-solid fa-bookmark" : "fa-regular fa-bookmark";
+    const saveBtn = document.getElementById("btn-save-current-word");
+    if (saveBtn) {
+      saveBtn.style.setProperty("background", isSaved ? "#10b981" : "#4f46e5", "important");
+      saveBtn.style.setProperty("border-color", isSaved ? "#059669" : "#4338ca", "important");
+    }
+  }
+
+  if (card) {
+    card.classList.remove("hidden");
+  }
+
+  if (pushHistory) {
+    rwggpHistory = [wordData, ...rwggpHistory.filter(w => w.word.toLowerCase() !== wordData.word.toLowerCase())].slice(0, 20);
+    try {
+      localStorage.setItem("sol_rwggp_history", JSON.stringify(rwggpHistory));
+    } catch (e) {}
+    renderRwggpHistory();
+  }
+}
+
+async function generateRandomWord() {
+  if (!rwggpWords || rwggpWords.length === 0) {
+    try {
+      const res = await fetch("/api/words/random");
+      if (res.ok) {
+        const word = await res.json();
+        displayRwggpWord(word, true);
+        return;
+      }
+    } catch (e) {}
+    if (typeof showToast === "function") showToast("Word database is loading. Please try again in a moment!");
+    return;
+  }
+  const randomIndex = Math.floor(Math.random() * rwggpWords.length);
+  const word = rwggpWords[randomIndex];
+  displayRwggpWord(word, true);
+}
+
+async function analyzeWordQuery(query) {
+  if (!query) {
+    if (typeof showToast === "function") showToast("Please enter a word to analyze");
+    return;
+  }
+  const clean = query.trim().toLowerCase();
+  let match = rwggpWords.find(w => w.word.toLowerCase() === clean);
+  if (!match) {
+    try {
+      const res = await fetch(`/api/words/analyze/${encodeURIComponent(clean)}`);
+      if (res.ok) {
+        match = await res.json();
+      }
+    } catch (e) {}
+  }
+  if (match) {
+    displayRwggpWord(match, true);
+    const input = document.getElementById("rwggp-analyze-input");
+    if (input) input.value = "";
+  } else {
+    if (typeof showToast === "function") {
+      showToast(`"${query}" not found in the word database`);
+    } else {
+      alert(`"${query}" not found in the word database`);
+    }
+  }
+}
+
+function speakRwggpWord(text) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    console.error("SpeechSynthesis error:", e);
+  }
+}
+
+function renderRwggpHistory() {
+  const card = document.getElementById("rwggp-history-card");
+  const container = document.getElementById("rwggp-history-container");
+  if (!container) return;
+
+  if (rwggpHistory.length === 0) {
+    if (card) card.classList.add("hidden");
+    container.innerHTML = "";
+    return;
+  }
+
+  if (card) card.classList.remove("hidden");
+
+  container.innerHTML = rwggpHistory.map(w => {
+    const color = getRwggpCategoryColor(w.colorCategory);
+    const isSaved = isWordSavedInAnyList(w.word);
+    return `
+      <div class="rwggp-history-row" data-word="${escapeHtml(w.word)}">
+        <span class="history-color-dot" style="background-color: ${color};"></span>
+        <span class="history-word-text">${escapeHtml(w.word)}</span>
+        <span class="history-category-label" style="color: ${color}; font-weight: 700;">${escapeHtml(w.colorCategory)}</span>
+        <button type="button" class="history-save-btn ${isSaved ? 'saved' : ''}" data-action="save" title="${isSaved ? 'Saved in list' : 'Save to list'}">
+          <i class="${isSaved ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'}"></i>
+        </button>
+        <button type="button" class="history-speak-btn" data-action="speak" title="Listen">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  // Attach event delegation
+  container.querySelectorAll(".rwggp-history-row").forEach(row => {
+    const wordStr = row.getAttribute("data-word");
+    const wordData = rwggpHistory.find(w => w.word === wordStr);
+
+    row.addEventListener("click", (e) => {
+      const saveBtn = e.target.closest('[data-action="save"]');
+      const speakBtn = e.target.closest('[data-action="speak"]');
+
+      if (saveBtn) {
+        e.stopPropagation();
+        if (wordData) openSaveWordModal(wordData);
+        return;
+      }
+      if (speakBtn) {
+        e.stopPropagation();
+        if (wordData) speakRwggpWord(wordData.word);
+        return;
+      }
+      if (wordData) {
+        displayRwggpWord(wordData, false);
+      }
+    });
+  });
+}
+
+function persistRwggpSavingLists() {
+  try {
+    localStorage.setItem("sol_savings_lists", JSON.stringify(rwggpSavingLists));
+  } catch (e) {}
+
+  // Sync to backend if available
+  try {
+    fetch("/api/savings/lists", {
+      method: "GET"
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+function createNewSavingList(name) {
+  if (!name) return;
+  const trimmed = name.trim();
+  if (rwggpSavingLists.some(l => l.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (typeof showToast === "function") showToast("A list with this name already exists!");
+    return;
+  }
+  const newList = {
+    id: `list_${Date.now()}`,
+    name: trimmed,
+    words: []
+  };
+  rwggpSavingLists.push(newList);
+  persistRwggpSavingLists();
+  renderRwggpSavingsAccordion();
+  if (typeof showToast === "function") showToast(`List "${trimmed}" created!`);
+}
+
+function renderRwggpSavingsAccordion() {
+  const container = document.getElementById("rwggp-savings-container");
+  if (!container) return;
+
+  if (rwggpSavingLists.length === 0) {
+    container.innerHTML = `<p class="rwggp-empty-savings-text">No saved lists yet. Click the bookmark icon on any word to save it.</p>`;
+    return;
+  }
+
+  container.innerHTML = rwggpSavingLists.map(list => {
+    const wordsCount = (list.words || []).length;
+    return `
+      <div class="savings-accordion-item" data-list-id="${escapeHtml(list.id)}">
+        <div class="savings-accordion-header">
+          <div class="savings-header-title">
+            <i class="fa-solid fa-chevron-right chevron"></i>
+            <span>${escapeHtml(list.name)}</span>
+            <span class="count">(${wordsCount})</span>
+          </div>
+          <button type="button" class="savings-delete-btn" data-action="delete-list" title="Delete List">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+        <div class="savings-accordion-body hidden">
+          ${wordsCount === 0 ? '<p style="font-size: 0.8rem; color: #94a3b8; padding: 0.4rem 0.5rem; margin:0;">No words saved in this list yet.</p>' : (list.words || []).map(w => {
+            const color = getRwggpCategoryColor(w.colorCategory);
+            return `
+              <div class="savings-word-row" data-word="${escapeHtml(w.word)}">
+                <div class="word-name">
+                  <span class="history-color-dot" style="background-color: ${color};"></span>
+                  <span>${escapeHtml(w.word)}</span>
+                  <span style="font-size: 0.72rem; color: #94a3b8; font-weight: normal; margin-left: 0.3rem;">${escapeHtml(w.definition || '')}</span>
+                </div>
+                <button type="button" class="savings-delete-btn" data-action="remove-word" title="Remove word" style="font-size: 0.9rem; padding: 2px 6px;">&times;</button>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Attach Accordion Toggle and Actions
+  container.querySelectorAll(".savings-accordion-item").forEach(itemEl => {
+    const listId = itemEl.getAttribute("data-list-id");
+    const targetList = rwggpSavingLists.find(l => l.id === listId);
+    const header = itemEl.querySelector(".savings-accordion-header");
+    const body = itemEl.querySelector(".savings-accordion-body");
+    const delListBtn = itemEl.querySelector('[data-action="delete-list"]');
+
+    if (header && body) {
+      header.addEventListener("click", (e) => {
+        if (e.target.closest('[data-action="delete-list"]')) return;
+        const isExpanded = itemEl.classList.toggle("expanded");
+        body.classList.toggle("hidden", !isExpanded);
+      });
+    }
+
+    if (delListBtn) {
+      delListBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (confirm(`Delete the list "${targetList ? targetList.name : ''}"?`)) {
+          rwggpSavingLists = rwggpSavingLists.filter(l => l.id !== listId);
+          persistRwggpSavingLists();
+          renderRwggpSavingsAccordion();
+          renderRwggpHistory();
+          if (typeof showToast === "function") showToast("List deleted");
+        }
+      });
+    }
+
+    // Word rows inside list
+    itemEl.querySelectorAll(".savings-word-row").forEach(row => {
+      const wordStr = row.getAttribute("data-word");
+      row.addEventListener("click", (e) => {
+        const removeBtn = e.target.closest('[data-action="remove-word"]');
+        if (removeBtn) {
+          e.stopPropagation();
+          if (targetList) {
+            targetList.words = (targetList.words || []).filter(w => (w.word || "").toLowerCase() !== wordStr.toLowerCase());
+            persistRwggpSavingLists();
+            renderRwggpSavingsAccordion();
+            renderRwggpHistory();
+            if (rwggpActiveWord && rwggpActiveWord.word.toLowerCase() === wordStr.toLowerCase()) {
+              displayRwggpWord(rwggpActiveWord, false);
+            }
+            if (typeof showToast === "function") showToast(`Removed "${wordStr}" from list`);
+          }
+          return;
+        }
+
+        // Click word to display it
+        const fullWord = rwggpWords.find(w => w.word.toLowerCase() === wordStr.toLowerCase()) || 
+                         (targetList ? targetList.words.find(w => w.word.toLowerCase() === wordStr.toLowerCase()) : null);
+        if (fullWord) {
+          displayRwggpWord(fullWord, true);
+        }
+      });
+    });
+  });
+}
+
+// -------------------------------------------------------------
+// Category Words Modal
+// -------------------------------------------------------------
+function openCategoryWordsModal(categoryName) {
+  const modal = document.getElementById("category-words-modal-overlay");
+  const titleEl = document.getElementById("cat-modal-title");
+  const subEl = document.getElementById("cat-modal-subtitle");
+  const searchInput = document.getElementById("cat-modal-search");
+  const gridEl = document.getElementById("cat-modal-words-grid");
+  const headerEl = document.getElementById("cat-modal-header");
+  const closeBtn = document.getElementById("btn-close-cat-modal");
+
+  if (!modal || !gridEl) return;
+
+  const cat = getRwggpCategory(categoryName);
+  const color = cat ? cat.color : "#4f46e5";
+  const sound = cat ? cat.sound : "";
+
+  // Compute contrasting text color
+  let isLight = false;
+  try {
+    const hex = color.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16) || 0;
+    const g = parseInt(hex.substr(2, 2), 16) || 0;
+    const b = parseInt(hex.substr(4, 2), 16) || 0;
+    isLight = (r * 299 + g * 587 + b * 114) / 1000 > 130;
+  } catch (e) {}
+
+  const textColor = isLight ? "#0f172a" : "#ffffff";
+
+  if (headerEl) {
+    headerEl.style.backgroundColor = color;
+  }
+  if (titleEl) {
+    titleEl.textContent = categoryName;
+    titleEl.style.color = textColor;
+  }
+  if (subEl) {
+    const categoryWords = rwggpWords.filter(w => w.colorCategory.toUpperCase() === categoryName.toUpperCase());
+    subEl.textContent = `${sound} • ${categoryWords.length} words`;
+    subEl.style.color = textColor;
+  }
+  if (closeBtn) {
+    closeBtn.style.color = textColor;
+  }
+
+  const categoryWords = rwggpWords.filter(w => w.colorCategory.toUpperCase() === categoryName.toUpperCase());
+
+  const renderGrid = (filterQuery = "") => {
+    const filtered = categoryWords.filter(w => w.word.toLowerCase().includes(filterQuery.toLowerCase()));
+    if (filtered.length === 0) {
+      gridEl.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #94a3b8; padding: 2rem;">No words match "${escapeHtml(filterQuery)}"</div>`;
+      return;
+    }
+    gridEl.innerHTML = filtered.map(w => {
+      return `
+        <button type="button" class="cat-word-btn" data-word="${escapeHtml(w.word)}" style="text-align:left; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.45rem 0.65rem; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all 0.15s ease; display:flex; align-items:center; justify-content:space-between;">
+          <span>${formatWordUnderline(w, color)}</span>
+        </button>
+      `;
+    }).join("");
+
+    gridEl.querySelectorAll(".cat-word-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const wordStr = btn.getAttribute("data-word");
+        const found = rwggpWords.find(w => w.word === wordStr);
+        if (found) {
+          displayRwggpWord(found, true);
+          modal.classList.add("hidden");
+        }
+      });
+    });
+  };
+
+  renderGrid("");
+
+  if (searchInput) {
+    searchInput.value = "";
+    searchInput.oninput = () => renderGrid(searchInput.value.trim());
+  }
+
+  modal.classList.remove("hidden");
+}
+
+// -------------------------------------------------------------
+// Save Word Modal / Context Popover
+// -------------------------------------------------------------
+function openSaveWordModal(wordData) {
+  if (!wordData) return;
+  rwggpSaveTargetWord = wordData;
+
+  const modal = document.getElementById("save-word-modal-overlay");
+  const container = document.getElementById("save-popover-lists-container");
+  const searchInput = document.getElementById("save-popover-search-input");
+  const createRow = document.getElementById("save-popover-create-row");
+  const createInput = document.getElementById("save-new-list-input");
+
+  if (!modal || !container) return;
+
+  if (createRow) createRow.classList.add("hidden");
+  if (createInput) createInput.value = "";
+  if (searchInput) searchInput.value = "";
+
+  const renderLists = (query = "") => {
+    const filtered = rwggpSavingLists.filter(l => l.name.toLowerCase().includes(query.toLowerCase()));
+    if (filtered.length === 0) {
+      container.innerHTML = `<p class="save-popover-empty">No lists found. Click "Create New List" above.</p>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(list => {
+      const alreadyInList = (list.words || []).some(w => (w.word || "").toLowerCase() === wordData.word.toLowerCase());
+      return `
+        <div class="save-popover-list-row ${alreadyInList ? 'in-list' : ''}" data-list-id="${escapeHtml(list.id)}" title="${alreadyInList ? 'Already in this list' : 'Click to save word'}">
+          <i class="${alreadyInList ? 'fa-solid fa-check save-popover-row-bookmark' : 'fa-regular fa-bookmark save-popover-row-bookmark'}" style="color: ${alreadyInList ? '#10b981' : '#4f46e5'};"></i>
+          <span class="save-popover-list-name">${escapeHtml(list.name)}</span>
+          <span class="save-popover-word-count">(${(list.words || []).length})</span>
+        </div>
+      `;
+    }).join("");
+
+    container.querySelectorAll(".save-popover-list-row").forEach(row => {
+      row.addEventListener("click", () => {
+        const listId = row.getAttribute("data-list-id");
+        const list = rwggpSavingLists.find(l => l.id === listId);
+        if (!list) return;
+
+        const already = (list.words || []).some(w => (w.word || "").toLowerCase() === wordData.word.toLowerCase());
+        if (already) {
+          if (typeof showToast === "function") showToast(`"${wordData.word}" is already in ${list.name}`);
+          return;
+        }
+
+        list.words = list.words || [];
+        list.words.push({
+          word: wordData.word,
+          colorCategory: wordData.colorCategory,
+          stressedVowel: wordData.stressedVowel,
+          definition: wordData.definition || ""
+        });
+
+        persistRwggpSavingLists();
+        renderRwggpSavingsAccordion();
+        renderRwggpHistory();
+        if (rwggpActiveWord && rwggpActiveWord.word.toLowerCase() === wordData.word.toLowerCase()) {
+          displayRwggpWord(rwggpActiveWord, false);
+        }
+
+        if (typeof showToast === "function") showToast(`Added "${wordData.word}" to ${list.name}`);
+        modal.classList.add("hidden");
+      });
+    });
+  };
+
+  renderLists("");
+
+  if (searchInput) {
+    searchInput.oninput = () => renderLists(searchInput.value.trim());
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function setupSaveWordModalControls() {
+  const modal = document.getElementById("save-word-modal-overlay");
+  const closeBtn = document.getElementById("btn-close-save-popover");
+  const showCreateBtn = document.getElementById("btn-show-create-list");
+  const createRow = document.getElementById("save-popover-create-row");
+  const createInput = document.getElementById("save-new-list-input");
+  const confirmCreateBtn = document.getElementById("btn-confirm-create-list");
+  const cancelCreateBtn = document.getElementById("btn-cancel-create-list");
+
+  if (closeBtn && modal) {
+    closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.add("hidden");
+    });
+  }
+
+  if (showCreateBtn && createRow && createInput) {
+    showCreateBtn.addEventListener("click", () => {
+      createRow.classList.remove("hidden");
+      createInput.focus();
+    });
+  }
+
+  if (cancelCreateBtn && createRow) {
+    cancelCreateBtn.addEventListener("click", () => {
+      createRow.classList.add("hidden");
+    });
+  }
+
+  if (confirmCreateBtn && createInput) {
+    confirmCreateBtn.addEventListener("click", () => {
+      const name = createInput.value.trim();
+      if (!name) return;
+      if (rwggpSavingLists.some(l => l.name.toLowerCase() === name.toLowerCase())) {
+        if (typeof showToast === "function") showToast("List name already exists");
+        return;
+      }
+      const newList = {
+        id: `list_${Date.now()}`,
+        name: name,
+        words: []
+      };
+      rwggpSavingLists.push(newList);
+      persistRwggpSavingLists();
+      renderRwggpSavingsAccordion();
+      createInput.value = "";
+      createRow.classList.add("hidden");
+
+      // Immediately add the active word if we have one
+      if (rwggpSaveTargetWord) {
+        newList.words.push({
+          word: rwggpSaveTargetWord.word,
+          colorCategory: rwggpSaveTargetWord.colorCategory,
+          stressedVowel: rwggpSaveTargetWord.stressedVowel,
+          definition: rwggpSaveTargetWord.definition || ""
+        });
+        persistRwggpSavingLists();
+        renderRwggpSavingsAccordion();
+        renderRwggpHistory();
+        if (rwggpActiveWord) displayRwggpWord(rwggpActiveWord, false);
+        if (typeof showToast === "function") showToast(`Added "${rwggpSaveTargetWord.word}" to ${name}`);
+        if (modal) modal.classList.add("hidden");
+      }
+    });
+  }
+}
+
+// -------------------------------------------------------------
+// Metronome Engine (Web Audio API)
+// -------------------------------------------------------------
+function setupMetronomeControls() {
+  const btnToggle = document.getElementById("btn-toggle-metronome");
+  const dropdown = document.getElementById("metronome-dropdown");
+  const btnClose = document.getElementById("btn-close-metronome");
+  const btnPlay = document.getElementById("btn-metronome-play");
+  const playIcon = document.getElementById("metronome-play-icon");
+  const slider = document.getElementById("metronome-bpm-slider");
+  const bpmVal = document.getElementById("metronome-bpm-val");
+  const tempoName = document.getElementById("metronome-tempo-name");
+  const btnBpmUp = document.getElementById("btn-bpm-up");
+  const btnBpmDown = document.getElementById("btn-bpm-down");
+
+  if (btnToggle && dropdown) {
+    btnToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("hidden");
+    });
+  }
+
+  if (btnClose && dropdown) {
+    btnClose.addEventListener("click", () => dropdown.classList.add("hidden"));
+  }
+
+  // Update BPM from slider
+  const setBpm = (newVal) => {
+    metBpm = Math.min(220, Math.max(40, newVal));
+    if (slider) slider.value = metBpm;
+    if (bpmVal) bpmVal.textContent = metBpm;
+    if (tempoName) tempoName.textContent = getMetTempoName(metBpm);
+  };
+
+  if (slider) {
+    slider.addEventListener("input", (e) => setBpm(parseInt(e.target.value, 10)));
+  }
+
+  if (btnBpmUp) {
+    btnBpmUp.addEventListener("click", () => setBpm(metBpm + 1));
+  }
+
+  if (btnBpmDown) {
+    btnBpmDown.addEventListener("click", () => setBpm(metBpm - 1));
+  }
+
+  // Time Signatures
+  document.querySelectorAll("#metronome-sig-pills .metronome-pill-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#metronome-sig-pills .metronome-pill-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const beats = parseInt(btn.getAttribute("data-beats"), 10);
+      const note = parseInt(btn.getAttribute("data-note"), 10);
+      metTimeSig = { beats, noteValue: note };
+      renderBeatDots();
+    });
+  });
+
+  // Sound Options
+  document.querySelectorAll("#metronome-sound-pills .metronome-pill-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#metronome-sound-pills .metronome-pill-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      metSound = btn.getAttribute("data-sound") || "click";
+    });
+  });
+
+  // Play / Pause Toggle
+  if (btnPlay) {
+    btnPlay.addEventListener("click", () => {
+      if (metIsPlaying) {
+        stopMetronome();
+      } else {
+        startMetronome();
+      }
+    });
+  }
+
+  renderBeatDots();
+}
+
+function renderBeatDots() {
+  const container = document.getElementById("metronome-beat-dots");
+  if (!container) return;
+  container.innerHTML = "";
+  for (let i = 0; i < metTimeSig.beats; i++) {
+    const dot = document.createElement("span");
+    dot.className = i === 0 ? "beat-dot active" : "beat-dot";
+    container.appendChild(dot);
+  }
+}
+
+function startMetronome() {
+  if (!metAudioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    metAudioCtx = new AudioCtx();
+  }
+  if (metAudioCtx.state === "suspended") {
+    metAudioCtx.resume();
+  }
+
+  metIsPlaying = true;
+  metCurrentBeat = 0;
+  metNextNoteTime = metAudioCtx.currentTime + 0.05;
+
+  const playIcon = document.getElementById("metronome-play-icon");
+  if (playIcon) playIcon.className = "fa-solid fa-pause";
+
+  // Start animated swinging pendulum arm on SVG
+  const pendulumSvg = document.getElementById("metronome-pendulum-svg-elem");
+  if (pendulumSvg) pendulumSvg.style.animation = `pendulumSwing ${60 / metBpm}s ease-in-out infinite alternate`;
+
+  metScheduler();
+}
+
+function stopMetronome() {
+  metIsPlaying = false;
+  if (metTimerId) {
+    clearTimeout(metTimerId);
+    metTimerId = null;
+  }
+
+  const playIcon = document.getElementById("metronome-play-icon");
+  if (playIcon) playIcon.className = "fa-solid fa-play";
+
+  const pendulumSvg = document.getElementById("metronome-pendulum-svg-elem");
+  if (pendulumSvg) pendulumSvg.style.animation = "none";
+
+  // Reset active beat dots
+  const dots = document.querySelectorAll("#metronome-beat-dots .beat-dot");
+  dots.forEach((d, idx) => d.classList.toggle("active", idx === 0));
+}
+
+function metScheduler() {
+  if (!metIsPlaying || !metAudioCtx) return;
+
+  while (metNextNoteTime < metAudioCtx.currentTime + 0.1) {
+    playMetTone(metNextNoteTime, metCurrentBeat === 0);
+    flashBeatDot(metCurrentBeat);
+
+    // Calculate next beat time
+    const secondsPerBeat = 60.0 / metBpm;
+    // If noteValue is 8 (like 5/8 or 6/8), adjust beat length
+    const factor = metTimeSig.noteValue === 8 ? 0.5 : 1.0;
+    metNextNoteTime += secondsPerBeat * factor;
+
+    metCurrentBeat = (metCurrentBeat + 1) % metTimeSig.beats;
+  }
+
+  metTimerId = setTimeout(metScheduler, 25);
+}
+
+function playMetTone(time, isAccent) {
+  if (!metAudioCtx) return;
+  const osc = metAudioCtx.createOscillator();
+  const gain = metAudioCtx.createGain();
+
+  let freq = 800;
+  let type = "square";
+
+  if (metSound === "click") {
+    freq = isAccent ? 1000 : 800;
+    type = "square";
+  } else if (metSound === "wood") {
+    freq = isAccent ? 400 : 300;
+    type = "sine";
+  } else if (metSound === "beep") {
+    freq = isAccent ? 880 : 660;
+    type = "sine";
+  } else if (metSound === "tick") {
+    freq = isAccent ? 1500 : 1200;
+    type = "square";
+  }
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, time);
+
+  gain.gain.setValueAtTime(0.4, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + (metSound === "beep" ? 0.08 : 0.04));
+
+  osc.connect(gain);
+  gain.connect(metAudioCtx.destination);
+
+  osc.start(time);
+  osc.stop(time + (metSound === "beep" ? 0.08 : 0.04));
+}
+
+function flashBeatDot(beatIndex) {
+  const dots = document.querySelectorAll("#metronome-beat-dots .beat-dot");
+  dots.forEach((d, idx) => {
+    d.classList.toggle("active", idx === beatIndex);
+  });
 }
 
 function renderCircleMembersWidget() {

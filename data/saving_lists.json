@@ -1,0 +1,75 @@
+[
+  {
+    "name": "🟤 Brown",
+    "words": [
+      {
+        "word": "proud",
+        "colorCategory": "BROWN COW",
+        "stressedVowel": "ou",
+        "definition": "Feeling honoured"
+      },
+      {
+        "word": "surround",
+        "colorCategory": "BROWN COW",
+        "stressedVowel": "ou",
+        "definition": "Anything, such as a fence or border"
+      },
+      {
+        "word": "encounter",
+        "colorCategory": "BROWN COW",
+        "stressedVowel": "ou",
+        "definition": "A meeting, especially one"
+      },
+      {
+        "word": "trousers",
+        "colorCategory": "BROWN COW",
+        "stressedVowel": "ou",
+        "definition": "An article of clothing"
+      },
+      {
+        "word": "mountain",
+        "colorCategory": "BROWN COW",
+        "stressedVowel": "ou",
+        "definition": "An elevation of land of considerable dimensions"
+      },
+      {
+        "word": "stupid",
+        "colorCategory": "BLUE MOON",
+        "stressedVowel": "u",
+        "definition": "A stupid person"
+      }
+    ]
+  },
+  {
+    "name": "⚪ Silver Pin",
+    "words": [
+      {
+        "word": "delivery",
+        "colorCategory": "SILVER PIN",
+        "stressedVowel": "i",
+        "definition": "Conveying something"
+      }
+    ]
+  },
+  {
+    "name": "🟣 Purple",
+    "words": [
+      {
+        "word": "urban",
+        "colorCategory": "PURPLE SHIRT",
+        "stressedVowel": "ur",
+        "definition": "Related to the"
+      },
+      {
+        "word": "observe",
+        "colorCategory": "PURPLE SHIRT",
+        "stressedVowel": "er",
+        "definition": "To notice or view, especially carefully or with"
+      }
+    ]
+  },
+  {
+    "name": "🟡 Yellow Cup",
+    "words": []
+  }
+]

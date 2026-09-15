@@ -56,6 +56,52 @@ def sanitize_user(user):
     copy.pop("passwordHash", None)
     return copy
 
+WORDS_FILE = os.path.join(BASE_DIR, "data", "words.json")
+CATEGORIES_FILE = os.path.join(BASE_DIR, "data", "categories.json")
+SAVING_LISTS_FILE = os.path.join(BASE_DIR, "data", "saving_lists.json")
+
+WORDS_CACHE = []
+CATEGORIES_CACHE = []
+
+def get_words():
+    global WORDS_CACHE
+    if not WORDS_CACHE and os.path.exists(WORDS_FILE):
+        try:
+            with open(WORDS_FILE, "r", encoding="utf-8") as f:
+                WORDS_CACHE = json.load(f)
+        except Exception as e:
+            print("Error loading words.json:", e)
+    return WORDS_CACHE
+
+def get_categories():
+    global CATEGORIES_CACHE
+    if not CATEGORIES_CACHE and os.path.exists(CATEGORIES_FILE):
+        try:
+            with open(CATEGORIES_FILE, "r", encoding="utf-8") as f:
+                CATEGORIES_CACHE = json.load(f)
+        except Exception as e:
+            print("Error loading categories.json:", e)
+    return CATEGORIES_CACHE
+
+def get_saving_lists():
+    data = load_data()
+    if "saving_lists" not in data or not data["saving_lists"]:
+        if os.path.exists(SAVING_LISTS_FILE):
+            try:
+                with open(SAVING_LISTS_FILE, "r", encoding="utf-8") as f:
+                    init_lists = json.load(f)
+                    for idx, item in enumerate(init_lists):
+                        if "id" not in item:
+                            item["id"] = f"list_{idx+1}_{int(time.time())}"
+                    data["saving_lists"] = init_lists
+                    save_data(data)
+            except Exception as e:
+                print("Error loading default saving_lists.json:", e)
+                data["saving_lists"] = []
+        else:
+            data["saving_lists"] = []
+    return data.get("saving_lists", [])
+
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
@@ -63,7 +109,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         # Enable CORS and disable aggressive caching for API endpoints
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         if self.path.startswith("/api/"):
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -76,7 +122,88 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path.startswith("/api/videos"):
+        parsed_url = urllib.parse.urlparse(self.path)
+        path = parsed_url.path
+        query = urllib.parse.parse_qs(parsed_url.query)
+
+        if path == "/api/words/random":
+            words = get_words()
+            if not words:
+                self.send_error(404, "No words found")
+                return
+            word = secrets.choice(words)
+            payload = json.dumps(word).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        elif path.startswith("/api/words/analyze/"):
+            target = urllib.parse.unquote(path[len("/api/words/analyze/"):].strip().lower())
+            words = get_words()
+            found = next((w for w in words if w.get("word", "").lower() == target), None)
+            if not found:
+                resp = json.dumps({"detail": f"Word '{target}' not found in database"}).encode("utf-8")
+                self.send_response(404)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+                return
+            payload = json.dumps(found).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        elif path.startswith("/api/words/definition/"):
+            target = urllib.parse.unquote(path[len("/api/words/definition/"):].strip().lower())
+            words = get_words()
+            found = next((w for w in words if w.get("word", "").lower() == target), None)
+            defn = found.get("definition", "Definition not available") if found else "Definition not available"
+            payload = json.dumps({"word": target, "definition": defn}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        elif path == "/api/words" or path == "/api/words/":
+            cat = query.get("category", [None])[0]
+            words = get_words()
+            if cat:
+                cat_lower = cat.strip().lower()
+                filtered = [w for w in words if w.get("colorCategory", "").strip().lower() == cat_lower]
+            else:
+                filtered = words
+            payload = json.dumps(filtered).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        elif path == "/api/categories" or path == "/api/categories/":
+            cats = get_categories()
+            payload = json.dumps(cats).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        elif path == "/api/savings/lists" or path == "/api/savings/lists/":
+            lists = get_saving_lists()
+            payload = json.dumps(lists).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        elif path.startswith("/api/videos"):
             data = load_data()
             payload = json.dumps(data.get("videos", [])).encode("utf-8")
             self.send_response(200)
@@ -314,9 +441,129 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header("Content-Length", str(len(resp)))
                 self.end_headers()
                 self.wfile.write(resp)
+        elif self.path == "/api/savings/lists" or self.path == "/api/savings/lists/":
+            try:
+                payload = json.loads(body)
+                name = (payload.get("name") or "").strip()
+                if not name:
+                    raise ValueError("List name cannot be empty")
+                data = load_data()
+                lists = data.get("saving_lists", [])
+                if any(l.get("name", "").strip().lower() == name.lower() for l in lists):
+                    self.send_response(400)
+                    resp = json.dumps({"detail": "List name already exists"}).encode("utf-8")
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                    return
+                new_list = {
+                    "id": f"list_{uuid.uuid4().hex[:8]}",
+                    "name": name,
+                    "words": []
+                }
+                lists.append(new_list)
+                data["saving_lists"] = lists
+                save_data(data)
+                resp = json.dumps(new_list).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+        elif self.path.startswith("/api/savings/lists/") and self.path.endswith("/words"):
+            try:
+                parts = self.path.strip("/").split("/")
+                list_id = parts[3]
+                payload = json.loads(body)
+                data = load_data()
+                lists = data.get("saving_lists", [])
+                target_list = next((l for l in lists if str(l.get("id")) == list_id), None)
+                if not target_list:
+                    self.send_response(404)
+                    resp = json.dumps({"detail": "List not found"}).encode("utf-8")
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                    return
+                word_str = (payload.get("word") or "").strip()
+                if any(w.get("word", "").lower() == word_str.lower() for w in target_list.get("words", [])):
+                    self.send_response(400)
+                    resp = json.dumps({"detail": "Word already in list"}).encode("utf-8")
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                    return
+                target_list.setdefault("words", []).append(payload)
+                data["saving_lists"] = lists
+                save_data(data)
+                resp = json.dumps({"success": True}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
             return
 
         super().do_POST()
+
+    def do_DELETE(self):
+        parsed_url = urllib.parse.urlparse(self.path)
+        path = parsed_url.path
+
+        if path.startswith("/api/savings/lists/"):
+            parts = path.strip("/").split("/")
+            # e.g. api/savings/lists/{id}/words/{word}
+            if len(parts) >= 5 and parts[3] == "words":
+                list_id = parts[2]
+                word_to_remove = urllib.parse.unquote(parts[4]).lower()
+                data = load_data()
+                lists = data.get("saving_lists", [])
+                target_list = next((l for l in lists if str(l.get("id")) == list_id), None)
+                if target_list:
+                    target_list["words"] = [w for w in target_list.get("words", []) if (w.get("word") or "").lower() != word_to_remove]
+                    data["saving_lists"] = lists
+                    save_data(data)
+                resp = json.dumps({"success": True}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+                return
+            elif len(parts) == 3 and parts[0] == "api" and parts[1] == "savings" and parts[2].startswith("lists"):
+                pass
+            elif len(parts) >= 3:
+                list_id = parts[2]
+                data = load_data()
+                data["saving_lists"] = [l for l in data.get("saving_lists", []) if str(l.get("id")) != list_id]
+                save_data(data)
+                resp = json.dumps({"success": True}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+                return
+
+        self.send_error(404, "Not Found")
 
 if __name__ == "__main__":
     os.chdir(BASE_DIR)

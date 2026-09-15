@@ -5801,6 +5801,17 @@ body {
   display: block;
 }
 
+@keyframes pendulumSwing {
+  0% {
+    transform: rotate(-16deg);
+    transform-origin: 12px 19px;
+  }
+  100% {
+    transform: rotate(16deg);
+    transform-origin: 12px 19px;
+  }
+}
+
 .metronome-popover-card {
   background-color: #ffffff;
   width: 350px;

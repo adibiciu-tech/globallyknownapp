@@ -1,0 +1,162 @@
+[
+  {
+    "name": "GREEN TEA",
+    "color": "#33CC33",
+    "sound": "/iy/",
+    "keywords": [
+      "bee",
+      "see",
+      "team"
+    ]
+  },
+  {
+    "name": "RED DRESS",
+    "color": "#FF0000",
+    "sound": "/e/",
+    "keywords": [
+      "bed",
+      "next",
+      "steps"
+    ]
+  },
+  {
+    "name": "SILVER PIN",
+    "color": "#D9D9D9",
+    "sound": "/ɪ/",
+    "keywords": [
+      "it",
+      "sit",
+      "spot"
+    ]
+  },
+  {
+    "name": "PURPLE SHIRT",
+    "color": "#7030A0",
+    "sound": "/ɜr/",
+    "keywords": [
+      "bird",
+      "her",
+      "work"
+    ]
+  },
+  {
+    "name": "BROWN COW",
+    "color": "#C55A11",
+    "sound": "/aw/",
+    "keywords": [
+      "how",
+      "now",
+      "drawn"
+    ]
+  },
+  {
+    "name": "WHITE TIE",
+    "color": "#FFFFFF",
+    "sound": "/ay/",
+    "keywords": [
+      "my",
+      "time",
+      "fly"
+    ]
+  },
+  {
+    "name": "BLACK CAT",
+    "color": "#000000",
+    "sound": "/æ/",
+    "keywords": [
+      "cat",
+      "bad",
+      "magic"
+    ]
+  },
+  {
+    "name": "OLIVE SOCK",
+    "color": "#808000",
+    "sound": "/ɑ/",
+    "keywords": [
+      "hot",
+      "not",
+      "top"
+    ]
+  },
+  {
+    "name": "BLUE MOON",
+    "color": "#0070C0",
+    "sound": "/uw/",
+    "keywords": [
+      "too",
+      "moon",
+      "blue"
+    ]
+  },
+  {
+    "name": "ROSE BOAT",
+    "color": "#FF69A6",
+    "sound": "/ow/",
+    "keywords": [
+      "go",
+      "home",
+      "boat"
+    ]
+  },
+  {
+    "name": "ORANGE DOOR",
+    "color": "#FF9900",
+    "sound": "/or/",
+    "keywords": [
+      "door",
+      "floor",
+      "more"
+    ]
+  },
+  {
+    "name": "GRAY DAY",
+    "color": "#7F7F7F",
+    "sound": "/ey/",
+    "keywords": [
+      "day",
+      "say",
+      "cake"
+    ]
+  },
+  {
+    "name": "WOODEN HOOK",
+    "color": "#CA874A",
+    "sound": "/u/",
+    "keywords": [
+      "book",
+      "good",
+      "look"
+    ]
+  },
+  {
+    "name": "MUSTARD CUP",
+    "color": "#F8F200",
+    "sound": "/ʌ/",
+    "keywords": [
+      "up",
+      "run",
+      "come"
+    ]
+  },
+  {
+    "name": "TURQUOISE TOY",
+    "color": "#00FFFF",
+    "sound": "/oy/",
+    "keywords": [
+      "boy",
+      "toy",
+      "joy"
+    ]
+  },
+  {
+    "name": "AUBURN DOG",
+    "color": "#C00000",
+    "sound": "/o/",
+    "keywords": [
+      "dog",
+      "log",
+      "fog"
+    ]
+  }
+]
