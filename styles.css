@@ -5271,7 +5271,7 @@ body {
 /* Word Card */
 .rwggp-word-card {
   text-align: center;
-  padding: 2rem 2rem 2.25rem;
+  padding: 2rem 2rem 3.4rem;
   position: relative;
   box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
   border: 1px solid #e2e8f0;
@@ -5285,49 +5285,56 @@ body {
   width: 100%;
 }
 
-.rwggp-speaker-btn {
+.rwggp-word-actions {
   position: absolute;
-  bottom: 1.1rem;
-  right: 1.25rem;
-  width: 36px;
-  height: 36px;
+  bottom: 0.85rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  z-index: 10;
+}
+
+.rwggp-speaker-btn {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: #1e293b !important;
   border: 1px solid #334155 !important;
   color: #ffffff !important;
-  font-size: 0.95rem;
+  font-size: 0.78rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25) !important;
-  transition: all 0.25s ease;
-  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.22s ease;
 }
 
 .rwggp-speaker-btn i {
   color: #ffffff !important;
   -webkit-text-fill-color: initial !important;
   background: none !important;
+  font-size: 0.78rem;
 }
 
 .rwggp-speaker-btn:hover {
   background: #334155 !important;
   border-color: #475569 !important;
   color: #ffffff !important;
-  transform: scale(1.12) rotate(-6deg);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.35) !important;
+  transform: scale(1.1) rotate(-6deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28) !important;
 }
 
 .rwggp-speaker-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 
 :root[data-theme="light"] .rwggp-speaker-btn {
   background: #ffffff !important;
   border: 1px solid #cbd5e1 !important;
   color: #0f172a !important;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06) !important;
 }
 
 :root[data-theme="light"] .rwggp-speaker-btn i {

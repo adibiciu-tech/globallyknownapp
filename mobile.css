@@ -597,13 +597,30 @@ html, body {
 }
 
 /* 3. Word Display Card */
-.rwggp-word-card {
-  padding: 1.5rem 0.85rem 1.75rem 0.85rem !important;
+.rwggp-card.rwggp-word-card {
+  padding: 1.5rem 0.85rem 3.4rem 0.85rem !important;
   width: 100% !important;
   box-sizing: border-box !important;
   border-radius: 16px !important;
   box-shadow: 0 8px 24px -3px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04) !important;
   border: 1px solid #e2e8f0 !important;
+  position: relative !important;
+}
+
+.rwggp-word-actions {
+  position: absolute !important;
+  bottom: 0.75rem !important;
+  right: 0.85rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  z-index: 10 !important;
+}
+
+.rwggp-word-actions .rwggp-speaker-btn {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 0.78rem !important;
 }
 
 .rwggp-word-text {
@@ -663,7 +680,7 @@ html, body {
 }
 
 /* 5. History & Savings Cards */
-.rwggp-card {
+.rwggp-card:not(.rwggp-word-card) {
   padding: 1.15rem 1rem !important;
   border-radius: 16px !important;
   width: 100% !important;
