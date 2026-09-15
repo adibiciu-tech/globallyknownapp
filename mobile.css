@@ -598,7 +598,7 @@ html, body {
 
 /* 3. Word Display Card */
 .rwggp-card.rwggp-word-card {
-  padding: 1.5rem 0.85rem 3.4rem 0.85rem !important;
+  padding: 1.5rem 0.85rem 1.75rem 0.85rem !important;
   width: 100% !important;
   box-sizing: border-box !important;
   border-radius: 16px !important;
@@ -607,20 +607,19 @@ html, body {
   position: relative !important;
 }
 
-.rwggp-word-actions {
-  position: absolute !important;
-  bottom: 0.75rem !important;
-  right: 0.85rem !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
-  z-index: 10 !important;
+.rwggp-word-details {
+  position: relative !important;
+  width: 100% !important;
 }
 
-.rwggp-word-actions .rwggp-speaker-btn {
+.rwggp-speaker-btn {
+  position: absolute !important;
+  top: -2px !important;
+  right: 0.85rem !important;
   width: 28px !important;
   height: 28px !important;
   font-size: 0.78rem !important;
+  z-index: 10 !important;
 }
 
 .rwggp-word-text {
