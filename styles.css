@@ -5273,6 +5273,8 @@ body {
   text-align: center;
   padding: 2rem 2rem 2.25rem;
   position: relative;
+  box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
 }
 
 .rwggp-word-inner {
@@ -5361,12 +5363,16 @@ body {
   font-size: 4rem;
   font-weight: 800;
   padding: 1.75rem 1rem 1.5rem;
-  border-radius: 14px;
-  background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
   line-height: 1.05;
   text-align: center;
   letter-spacing: -0.02em;
-  transition: color 0.3s ease, text-shadow 0.3s ease;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.07);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.09));
+  transition: color 0.3s ease, text-shadow 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
 }
 
 .rwggp-word-text .stressed-vowel-underline {
