@@ -1283,8 +1283,7 @@ body {
   animation: detailFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Disable fade-in animations on all details inside Word Pronunciation windows */
-#panel-random-word *,
+/* Disable fade-in animations on legacy word pronunciation details */
 .random-word-card,
 .random-word-card *,
 .word-history-card,
@@ -1292,7 +1291,6 @@ body {
   animation: none !important;
   animation-delay: 0s !important;
   opacity: 1 !important;
-  transform: none !important;
 }
 
 #panel-start-here {
@@ -5203,9 +5201,11 @@ body {
   position: absolute;
   top: 100%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) !important;
   margin-top: 0.75rem;
   z-index: 1000;
+  max-width: 100vw;
+  box-sizing: border-box;
 }
 
 .metronome-dropdown-container.hidden {
@@ -5815,6 +5815,8 @@ body {
 .metronome-popover-card {
   background-color: #ffffff;
   width: 350px;
+  max-width: calc(100vw - 28px);
+  box-sizing: border-box;
   border-radius: 18px;
   box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.06);
   padding: 1rem 0.9rem;
