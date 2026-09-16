@@ -445,13 +445,28 @@ function updateHomeChatModeState() {
   if (homeContent) homeContent.classList.toggle("has-messages", hasMsgs);
 }
 
-function triggerHomeFadeInAnimation() {
-  const container = document.querySelector(".gemini-home-content");
-  if (!container) return;
+function triggerSolFadeIn() {
+  const solPanel = document.getElementById("panel-sol-chat");
+  if (!solPanel) return;
   
-  container.classList.remove("fade-in-anim");
-  void container.offsetWidth; // Force DOM reflow
-  container.classList.add("fade-in-anim");
+  const content = solPanel.querySelector(".gemini-home-content") || document.querySelector(".gemini-home-content");
+  if (content) {
+    content.classList.remove("fade-in-anim");
+    void content.offsetWidth; // Force DOM reflow
+    content.classList.add("fade-in-anim");
+  }
+
+  const targets = solPanel.querySelectorAll(".sol-eye-icon-wrapper, .gemini-home-greeting, .gemini-input-wrapper");
+  targets.forEach(el => {
+    el.classList.remove("sol-fade-in-play");
+    void el.offsetWidth; // Force DOM reflow to restart CSS keyframe animation
+    el.classList.add("sol-fade-in-play");
+  });
+}
+window.triggerSolFadeIn = triggerSolFadeIn;
+
+function triggerHomeFadeInAnimation() {
+  triggerSolFadeIn();
 }
 
 function attachAiActions(aiDiv, text) {
@@ -1735,6 +1750,7 @@ window.switchPanel = function(panelId) {
   } else if (panelId === "random-word") {
     if (typeof initRandomWordPanel === "function") initRandomWordPanel();
   } else if (panelId === "sol-chat") {
+    if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
     const homeInput = document.getElementById("gemini-home-input");
     if (homeInput) setTimeout(() => homeInput.focus(), 60);
   }
@@ -3940,6 +3956,9 @@ function initAuthSystem() {
       if (typeof window.switchPanel === "function") {
         window.switchPanel("sol-chat");
       }
+      if (typeof triggerSolFadeIn === "function") {
+        triggerSolFadeIn();
+      }
       if (typeof showToast === "function") {
         showToast("🧭 Browsing in Guest Preview mode. Sign in anytime!");
       }
@@ -3963,6 +3982,7 @@ function checkActiveSession() {
         if (authModal) authModal.classList.add("hidden");
         renderUserProfile(user);
         renderCircleMembersWidget();
+        if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
         return;
       }
     } catch (e) {
@@ -3975,6 +3995,7 @@ function checkActiveSession() {
   if (window.solGuestMode === true) {
     if (authModal) authModal.classList.add("hidden");
     renderGuestProfile();
+    if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
     return;
   }
 
@@ -4027,6 +4048,9 @@ function loginUserSuccess(user, token, isNew = false) {
 
   if (typeof window.switchPanel === "function") {
     window.switchPanel("sol-chat");
+  }
+  if (typeof triggerSolFadeIn === "function") {
+    triggerSolFadeIn();
   }
 
   if (typeof showToast === "function") {
