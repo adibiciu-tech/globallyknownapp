@@ -5666,6 +5666,16 @@ body {
   line-height: 1;
 }
 
+.history-category-label.is-white-tie {
+  color: #ffffff !important;
+  -webkit-text-stroke: 0.5px #64748b;
+  paint-order: stroke fill;
+}
+
+.history-color-dot.is-white-tie {
+  border: 1px solid #cbd5e1;
+}
+
 .rwggp-empty-savings-text {
   text-align: center;
   color: #94a3b8;

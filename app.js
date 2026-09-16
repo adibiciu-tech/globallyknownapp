@@ -4818,9 +4818,10 @@ function renderRwggpHistory() {
   container.innerHTML = rwggpHistory.map(w => {
     const color = getRwggpCategoryColor(w.colorCategory);
     const isSaved = isWordSavedInAnyList(w.word);
+    const isWhiteTie = (w.colorCategory || "").trim().toUpperCase() === "WHITE TIE";
     return `
-      <div class="rwggp-history-row" data-word="${escapeHtml(w.word)}">
-        <span class="history-color-dot" style="background-color: ${color};"></span>
+      <div class="rwggp-history-row" data-word="${escapeHtml(w.word)}" ${isWhiteTie ? 'data-white-tie="true"' : ''}>
+        <span class="history-color-dot ${isWhiteTie ? 'is-white-tie' : ''}" style="background-color: ${color};"></span>
         <span class="history-word-text">${escapeHtml(w.word)}</span>
         <button type="button" class="history-save-btn ${isSaved ? 'saved' : ''}" data-action="save" title="${isSaved ? 'Saved in list' : 'Save to list'}">
           ${isSaved ? `
@@ -4836,7 +4837,7 @@ function renderRwggpHistory() {
             </svg>
           `}
         </button>
-        <span class="history-category-label" style="color: ${color}; font-weight: 700;">${escapeHtml(w.colorCategory)}</span>
+        <span class="history-category-label ${isWhiteTie ? 'is-white-tie' : ''}" style="color: ${color}; font-weight: 700;">${escapeHtml(w.colorCategory)}</span>
         <button type="button" class="history-speak-btn" data-action="speak" title="Listen">
           <i class="fa-solid fa-volume-high"></i>
         </button>
