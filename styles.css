@@ -5645,11 +5645,16 @@ body {
 }
 
 .history-plus-icon-svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
-  display: inline-block;
-  vertical-align: middle;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.history-save-btn:hover .history-plus-icon-svg:not(.saved) circle,
+.history-save-btn:hover .history-plus-icon-svg:not(.saved) line {
+  stroke: #4f46e5;
 }
 
 .history-category-label {

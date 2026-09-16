@@ -4823,7 +4823,18 @@ function renderRwggpHistory() {
         <span class="history-color-dot" style="background-color: ${color};"></span>
         <span class="history-word-text">${escapeHtml(w.word)}</span>
         <button type="button" class="history-save-btn ${isSaved ? 'saved' : ''}" data-action="save" title="${isSaved ? 'Saved in list' : 'Save to list'}">
-          <i class="${isSaved ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-plus'}"></i>
+          ${isSaved ? `
+            <svg class="history-plus-icon-svg saved" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#ffffff" stroke="#10b981" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" fill="#ffffff" stroke="#10b981" />
+              <path d="m9 12 2 2 4-4" stroke="#10b981" />
+            </svg>
+          ` : `
+            <svg class="history-plus-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#ffffff" stroke="#94a3b8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" fill="#ffffff" stroke="#94a3b8" />
+              <line x1="12" y1="8" x2="12" y2="16" stroke="#94a3b8" />
+              <line x1="8" y1="12" x2="16" y2="12" stroke="#94a3b8" />
+            </svg>
+          `}
         </button>
         <span class="history-category-label" style="color: ${color}; font-weight: 700;">${escapeHtml(w.colorCategory)}</span>
         <button type="button" class="history-speak-btn" data-action="speak" title="Listen">
