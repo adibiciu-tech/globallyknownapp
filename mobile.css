@@ -463,7 +463,46 @@ html, body {
 }
 
 .netflix-slider-track .video-card {
-  flex: 0 0 85vw !important;
+  flex: 0 0 clamp(160px, 58vw, 215px) !important;
+  min-width: clamp(160px, 58vw, 215px) !important;
+  max-width: clamp(160px, 58vw, 215px) !important;
+}
+
+.add-video-frame,
+.add-video-blue-frame {
+  min-height: 125px !important;
+  padding: 0.75rem 0.4rem !important;
+}
+
+.add-video-plus-circle {
+  width: 36px !important;
+  height: 36px !important;
+  margin-bottom: 6px !important;
+}
+
+.add-video-plus-circle i {
+  font-size: 1.05rem !important;
+}
+
+.add-video-title {
+  font-size: 13px !important;
+}
+
+.add-video-sub {
+  font-size: 10px !important;
+}
+
+.video-card-info-footer {
+  padding: 6px 10px !important;
+}
+
+.video-card-title {
+  font-size: 0.82rem !important;
+}
+
+.delete-video-btn.mini {
+  padding: 3px 8px !important;
+  font-size: 0.72rem !important;
 }
 
 /* 6. Mobile Sol Chat & Describing Lab (Full Dynamic Resolution Adaptation) */
