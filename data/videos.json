@@ -1,0 +1,28 @@
+[
+  {
+    "id": "vid_test_123",
+    "categoryId": "city",
+    "title": "Episode 1",
+    "desc": "Custom embedded YouTube video",
+    "embedUrl": "https://www.youtube.com/embed/gCWYp2zJpB8",
+    "isUserAdded": true
+  },
+  {
+    "id": "custom_1789590071219_0liw7",
+    "categoryId": "city",
+    "title": "City Streets at Dusk",
+    "desc": "Custom embedded video lesson",
+    "embedUrl": "https://www.youtube.com/embed/3i_JmO7zM0A",
+    "isUserAdded": true,
+    "addedAt": 1789590071219
+  },
+  {
+    "id": "custom_1789590112159_1zwrb",
+    "categoryId": "city",
+    "title": "City Streets at Dusk",
+    "desc": "Custom embedded video lesson",
+    "embedUrl": "https://www.youtube.com/embed/3i_JmO7zM0A",
+    "isUserAdded": true,
+    "addedAt": 1789590112159
+  }
+]

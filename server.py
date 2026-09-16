@@ -13,6 +13,7 @@ import urllib.parse
 PORT = int(os.environ.get("PORT", 8000))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, "data_store.json")
+VIDEOS_FILE = os.path.join(BASE_DIR, "data", "videos.json")
 
 def get_local_ip():
     try:
@@ -24,26 +25,67 @@ def get_local_ip():
     except Exception:
         return "127.0.0.1"
 
-def load_data():
-    if os.path.exists(DATA_FILE):
+def get_permanent_videos():
+    if os.path.exists(VIDEOS_FILE):
         try:
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                d = json.load(f)
-                if "users" not in d:
-                    d["users"] = []
-                return d
+            with open(VIDEOS_FILE, "r", encoding="utf-8") as f:
+                vids = json.load(f)
+                if isinstance(vids, list):
+                    return vids
         except Exception as e:
-            print("Error reading data_store.json:", e)
-    return {"videos": [], "conversations": [], "progress": {}, "users": []}
+            print("Error reading videos.json:", e)
+    return []
+
+def save_permanent_videos(videos):
+    if not isinstance(videos, list):
+        return
+    for attempt in range(5):
+        try:
+            temp_file = VIDEOS_FILE + ".tmp"
+            with open(temp_file, "w", encoding="utf-8") as f:
+                json.dump(videos, f, ensure_ascii=False, indent=2)
+            os.replace(temp_file, VIDEOS_FILE)
+            break
+        except Exception as e:
+            if attempt == 4:
+                print("Error saving videos.json:", e)
+            time.sleep(0.05)
+
+def load_data():
+    d = {"videos": [], "conversations": [], "progress": {}, "users": []}
+    if os.path.exists(DATA_FILE):
+        for attempt in range(5):
+            try:
+                with open(DATA_FILE, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                    if "users" not in d:
+                        d["users"] = []
+                    break
+            except Exception as e:
+                if attempt == 4:
+                    print("Error reading data_store.json:", e)
+                time.sleep(0.05)
+    # Never return empty videos if permanent storage has videos
+    if not d.get("videos"):
+        permanent_vids = get_permanent_videos()
+        if permanent_vids:
+            d["videos"] = permanent_vids
+    return d
 
 def save_data(data):
-    try:
-        temp_file = DATA_FILE + ".tmp"
-        with open(temp_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        os.replace(temp_file, DATA_FILE)
-    except Exception as e:
-        print("Error saving data_store.json:", e)
+    for attempt in range(5):
+        try:
+            temp_file = DATA_FILE + ".tmp"
+            with open(temp_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            os.replace(temp_file, DATA_FILE)
+            break
+        except Exception as e:
+            if attempt == 4:
+                print("Error saving data_store.json:", e)
+            time.sleep(0.05)
+    if "videos" in data and isinstance(data["videos"], list):
+        save_permanent_videos(data["videos"])
 
 def hash_password(password, salt=None):
     if not salt:
@@ -400,13 +442,83 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(resp)
             return
 
-        if self.path.startswith("/api/videos"):
+        if self.path.startswith("/api/videos/delete"):
             try:
-                videos = json.loads(body)
+                payload = json.loads(body)
+                vid_id = payload.get("id")
                 data = load_data()
-                data["videos"] = videos
+                existing = data.get("videos", [])
+                filtered = [v for v in existing if isinstance(v, dict) and v.get("id") != vid_id]
+                data["videos"] = filtered
                 save_data(data)
-                resp = json.dumps({"success": True, "count": len(videos)}).encode("utf-8")
+                save_permanent_videos(filtered)
+                resp = json.dumps({"success": True, "count": len(filtered), "videos": filtered}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
+        elif self.path.startswith("/api/videos/import") or self.path.startswith("/api/videos/restore"):
+            try:
+                imported = json.loads(body)
+                if isinstance(imported, dict) and "videos" in imported:
+                    imported = imported["videos"]
+                if isinstance(imported, list):
+                    data = load_data()
+                    # Union merge imported with existing
+                    existing = data.get("videos", [])
+                    vmap = {v["id"]: v for v in existing if isinstance(v, dict) and "id" in v}
+                    for v in imported:
+                        if isinstance(v, dict) and "id" in v:
+                            vmap[v["id"]] = v
+                    merged = list(vmap.values())
+                    data["videos"] = merged
+                    save_data(data)
+                    save_permanent_videos(merged)
+                    resp = json.dumps({"success": True, "count": len(merged), "videos": merged}).encode("utf-8")
+                else:
+                    resp = json.dumps({"error": "Invalid format, array of videos expected"}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
+        elif self.path.startswith("/api/videos"):
+            try:
+                posted_videos = json.loads(body)
+                if isinstance(posted_videos, list):
+                    data = load_data()
+                    existing = data.get("videos", [])
+                    # Union merge by id so no client can accidentally erase another client's embeds
+                    vmap = {v["id"]: v for v in existing if isinstance(v, dict) and "id" in v}
+                    for v in posted_videos:
+                        if isinstance(v, dict) and "id" in v:
+                            vmap[v["id"]] = v
+                    merged = list(vmap.values())
+                    data["videos"] = merged
+                    save_data(data)
+                    save_permanent_videos(merged)
+                    resp = json.dumps({"success": True, "count": len(merged), "videos": merged}).encode("utf-8")
+                else:
+                    resp = json.dumps({"error": "Array expected"}).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(resp)))

@@ -3791,17 +3791,91 @@ function setupSettingsHandlers() {
     }
   });
 
-  // Clear data settings
+  // Clear data settings (Safeguards video library from being wiped)
   clearAllDataBtn.addEventListener("click", () => {
-    if (confirm("WARNING: This will clear your entire SOL history, delete saved API keys, and reload the workspace. Proceed?")) {
+    if (confirm("WARNING: This will clear your chat history, cached exercises, and reset your API key.\n\nNOTE: Your embedded videos in the Video Library will remain safely preserved.\n\nProceed?")) {
+      const savedVideos = localStorage.getItem("sol_user_added_videos");
       localStorage.clear();
+      if (savedVideos) {
+        localStorage.setItem("sol_user_added_videos", savedVideos);
+      }
       activeChatMessages = [];
       geminiService.setApiKey("");
       
-      alert("Local data cleared.");
+      alert("Local chat data reset. Your embedded video library was safely preserved.");
       location.reload();
     }
   });
+
+  // Video Library Settings Controls
+  const btnSyncVideos = document.getElementById("btn-sync-videos-now");
+  if (btnSyncVideos) {
+    btnSyncVideos.addEventListener("click", async () => {
+      btnSyncVideos.disabled = true;
+      btnSyncVideos.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
+      try {
+        const vids = await fetchServerVideos();
+        if (typeof initVideosPanel === "function") await initVideosPanel();
+        showToast(`🔄 Video library synced (${vids.length} videos active)!`);
+      } catch (err) {
+        showToast("⚠️ Could not sync with server, using local storage.");
+      } finally {
+        btnSyncVideos.disabled = false;
+        btnSyncVideos.innerHTML = '<i class="fa-solid fa-rotate"></i> Sync All Videos Now';
+      }
+    });
+  }
+
+  const btnExportVideos = document.getElementById("btn-export-videos-backup");
+  if (btnExportVideos) {
+    btnExportVideos.addEventListener("click", () => {
+      const localVids = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localVids, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `globallyknown_video_library_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("💾 Video library backup downloaded!");
+    });
+  }
+
+  const btnImportVideos = document.getElementById("btn-import-videos-backup");
+  const fileInputImport = document.getElementById("import-videos-file-input");
+  if (btnImportVideos && fileInputImport) {
+    btnImportVideos.addEventListener("click", () => {
+      fileInputImport.value = "";
+      fileInputImport.click();
+    });
+
+    fileInputImport.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          const vids = Array.isArray(parsed) ? parsed : (parsed.videos || []);
+          if (!Array.isArray(vids) || vids.length === 0) {
+            showToast("⚠️ No valid videos found in backup file.");
+            return;
+          }
+          await fetch("/api/videos/import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(vids)
+          });
+          await fetchServerVideos();
+          if (typeof initVideosPanel === "function") await initVideosPanel();
+          showToast(`📥 Successfully restored ${vids.length} videos to library!`);
+        } catch (err) {
+          showToast("⚠️ Invalid JSON backup file.");
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
 }
 
 function applyTheme(themeName) {
@@ -4363,48 +4437,281 @@ if (document.readyState === "loading") {
 
 
 
+// -------------------------------------------------------------
+// Universal Video Embed URL Parser & Formatter
+// -------------------------------------------------------------
+function parseEmbedVideoUrl(rawInput) {
+  if (!rawInput || typeof rawInput !== "string") return "";
+  let text = rawInput.trim();
+
+  // If user pasted an <iframe>...</iframe> snippet, extract src attribute
+  const iframeSrcMatch = text.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+  if (iframeSrcMatch) {
+    text = iframeSrcMatch[1].trim();
+  }
+
+  // 1. YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
+  const shortsMatch = text.match(/(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/i);
+  if (shortsMatch) {
+    return `https://www.youtube.com/embed/${shortsMatch[1]}`;
+  }
+
+  // 2. YouTube Playlist: https://www.youtube.com/playlist?list=LIST_ID
+  const playlistOnlyMatch = text.match(/youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/i);
+  if (playlistOnlyMatch) {
+    return `https://www.youtube.com/embed/videoseries?list=${playlistOnlyMatch[1]}`;
+  }
+
+  // 3. YouTube Watch, youtu.be, or existing /embed/
+  const ytMatch = text.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/i);
+  const listMatch = text.match(/[?&]list=([a-zA-Z0-9_-]+)/i);
+  if (ytMatch) {
+    const videoId = ytMatch[1];
+    let res = `https://www.youtube.com/embed/${videoId}`;
+    if (listMatch) res += `?list=${listMatch[1]}`;
+    return res;
+  }
+
+  // 4. Vimeo: https://vimeo.com/VIDEO_ID or https://player.vimeo.com/video/VIDEO_ID
+  const vimeoMatch = text.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/i);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  // 5. Direct or already formatted URL
+  if (text.startsWith("http://") || text.startsWith("https://")) {
+    return text;
+  }
+
+  return "";
+}
+
+// Update status badges in Info / Settings
+function updateVideoSettingsBadge(count, isServerSynced) {
+  const syncBadge = document.getElementById("video-sync-status-badge");
+  const countBadge = document.getElementById("video-total-count-badge");
+  if (syncBadge) {
+    if (isServerSynced) {
+      syncBadge.innerHTML = '<span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 8px #10b981;"></span> Permanent Storage Active (Server Synced)';
+      syncBadge.style.color = "#34d399";
+      syncBadge.style.borderColor = "rgba(16, 185, 129, 0.4)";
+      syncBadge.style.background = "rgba(16, 185, 129, 0.15)";
+    } else {
+      syncBadge.innerHTML = '<span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span> Browser Storage Active';
+      syncBadge.style.color = "#fbbf24";
+      syncBadge.style.borderColor = "rgba(245, 158, 11, 0.4)";
+      syncBadge.style.background = "rgba(245, 158, 11, 0.15)";
+    }
+  }
+  if (countBadge) {
+    countBadge.textContent = `${count} Video${count === 1 ? "" : "s"} Embedded`;
+  }
+}
+
 async function fetchServerVideos() {
+  let serverVids = [];
+  let serverAvailable = false;
   try {
     const res = await fetch("/api/videos", { cache: "no-store" });
     if (res.ok) {
-      const serverVids = await res.json();
-      if (Array.isArray(serverVids)) {
-        if (serverVids.length > 0) {
-          localStorage.setItem("sol_user_added_videos", JSON.stringify(serverVids));
-          return serverVids;
-        } else {
-          // If server is empty, check if this client has local videos and sync them
-          const local = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
-          const validLocal = Array.isArray(local) ? local.filter(v => v && !v.isAddTemplate && v.embedUrl) : [];
-          if (validLocal.length > 0) {
-            await syncVideosToServer(validLocal);
-            return validLocal;
-          }
-        }
-        return serverVids;
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        serverVids = data;
+        serverAvailable = true;
       }
     }
   } catch (err) {
     console.warn("Could not reach /api/videos, using localStorage cache:", err);
   }
-  try {
-    return JSON.parse(localStorage.getItem("sol_user_added_videos")) || [];
-  } catch (err) {
-    return [];
+
+  const localVids = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+  const validLocal = Array.isArray(localVids) ? localVids.filter(v => v && !v.isAddTemplate && v.embedUrl) : [];
+
+  // Two-way union merge by ID so no video is EVER dropped or overwritten
+  const mergedMap = new Map();
+  serverVids.forEach(v => {
+    if (v && v.id) mergedMap.set(v.id, v);
+  });
+  validLocal.forEach(v => {
+    if (v && v.id && !mergedMap.has(v.id)) {
+      mergedMap.set(v.id, v);
+    }
+  });
+
+  const mergedList = Array.from(mergedMap.values());
+  localStorage.setItem("sol_user_added_videos", JSON.stringify(mergedList));
+
+  // If local had videos the server didn't have, push merged list to server
+  if (serverAvailable && mergedList.length > serverVids.length) {
+    await syncVideosToServer(mergedList);
   }
+
+  updateVideoSettingsBadge(mergedList.length, serverAvailable);
+  return mergedList;
 }
 
 async function syncVideosToServer(videos) {
   const filtered = Array.isArray(videos) ? videos.filter(v => v && !v.isAddTemplate && v.embedUrl && v.embedUrl.trim() !== "") : [];
   localStorage.setItem("sol_user_added_videos", JSON.stringify(filtered));
+  let serverAvailable = false;
   try {
-    await fetch("/api/videos", {
+    const res = await fetch("/api/videos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(filtered)
     });
+    if (res.ok) {
+      serverAvailable = true;
+      const data = await res.json();
+      if (data && Array.isArray(data.videos)) {
+        localStorage.setItem("sol_user_added_videos", JSON.stringify(data.videos));
+        updateVideoSettingsBadge(data.videos.length, true);
+        return data.videos;
+      }
+    }
   } catch (err) {
     console.warn("Could not push videos to /api/videos:", err);
+  }
+  updateVideoSettingsBadge(filtered.length, serverAvailable);
+  return filtered;
+}
+
+async function deleteVideoFromServer(videoId) {
+  let serverAvailable = false;
+  try {
+    const res = await fetch("/api/videos/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: videoId })
+    });
+    if (res.ok) {
+      serverAvailable = true;
+      const data = await res.json();
+      if (data && Array.isArray(data.videos)) {
+        localStorage.setItem("sol_user_added_videos", JSON.stringify(data.videos));
+        updateVideoSettingsBadge(data.videos.length, true);
+        return data.videos;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not delete from server:", err);
+  }
+  let localVids = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+  localVids = localVids.filter(v => v.id !== videoId);
+  localStorage.setItem("sol_user_added_videos", JSON.stringify(localVids));
+  updateVideoSettingsBadge(localVids.length, serverAvailable);
+  return localVids;
+}
+
+// -------------------------------------------------------------
+// Add Video Modal Handling (Safe & Persistent)
+// -------------------------------------------------------------
+let addVideoModalInitialized = false;
+
+function openAddVideoModal(defaultCategoryId = "city") {
+  const modal = document.getElementById("modal-add-video");
+  const selectCat = document.getElementById("add-video-category-select");
+  const inputUrl = document.getElementById("add-video-url-input");
+  const inputTitle = document.getElementById("add-video-title-input");
+
+  if (!modal) return;
+
+  // Populate category select
+  if (selectCat) {
+    selectCat.innerHTML = "";
+    PLAYLIST_CATEGORIES.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = `${c.flag} ${c.title}`;
+      if (c.id === defaultCategoryId) opt.selected = true;
+      selectCat.appendChild(opt);
+    });
+  }
+
+  if (inputUrl) inputUrl.value = "";
+  if (inputTitle) inputTitle.value = "";
+
+  modal.classList.remove("hidden");
+  setTimeout(() => {
+    if (inputUrl) inputUrl.focus();
+  }, 100);
+
+  if (!addVideoModalInitialized) {
+    addVideoModalInitialized = true;
+    const btnClose = document.getElementById("btn-close-add-video-modal");
+    const btnCancel = document.getElementById("btn-cancel-add-video");
+    const form = document.getElementById("form-add-video");
+
+    const closeModal = () => modal.classList.add("hidden");
+
+    if (btnClose) btnClose.addEventListener("click", closeModal);
+    if (btnCancel) btnCancel.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    const handleSubmit = async (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const rawUrl = inputUrl ? inputUrl.value : "";
+      const parsedEmbedUrl = parseEmbedVideoUrl(rawUrl);
+
+      if (!parsedEmbedUrl) {
+        showToast("⚠️ Please enter a valid YouTube, Vimeo, or video embed link.");
+        if (inputUrl) inputUrl.focus();
+        return;
+      }
+
+      const title = (inputTitle && inputTitle.value.trim()) ? inputTitle.value.trim() : "Embedded Video";
+      const catId = (selectCat && selectCat.value) ? selectCat.value : "city";
+
+      const newVid = {
+        id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        categoryId: catId,
+        title: title,
+        desc: "Custom embedded video lesson",
+        embedUrl: parsedEmbedUrl,
+        isUserAdded: true,
+        addedAt: Date.now()
+      };
+
+      const submitBtn = document.getElementById("btn-submit-add-video");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+      }
+
+      try {
+        const currentVideos = await fetchServerVideos();
+        const merged = [...currentVideos.filter(v => v.id !== newVid.id), newVid];
+        await syncVideosToServer(merged);
+
+        closeModal();
+        showToast("✅ Video permanently saved to library!");
+        await initVideosPanel();
+      } catch (err) {
+        console.error("Error saving video:", err);
+        showToast("⚠️ Saved locally, syncing will continue in background.");
+        closeModal();
+        await initVideosPanel();
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i> Embed Video Permanently';
+        }
+      }
+    };
+
+    if (form) {
+      form.addEventListener("submit", handleSubmit);
+    }
+    const btnSubmit = document.getElementById("btn-submit-add-video");
+    if (btnSubmit) {
+      btnSubmit.addEventListener("click", handleSubmit);
+    }
   }
 }
 
@@ -4516,47 +4823,12 @@ async function initVideosPanel() {
               <i class="fa-solid fa-plus"></i>
             </div>
             <span class="add-video-title">Add Video</span>
-            <span class="add-video-sub">Embed YouTube Link</span>
+            <span class="add-video-sub">Embed Video Link</span>
           </div>
         `;
 
-        card.addEventListener("click", async () => {
-          const rawUrl = prompt("🔗 Enter YouTube Link or Embed URL:\n(e.g., https://www.youtube.com/watch?v=... or https://youtu.be/...)");
-          if (!rawUrl || !rawUrl.trim()) return;
-
-          let embedUrl = rawUrl.trim();
-          let videoId = "";
-          let listId = "";
-
-          const watchMatch = embedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
-          const listMatch = embedUrl.match(/[?&]list=([a-zA-Z0-9_-]+)/);
-
-          if (watchMatch) videoId = watchMatch[1];
-          if (listMatch) listId = listMatch[1];
-
-          if (videoId) {
-            embedUrl = `https://www.youtube.com/embed/${videoId}`;
-            if (listId) embedUrl += `?list=${listId}`;
-          }
-
-          const title = prompt("📝 Enter Video Title:", "My Embedded Video") || "My Embedded Video";
-
-          const newVid = {
-            id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            categoryId: category.id,
-            title: title,
-            desc: "Custom embedded YouTube video",
-            embedUrl: embedUrl,
-            isUserAdded: true
-          };
-
-          const saved = JSON.parse(localStorage.getItem("sol_user_added_videos")) || [];
-          saved.push(newVid);
-          const filtered = saved.filter(v => v && !v.isAddTemplate && v.embedUrl);
-          await syncVideosToServer(filtered);
-          
-          if (typeof showToast === "function") showToast("✅ Video saved across all devices!");
-          initVideosPanel();
+        card.addEventListener("click", () => {
+          openAddVideoModal(category.id);
         });
 
         trackElement.appendChild(card);
@@ -4595,10 +4867,8 @@ async function initVideosPanel() {
         deleteBtn.addEventListener("click", async (e) => {
           e.stopPropagation();
           if (confirm(`Delete video "${video.title}"?`)) {
-            let userVids = JSON.parse(localStorage.getItem("sol_user_added_videos")) || [];
-            userVids = userVids.filter(v => v.id !== video.id);
-            await syncVideosToServer(userVids);
-            if (typeof showToast === "function") showToast("🗑️ Video removed.");
+            await deleteVideoFromServer(video.id);
+            showToast("🗑️ Video removed.");
             initVideosPanel();
           }
         });
