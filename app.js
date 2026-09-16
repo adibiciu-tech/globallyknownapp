@@ -9,6 +9,7 @@ import { GeminiService } from "./gemini-service.js";
   let lastHtmlMod = null;
   
   setInterval(async () => {
+    if (document.hidden || (typeof navigator.onLine === "boolean" && !navigator.onLine)) return;
     try {
       const cssRes = await fetch(`styles.css?t=${Date.now()}`, { method: "HEAD" });
       const cssMod = cssRes.headers.get("last-modified") || cssRes.headers.get("etag");
@@ -24,9 +25,9 @@ import { GeminiService } from "./gemini-service.js";
       if (cssMod) lastCssMod = cssMod;
       if (htmlMod) lastHtmlMod = htmlMod;
     } catch (err) {
-      // Ignore transient network glitches
+      // Ignore transient network glitches or sleep states
     }
-  }, 1200);
+  }, 2500);
 })();
 
 // Initialize Gemini Service
