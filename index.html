@@ -59,13 +59,13 @@
         <ul class="nav-list">
           
           <!-- Category 0: Sol -->
-          <li class="nav-item" data-panel="sol-chat" onclick="if (window.startNewSolChatSession) { window.startNewSolChatSession(); } else { window.switchPanel('sol-chat'); }" title="Sol">
+          <li class="nav-item active" data-panel="sol-chat" onclick="if (window.startNewSolChatSession) { window.startNewSolChatSession(); } else { window.switchPanel('sol-chat'); }" title="Sol">
             <i class="fa-solid fa-comment-dots nav-icon"></i>
             <span class="nav-label">Sol</span>
           </li>
           
           <!-- Category 1: Start Here -->
-          <li class="nav-item active" data-panel="start-here" onclick="window.switchPanel('start-here')" title="Start Here">
+          <li class="nav-item" data-panel="start-here" onclick="window.switchPanel('start-here')" title="Start Here">
             <i class="fa-solid fa-house nav-icon"></i>
             <span class="nav-label">Start Here</span>
           </li>
@@ -151,8 +151,8 @@
           </button>
           
           <div class="current-chat-title-container">
-            <span class="chat-agent-badge" id="header-agent-badge">🎓</span>
-            <span class="chat-title-text" id="header-chat-title">Start Here</span>
+            <span class="chat-agent-badge" id="header-agent-badge"><i class="fa-solid fa-comment-dots"></i></span>
+            <span class="chat-title-text" id="header-chat-title">Sol</span>
           </div>
         </div>
 
@@ -222,7 +222,7 @@
       <section class="panels-container" id="panels-container">
 
         <!-- 0. Panel: Sol Chat Assistant (Dedicated Sol AI Assistant Panel) -->
-        <div class="workspace-panel" id="panel-sol-chat">
+        <div class="workspace-panel active" id="panel-sol-chat" style="display: flex !important; opacity: 1 !important; visibility: visible !important;">
           <div class="gemini-home-content">
             <!-- Theme-Colored Animated Sol Graphic Icon (Hand-Crafted Native Vector SVG) -->
             <div class="sol-eye-icon-wrapper" id="sol-eye-icon" title="SOL - Globally Known">
@@ -304,7 +304,7 @@
         </div>
 
         <!-- 1. Panel: Start Here (Globally Known Success Path Roadmap) -->
-        <div class="workspace-panel active" id="panel-start-here" style="display: flex !important; opacity: 1 !important; visibility: visible !important;">
+        <div class="workspace-panel" id="panel-start-here">
           <div class="success-path-container">
             
             <!-- Hero Header Banner -->

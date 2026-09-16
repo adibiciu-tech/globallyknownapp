@@ -131,7 +131,7 @@ let communityPosts = [
 // -------------------------------------------------------------
 // App State variables
 // -------------------------------------------------------------
-let activePanel = "start-here";
+let activePanel = "sol-chat";
 let activeChatMessages = JSON.parse(localStorage.getItem("sol_chat_history")) || [];
 let activeModel = "gemini-1.5-flash";
 let activeAgentId = "general";
@@ -381,9 +381,9 @@ function init() {
     });
   }
 
-  // Explicitly activate activePanel or start-here on startup
+  // Explicitly activate activePanel or sol-chat on startup
   if (typeof window.switchPanel === "function") {
-    window.switchPanel(activePanel || "start-here");
+    window.switchPanel(activePanel || "sol-chat");
   }
 }
 
@@ -3937,6 +3937,9 @@ function initAuthSystem() {
       window.solGuestMode = true;
       if (authModal) authModal.classList.add("hidden");
       renderGuestProfile();
+      if (typeof window.switchPanel === "function") {
+        window.switchPanel("sol-chat");
+      }
       if (typeof showToast === "function") {
         showToast("🧭 Browsing in Guest Preview mode. Sign in anytime!");
       }
@@ -4021,6 +4024,10 @@ function loginUserSuccess(user, token, isNew = false) {
   updateGreetingText();
   renderCircleMembersWidget();
   renderCircleFeed();
+
+  if (typeof window.switchPanel === "function") {
+    window.switchPanel("sol-chat");
+  }
 
   if (typeof showToast === "function") {
     showToast(isNew ? `🎉 Welcome to Globally Known, ${user.name.split(" ")[0]}!` : `👋 Welcome back, ${user.name.split(" ")[0]}!`);
