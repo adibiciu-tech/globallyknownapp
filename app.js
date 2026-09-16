@@ -5013,6 +5013,11 @@ async function initVideosPanel() {
       if (activeEmbedUrl.includes("youtube.com/embed/")) {
         activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
       }
+      if (activeEmbedUrl.includes("youtube-nocookie.com/embed/") || activeEmbedUrl.includes("youtube.com/embed/")) {
+        if (!activeEmbedUrl.includes("fs=")) {
+          activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
+        }
+      }
 
       card.innerHTML = `
         <div class="video-player-frame">
@@ -5021,9 +5026,14 @@ async function initVideosPanel() {
               src="${activeEmbedUrl}" 
               title="${escapeHtml(video.title)}" 
               frameborder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowfullscreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
+              allowfullscreen="true"
+              webkitallowfullscreen="true"
+              mozallowfullscreen="true"
             ></iframe>
+            <button class="player-floating-fs-btn" title="Open Fullscreen Video" aria-label="Fullscreen">
+              <i class="fa-solid fa-expand"></i>
+            </button>
           ` : `
             <div class="no-video-placeholder">No Video Source</div>
           `}
@@ -5031,10 +5041,38 @@ async function initVideosPanel() {
         <div class="video-card-info-footer">
           <div class="video-card-title-row">
             <h4 class="video-card-title" title="${escapeHtml(video.title)}">${escapeHtml(video.title)}</h4>
-            ${video.isUserAdded ? `<button class="delete-video-btn mini" data-id="${video.id}" title="Delete Video"><i class="fa-solid fa-trash-can"></i> <span class="delete-btn-label">Delete</span></button>` : ""}
+            <div class="video-card-actions">
+              <button class="fullscreen-video-btn mini" title="Fullscreen Video"><i class="fa-solid fa-expand"></i> <span class="action-btn-label">Fullscreen</span></button>
+              ${video.isUserAdded ? `<button class="delete-video-btn mini" data-id="${video.id}" title="Delete Video"><i class="fa-solid fa-trash-can"></i> <span class="delete-btn-label">Delete</span></button>` : ""}
+            </div>
           </div>
         </div>
       `;
+
+      const triggerFullscreen = (e) => {
+        if (e) e.stopPropagation();
+        const iframe = card.querySelector("iframe");
+        if (!iframe) return;
+        if (iframe.requestFullscreen) {
+          iframe.requestFullscreen();
+        } else if (iframe.webkitRequestFullscreen) {
+          iframe.webkitRequestFullscreen();
+        } else if (iframe.mozRequestFullScreen) {
+          iframe.mozRequestFullScreen();
+        } else if (iframe.msRequestFullscreen) {
+          iframe.msRequestFullscreen();
+        }
+      };
+
+      const floatingFsBtn = card.querySelector(".player-floating-fs-btn");
+      if (floatingFsBtn) {
+        floatingFsBtn.addEventListener("click", triggerFullscreen);
+      }
+
+      const fsBtn = card.querySelector(".fullscreen-video-btn.mini");
+      if (fsBtn) {
+        fsBtn.addEventListener("click", triggerFullscreen);
+      }
 
       const deleteBtn = card.querySelector(".delete-video-btn.mini");
       if (deleteBtn) {

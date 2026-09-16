@@ -463,14 +463,14 @@ html, body {
 }
 
 .netflix-slider-track .video-card {
-  flex: 0 0 clamp(160px, 58vw, 215px) !important;
-  min-width: clamp(160px, 58vw, 215px) !important;
-  max-width: clamp(160px, 58vw, 215px) !important;
+  flex: 0 0 clamp(230px, 68vw, 275px) !important;
+  min-width: clamp(230px, 68vw, 275px) !important;
+  max-width: clamp(230px, 68vw, 275px) !important;
 }
 
 .add-video-frame,
 .add-video-blue-frame {
-  min-height: 125px !important;
+  min-height: 140px !important;
   padding: 0.75rem 0.4rem !important;
 }
 
