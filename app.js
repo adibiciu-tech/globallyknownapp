@@ -5241,6 +5241,9 @@ function setupMetronomeControls() {
     btnToggle.addEventListener("click", (e) => {
       e.stopPropagation();
       dropdown.classList.toggle("hidden");
+      if (!dropdown.classList.contains("hidden")) {
+        updateSliderFill(metBpm);
+      }
     });
   }
 
@@ -5249,15 +5252,38 @@ function setupMetronomeControls() {
   }
 
   // Update BPM from slider
+  const updateSliderFill = (val) => {
+    if (!slider) return;
+    const min = parseFloat(slider.min) || 10;
+    const max = parseFloat(slider.max) || 220;
+    const current = typeof val === "number" ? val : (parseFloat(slider.value) || metBpm);
+    const ratio = Math.max(0, Math.min(1, (current - min) / (max - min)));
+    const trackH = slider.offsetHeight || 80;
+    const thumbRadius = 9;
+    const thumbCenterPx = thumbRadius + ratio * Math.max(0, trackH - thumbRadius * 2);
+    const pct = ((thumbCenterPx / trackH) * 100).toFixed(2);
+    slider.style.background = `linear-gradient(to top, #4f46e5 0%, #4f46e5 ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`;
+  };
+
   const setBpm = (newVal) => {
     metBpm = Math.min(220, Math.max(10, newVal));
-    if (slider) slider.value = metBpm;
+    if (slider) {
+      slider.value = metBpm;
+      updateSliderFill(metBpm);
+    }
     if (bpmVal) bpmVal.textContent = metBpm;
     if (tempoName) tempoName.textContent = getMetTempoName(metBpm);
   };
 
   if (slider) {
-    slider.addEventListener("input", (e) => setBpm(parseInt(e.target.value, 10)));
+    slider.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value, 10);
+      metBpm = Math.min(220, Math.max(10, val));
+      if (bpmVal) bpmVal.textContent = metBpm;
+      if (tempoName) tempoName.textContent = getMetTempoName(metBpm);
+      updateSliderFill(metBpm);
+    });
+    slider.addEventListener("change", (e) => setBpm(parseInt(e.target.value, 10)));
   }
 
   if (btnBpmUp) {
@@ -5301,6 +5327,7 @@ function setupMetronomeControls() {
   }
 
   renderBeatDots();
+  updateSliderFill(metBpm);
 }
 
 function renderBeatDots() {
