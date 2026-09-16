@@ -5315,10 +5315,6 @@ function startMetronome() {
   const playIcon = document.getElementById("metronome-play-icon");
   if (playIcon) playIcon.className = "fa-solid fa-pause";
 
-  // Start animated swinging pendulum arm on SVG
-  const pendulumSvg = document.getElementById("metronome-pendulum-svg-elem");
-  if (pendulumSvg) pendulumSvg.style.animation = `pendulumSwing ${60 / metBpm}s ease-in-out infinite alternate`;
-
   metScheduler();
 }
 
@@ -5331,9 +5327,6 @@ function stopMetronome() {
 
   const playIcon = document.getElementById("metronome-play-icon");
   if (playIcon) playIcon.className = "fa-solid fa-play";
-
-  const pendulumSvg = document.getElementById("metronome-pendulum-svg-elem");
-  if (pendulumSvg) pendulumSvg.style.animation = "none";
 
   // Reset active beat dots
   const dots = document.querySelectorAll("#metronome-beat-dots .beat-dot");

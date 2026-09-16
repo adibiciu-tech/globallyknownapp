@@ -5808,17 +5808,8 @@ body {
   height: 34px;
   margin-bottom: 2px;
   display: block;
-}
-
-@keyframes pendulumSwing {
-  0% {
-    transform: rotate(-16deg);
-    transform-origin: 12px 19px;
-  }
-  100% {
-    transform: rotate(16deg);
-    transform-origin: 12px 19px;
-  }
+  animation: none !important;
+  transform: none !important;
 }
 
 .metronome-popover-card {
