@@ -1780,13 +1780,17 @@ window.switchPanel = function(panelId) {
   } else if (panelId === "random-word") {
     if (typeof initRandomWordPanel === "function") initRandomWordPanel();
   } else if (panelId === "sol-chat") {
-    if (!hasPlayedFirstLoginEntrance) {
-      if (typeof triggerSolGrandEntrance === "function") {
-        triggerSolGrandEntrance();
-        hasPlayedFirstLoginEntrance = true;
+    const authModal = document.getElementById("auth-modal");
+    const isModalOpen = authModal && !authModal.classList.contains("hidden");
+    if (!isModalOpen) {
+      if (!hasPlayedFirstLoginEntrance) {
+        if (typeof triggerSolGrandEntrance === "function") {
+          triggerSolGrandEntrance();
+          hasPlayedFirstLoginEntrance = true;
+        }
+      } else {
+        if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
       }
-    } else {
-      if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
     }
     const homeInput = document.getElementById("gemini-home-input");
     if (homeInput) setTimeout(() => homeInput.focus(), 60);
@@ -3993,10 +3997,12 @@ function initAuthSystem() {
       if (typeof window.switchPanel === "function") {
         window.switchPanel("sol-chat");
       }
-      if (typeof triggerSolGrandEntrance === "function") {
-        triggerSolGrandEntrance();
-        hasPlayedFirstLoginEntrance = true;
-      }
+      setTimeout(() => {
+        if (typeof triggerSolGrandEntrance === "function") {
+          triggerSolGrandEntrance();
+          hasPlayedFirstLoginEntrance = true;
+        }
+      }, 40);
       if (typeof showToast === "function") {
         showToast("🧭 Browsing in Guest Preview mode. Sign in anytime!");
       }
@@ -4093,10 +4099,12 @@ function loginUserSuccess(user, token, isNew = false) {
   if (typeof window.switchPanel === "function") {
     window.switchPanel("sol-chat");
   }
-  if (typeof triggerSolGrandEntrance === "function") {
-    triggerSolGrandEntrance();
-    hasPlayedFirstLoginEntrance = true;
-  }
+  setTimeout(() => {
+    if (typeof triggerSolGrandEntrance === "function") {
+      triggerSolGrandEntrance();
+      hasPlayedFirstLoginEntrance = true;
+    }
+  }, 40);
 
   if (typeof showToast === "function") {
     showToast(isNew ? `🎉 Welcome to Globally Known, ${user.name.split(" ")[0]}!` : `👋 Welcome back, ${user.name.split(" ")[0]}!`);
