@@ -1768,13 +1768,15 @@ window.switchPanel = function(panelId) {
       }
     }
   }
-
   // 5. Special Panel Trigger Callbacks
   if (panelId === "community") {
     if (typeof renderCircleFeed === "function") renderCircleFeed();
     if (typeof renderCircleMembersWidget === "function") renderCircleMembersWidget();
   } else if (panelId === "videos") {
-    if (typeof initVideosPanel === "function") initVideosPanel();
+    const vg = document.getElementById("video-grid");
+    if (!vg || vg.children.length === 0) {
+      if (typeof initVideosPanel === "function") initVideosPanel();
+    }
   } else if (panelId === "output-practicing") {
     if (typeof initOutputPracticingPanel === "function") initOutputPracticingPanel();
   } else if (panelId === "random-word") {
@@ -4715,6 +4717,8 @@ function openAddVideoModal(defaultCategoryId = "city") {
   }
 }
 
+let currentVideosRenderId = 0;
+
 async function initVideosPanel() {
   const videoGrid = document.getElementById("video-grid");
   const playlistModal = document.getElementById("playlist-modal");
@@ -4723,13 +4727,37 @@ async function initVideosPanel() {
 
   if (!videoGrid) return;
 
-  videoGrid.innerHTML = "";
+  const thisRenderId = ++currentVideosRenderId;
+
+  let userAddedVideos = [];
+  try {
+    userAddedVideos = await fetchServerVideos();
+  } catch (err) {
+    console.warn("fetchServerVideos error:", err);
+    userAddedVideos = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+  }
+
+  // If a newer render request arrived while fetching, discard this stale render
+  if (thisRenderId !== currentVideosRenderId) {
+    return;
+  }
+
   if (playlistModal) playlistModal.classList.add("hidden");
 
-  let userAddedVideos = await fetchServerVideos();
-  userAddedVideos = userAddedVideos.filter(v => v && !v.isAddTemplate && v.embedUrl && v.embedUrl.trim() !== "");
+  userAddedVideos = (userAddedVideos || []).filter(v => v && !v.isAddTemplate && v.embedUrl && v.embedUrl.trim() !== "");
 
-  PLAYLIST_CATEGORIES.forEach(category => {
+  // Clear videoGrid right before appending to avoid duplicate rows from async race conditions
+  videoGrid.innerHTML = "";
+
+  // Deduplicate categories by ID
+  const seenCategoryIds = new Set();
+  const uniqueCategories = PLAYLIST_CATEGORIES.filter(cat => {
+    if (!cat || !cat.id || seenCategoryIds.has(cat.id)) return false;
+    seenCategoryIds.add(cat.id);
+    return true;
+  });
+
+  uniqueCategories.forEach(category => {
     const customForCategory = userAddedVideos.filter(v => v.categoryId === category.id);
     let allVids = [...customForCategory, { id: "add_card_" + category.id, isAddTemplate: true }];
     category.videos = allVids;
@@ -4737,6 +4765,7 @@ async function initVideosPanel() {
 
     const row = document.createElement("div");
     row.className = "playlist-category-row";
+    row.setAttribute("data-category-id", category.id);
 
     row.innerHTML = `
       <div class="category-header-row">
