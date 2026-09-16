@@ -651,9 +651,9 @@ html, body {
 
 .rwggp-generate-btn {
   width: 100% !important;
-  max-width: 340px !important;
-  padding: 0.75rem 1.25rem !important;
-  font-size: 0.98rem !important;
+  max-width: 260px !important;
+  padding: 0.72rem 1.25rem !important;
+  font-size: 0.95rem !important;
   justify-content: center !important;
 }
 
