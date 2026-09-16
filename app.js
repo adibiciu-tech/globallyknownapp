@@ -4453,21 +4453,21 @@ function parseEmbedVideoUrl(rawInput) {
   // 1. YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
   const shortsMatch = text.match(/(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/i);
   if (shortsMatch) {
-    return `https://www.youtube.com/embed/${shortsMatch[1]}`;
+    return `https://www.youtube-nocookie.com/embed/${shortsMatch[1]}`;
   }
 
   // 2. YouTube Playlist: https://www.youtube.com/playlist?list=LIST_ID
   const playlistOnlyMatch = text.match(/youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/i);
   if (playlistOnlyMatch) {
-    return `https://www.youtube.com/embed/videoseries?list=${playlistOnlyMatch[1]}`;
+    return `https://www.youtube-nocookie.com/embed/videoseries?list=${playlistOnlyMatch[1]}`;
   }
 
   // 3. YouTube Watch, youtu.be, or existing /embed/
-  const ytMatch = text.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/i);
+  const ytMatch = text.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]+)/i);
   const listMatch = text.match(/[?&]list=([a-zA-Z0-9_-]+)/i);
   if (ytMatch) {
     const videoId = ytMatch[1];
-    let res = `https://www.youtube.com/embed/${videoId}`;
+    let res = `https://www.youtube-nocookie.com/embed/${videoId}`;
     if (listMatch) res += `?list=${listMatch[1]}`;
     return res;
   }
@@ -4838,7 +4838,10 @@ async function initVideosPanel() {
       const card = document.createElement("div");
       card.className = "video-card";
 
-      const activeEmbedUrl = video.embedUrl || "";
+      let activeEmbedUrl = video.embedUrl || "";
+      if (activeEmbedUrl.includes("youtube.com/embed/")) {
+        activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
+      }
 
       card.innerHTML = `
         <div class="video-player-frame">
