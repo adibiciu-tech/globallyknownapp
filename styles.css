@@ -3446,6 +3446,40 @@ body {
   transform: translateX(50%) scale(1.15);
 }
 
+/* Floating Zoom Reset Button (Show Full Slide) */
+.zoom-reset-btn {
+  position: absolute;
+  top: 0.85rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.42rem 0.95rem;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid var(--accent-yellow, #f6ca21);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  z-index: 140;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.zoom-reset-btn:hover {
+  background: var(--accent-yellow, #f6ca21);
+  color: #121214;
+  transform: translateX(-50%) scale(1.06);
+}
+
+.zoom-reset-btn.hidden {
+  display: none !important;
+}
+
 /* Playlist Link Controls inside Video Library Cards */
 .video-title-link {
   color: inherit;

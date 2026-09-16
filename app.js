@@ -2288,6 +2288,7 @@ function initDictionaryPanel() {
   const btnAnchorLeft = document.getElementById("btn-anchor-left");
   const btnAnchorCenter = document.getElementById("btn-anchor-center");
   const btnAnchorRight = document.getElementById("btn-anchor-right");
+  const btnZoomReset = document.getElementById("btn-zoom-reset");
 
   // Floating side navigation buttons
   const btnFloatingPrev = document.getElementById("btn-floating-prev");
@@ -2310,6 +2311,7 @@ function initDictionaryPanel() {
 
   // Zoom & Pan states
   let isZoomed = false;
+  let currentZoomedColumn = null;
   let isDragging = false;
   let currentScale = 1;
   let startX = 0, startY = 0;
@@ -2320,24 +2322,60 @@ function initDictionaryPanel() {
 
   // Dynamically toggle zoom anchor visibility based on column position
   const updateAnchorVisibility = () => {
-    // Dynamically toggle Left & Right anchor icons between Circle-Dot (zoomed out) and Arrow (zoomed in)
+    const isMobile = window.innerWidth <= 900;
     const leftIcon = btnAnchorLeft ? btnAnchorLeft.querySelector("i") : null;
     const rightIcon = btnAnchorRight ? btnAnchorRight.querySelector("i") : null;
 
-    if (isZoomed) {
+    if (isMobile && isZoomed) {
+      if (btnZoomReset) btnZoomReset.classList.remove("hidden");
+      if (btnAnchorCenter) btnAnchorCenter.style.display = "none";
+
       if (leftIcon) leftIcon.className = "fa-solid fa-chevron-left";
       if (rightIcon) rightIcon.className = "fa-solid fa-chevron-right";
-    } else {
-      if (leftIcon) leftIcon.className = "fa-solid fa-circle-dot";
-      if (rightIcon) rightIcon.className = "fa-solid fa-circle-dot";
+
+      if (currentZoomedColumn === "left") {
+        if (btnAnchorLeft) btnAnchorLeft.style.display = "none";
+        if (btnAnchorRight) {
+          btnAnchorRight.style.display = "flex";
+          btnAnchorRight.style.opacity = "1";
+          btnAnchorRight.style.pointerEvents = "auto";
+        }
+      } else if (currentZoomedColumn === "center") {
+        if (btnAnchorLeft) {
+          btnAnchorLeft.style.display = "flex";
+          btnAnchorLeft.style.opacity = "1";
+          btnAnchorLeft.style.pointerEvents = "auto";
+        }
+        if (btnAnchorRight) {
+          btnAnchorRight.style.display = "flex";
+          btnAnchorRight.style.opacity = "1";
+          btnAnchorRight.style.pointerEvents = "auto";
+        }
+      } else if (currentZoomedColumn === "right") {
+        if (btnAnchorLeft) {
+          btnAnchorLeft.style.display = "flex";
+          btnAnchorLeft.style.opacity = "1";
+          btnAnchorLeft.style.pointerEvents = "auto";
+        }
+        if (btnAnchorRight) btnAnchorRight.style.display = "none";
+      }
+      return;
     }
 
     if (!isZoomed) {
+      if (btnZoomReset) btnZoomReset.classList.add("hidden");
+      if (leftIcon) leftIcon.className = "fa-solid fa-circle-dot";
+      if (rightIcon) rightIcon.className = "fa-solid fa-circle-dot";
       if (btnAnchorLeft) { btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; btnAnchorLeft.style.display = "flex"; }
       if (btnAnchorCenter) { btnAnchorCenter.style.opacity = ""; btnAnchorCenter.style.pointerEvents = ""; btnAnchorCenter.style.display = "flex"; }
       if (btnAnchorRight) { btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; btnAnchorRight.style.display = "flex"; }
       return;
     }
+
+    // Desktop zoomed handling
+    if (btnZoomReset) btnZoomReset.classList.remove("hidden");
+    if (leftIcon) leftIcon.className = "fa-solid fa-chevron-left";
+    if (rightIcon) rightIcon.className = "fa-solid fa-chevron-right";
 
     const width = slideImage.clientWidth;
     const limitX = (width * currentScale - width) / 2;
@@ -2372,6 +2410,7 @@ function initDictionaryPanel() {
 
   const resetZoom = () => {
     isZoomed = false;
+    currentZoomedColumn = null;
     isDragging = false;
     currentScale = 1;
     translateX = 0;
@@ -2385,6 +2424,10 @@ function initDictionaryPanel() {
     }
     if (slideImageWrapper) {
       slideImageWrapper.classList.remove("zoomed-state");
+      slideImageWrapper.classList.remove("mobile-column-zoomed");
+    }
+    if (btnZoomReset) {
+      btnZoomReset.classList.add("hidden");
     }
     updateAnchorVisibility();
   };
@@ -2631,6 +2674,24 @@ function initDictionaryPanel() {
       const dragDistance = Math.hypot(e.clientX - clickStartX, e.clientY - clickStartY);
 
       if (e.target === slideImage && dragDuration < 200 && dragDistance < 6) {
+        const isMobile = window.innerWidth <= 900;
+        if (isMobile) {
+          if (!isZoomed) {
+            const rect = slideImage.getBoundingClientRect();
+            const clickRel = e.clientX - rect.left;
+            if (clickRel < rect.width / 3) {
+              snapToAnchor("left");
+            } else if (clickRel > (2 * rect.width) / 3) {
+              snapToAnchor("right");
+            } else {
+              snapToAnchor("center");
+            }
+          } else {
+            resetZoom();
+          }
+          return;
+        }
+
         isZoomed = !isZoomed;
         if (isZoomed) {
           currentScale = 2; // Default 2x zoom on click
@@ -2701,6 +2762,26 @@ function initDictionaryPanel() {
 
     // 7. Snap-to-column anchor clicks
     const snapToAnchor = (column) => {
+      const isMobile = window.innerWidth <= 900;
+      if (isMobile) {
+        isZoomed = true;
+        currentZoomedColumn = column;
+        if (slideImageWrapper) {
+          slideImageWrapper.classList.add("mobile-column-zoomed");
+          slideImageWrapper.classList.remove("zoomed-state");
+        }
+        if (slideImage) {
+          slideImage.classList.add("zoomed");
+          let xPercent = 0;
+          if (column === "left") xPercent = 0;
+          else if (column === "center") xPercent = -33.333333;
+          else if (column === "right") xPercent = -66.666667;
+          slideImage.style.transform = `translate3d(${xPercent}%, 0, 0)`;
+        }
+        updateAnchorVisibility();
+        return;
+      }
+
       if (!isZoomed) {
         isZoomed = true;
         currentScale = 2;
@@ -2735,10 +2816,16 @@ function initDictionaryPanel() {
     if (btnAnchorLeft) {
       btnAnchorLeft.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (!isZoomed) {
+        const isMobile = window.innerWidth <= 900;
+        if (isMobile && isZoomed) {
+          if (currentZoomedColumn === "right") {
+            snapToAnchor("center");
+          } else {
+            snapToAnchor("left");
+          }
+        } else if (!isZoomed) {
           snapToAnchor("left");
         } else {
-          // Centered on Right Column: snap to Center Column. Otherwise snap to Left Column.
           const width = slideImage.clientWidth;
           const limitX = (width * currentScale - width) / 2;
           if (currentTranslateX < -limitX * 0.35) {
@@ -2762,10 +2849,16 @@ function initDictionaryPanel() {
     if (btnAnchorRight) {
       btnAnchorRight.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (!isZoomed) {
+        const isMobile = window.innerWidth <= 900;
+        if (isMobile && isZoomed) {
+          if (currentZoomedColumn === "left") {
+            snapToAnchor("center");
+          } else {
+            snapToAnchor("right");
+          }
+        } else if (!isZoomed) {
           snapToAnchor("right");
         } else {
-          // Centered on Left Column: snap to Center Column. Otherwise snap to Right Column.
           const width = slideImage.clientWidth;
           const limitX = (width * currentScale - width) / 2;
           if (currentTranslateX > limitX * 0.35) {
@@ -2776,6 +2869,43 @@ function initDictionaryPanel() {
         }
         scrollPanelToTop();
       });
+    }
+
+    if (btnZoomReset) {
+      btnZoomReset.addEventListener("click", (e) => {
+        e.stopPropagation();
+        resetZoom();
+      });
+    }
+
+    // Touch swipe between columns on mobile
+    let touchStartX = 0;
+    let touchStartY = 0;
+    if (slideImageWrapper) {
+      slideImageWrapper.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 1) {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      slideImageWrapper.addEventListener("touchend", (e) => {
+        const isMobile = window.innerWidth <= 900;
+        if (!isMobile || !isZoomed || e.changedTouches.length === 0) return;
+        const diffX = e.changedTouches[0].clientX - touchStartX;
+        const diffY = e.changedTouches[0].clientY - touchStartY;
+        if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+          if (diffX < 0) {
+            // Swipe left -> next column
+            if (currentZoomedColumn === "left") snapToAnchor("center");
+            else if (currentZoomedColumn === "center") snapToAnchor("right");
+          } else {
+            // Swipe right -> prev column
+            if (currentZoomedColumn === "right") snapToAnchor("center");
+            else if (currentZoomedColumn === "center") snapToAnchor("left");
+          }
+        }
+      }, { passive: true });
     }
   }
 }
