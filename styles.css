@@ -5600,18 +5600,19 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.15rem 0.3rem;
+  padding: 0.15rem 0.25rem;
   border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  transition: opacity 0.2s ease;
-  opacity: 0.65;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.7;
   flex-shrink: 0;
 }
 
 .history-save-btn:hover {
   opacity: 1;
+  transform: scale(1.1);
 }
 
 .history-save-btn.saved {
@@ -5619,15 +5620,19 @@ body {
 }
 
 .history-save-btn i {
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   color: #94a3b8;
   line-height: 1;
   transition: all 0.2s ease;
 }
 
+.history-save-btn:hover i {
+  color: #4f46e5;
+}
+
 .history-save-btn.saved i {
   color: #10b981;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
 }
 
 .saved-bookmark-check-svg {

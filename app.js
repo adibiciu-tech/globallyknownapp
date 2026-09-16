@@ -4822,10 +4822,10 @@ function renderRwggpHistory() {
       <div class="rwggp-history-row" data-word="${escapeHtml(w.word)}">
         <span class="history-color-dot" style="background-color: ${color};"></span>
         <span class="history-word-text">${escapeHtml(w.word)}</span>
-        <span class="history-category-label" style="color: ${color}; font-weight: 700;">${escapeHtml(w.colorCategory)}</span>
         <button type="button" class="history-save-btn ${isSaved ? 'saved' : ''}" data-action="save" title="${isSaved ? 'Saved in list' : 'Save to list'}">
-          <i class="${isSaved ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'}"></i>
+          <i class="${isSaved ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-plus'}"></i>
         </button>
+        <span class="history-category-label" style="color: ${color}; font-weight: 700;">${escapeHtml(w.colorCategory)}</span>
         <button type="button" class="history-speak-btn" data-action="speak" title="Listen">
           <i class="fa-solid fa-volume-high"></i>
         </button>
