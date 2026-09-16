@@ -1,5 +1,6 @@
 import http.server
 import socketserver
+import socket
 import json
 import os
 import sys
@@ -12,6 +13,16 @@ import urllib.parse
 PORT = int(os.environ.get("PORT", 8000))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, "data_store.json")
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
 
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -133,6 +144,20 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 return
             word = secrets.choice(words)
             payload = json.dumps(word).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        elif path == "/api/network-info":
+            local_ip = get_local_ip()
+            info = {
+                "local_ip": local_ip,
+                "port": PORT,
+                "mobile_url": f"http://{local_ip}:{PORT}"
+            }
+            payload = json.dumps(info).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(payload)))
@@ -568,8 +593,13 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     os.chdir(BASE_DIR)
     socketserver.TCPServer.allow_reuse_address = True
+    local_ip = get_local_ip()
     with socketserver.TCPServer(("", PORT), CustomHandler) as httpd:
-        print(f"Serving HTTP on 0.0.0.0 port {PORT} with persistent API sync...")
+        print("\n" + "=" * 60)
+        print("  GLOBALLY KNOWN SERVER RUNNING & READY!")
+        print(f"  Laptop/PC URL:  http://localhost:{PORT}")
+        print(f"  Mobile Phone:   http://{local_ip}:{PORT}")
+        print("=" * 60 + "\n")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

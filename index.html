@@ -1320,6 +1320,35 @@
               </div>
             </div>
 
+            <!-- Mobile Access & QR Code Card -->
+            <div class="settings-card mobile-access-card" style="border-color: rgba(246, 202, 33, 0.4); background: rgba(246, 202, 33, 0.04);">
+              <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-mobile-screen-button" style="font-size: 1.4rem; color: var(--accent-yellow, #f6ca21);"></i>
+                <h3 style="margin: 0; font-size: 1.15rem; color: #ffffff;">Connect with your Mobile Phone</h3>
+              </div>
+              <p class="setting-desc" style="color: #cbd5e1; margin-bottom: 1rem;">
+                Open Globally Known on your phone right now! Make sure your phone is connected to the same Wi-Fi network.
+              </p>
+              
+              <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; background: rgba(0, 0, 0, 0.35); padding: 1.25rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="background: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; width: 150px; height: 150px;">
+                  <img src="assets/mobile_qr_code.png" alt="Scan with Phone Camera" style="width: 100%; height: 100%; display: block;" />
+                </div>
+                <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.75rem;">
+                  <div style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Direct Mobile Link:</div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.4); padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);">
+                    <code style="color: var(--accent-yellow, #f6ca21); font-size: 0.95rem; font-weight: 700; user-select: all;" id="mobile-url-display">http://10.112.137.210:8000</code>
+                  </div>
+                  <div style="display: flex; gap: 0.6rem; margin-top: 0.25rem;">
+                    <button type="button" class="secondary-action-btn" id="btn-copy-mobile-url" onclick="navigator.clipboard.writeText('http://10.112.137.210:8000'); if (typeof showToast === 'function') showToast('📋 Mobile link copied to clipboard!');" style="padding: 0.5rem 0.9rem; font-size: 0.82rem; cursor: pointer;">
+                      <i class="fa-solid fa-copy"></i> Copy Link
+                    </button>
+                    <span style="font-size: 0.78rem; color: #94a3b8; align-self: center;">Scan QR code with your phone camera</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="settings-card danger-card">
               <h3>Reset Workspace</h3>
               <p class="setting-desc">Deletes all saved localStorage sessions, custom cache settings, and resets your API key configuration.</p>
