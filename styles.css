@@ -1658,6 +1658,66 @@ body {
   animation: solFadeIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
 }
 
+/* ===================================================================
+   Grand First-Entrance Animation (Special for First Appearance after Login)
+   Features an expansive 1.55s bloom, 40% scale expansion & deep upward float
+   =================================================================== */
+@keyframes solGrandFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(54px) scale(0.72);
+  }
+  35% {
+    opacity: 0.55;
+  }
+  75% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes solGreetingGrandFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(38px) scale(0.90);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes solInputGrandFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.93);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Grand First-Entrance Staggered Classes */
+.sol-eye-icon-wrapper.sol-grand-fade-in-play {
+  animation: solGrandFadeIn 1.55s cubic-bezier(0.12, 1, 0.22, 1) both !important;
+}
+
+.gemini-home-greeting.sol-grand-fade-in-play {
+  animation: solGreetingGrandFadeIn 1.4s cubic-bezier(0.12, 1, 0.22, 1) 0.25s both !important;
+}
+
+.gemini-input-wrapper.sol-grand-fade-in-play {
+  animation: solInputGrandFadeIn 1.35s cubic-bezier(0.12, 1, 0.22, 1) 0.45s both !important;
+}
+
+:root[data-theme="rainbow"] .sol-eye-icon-wrapper.sol-grand-fade-in-play {
+  animation: solGrandFadeIn 1.55s cubic-bezier(0.12, 1, 0.22, 1) both, rainbowBorderLoop 8s linear infinite !important;
+}
+
 /* Theme-Specific Bright Accent Colors for SVG Graphic Icon */
 :root[data-theme="dark"] .sol-eye-icon-svg path,
 :root[data-theme="dark"] .sol-eye-icon-svg line,
@@ -6980,6 +7040,10 @@ body {
 /* Smooth Fade-In Animation for New Conversation / Screen Transitions */
 .fade-in-anim {
   animation: fadeInSmooth 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.grand-fade-in-anim {
+  animation: fadeInSmooth 1.55s cubic-bezier(0.12, 1, 0.22, 1) forwards !important;
 }
 
 @keyframes fadeInSmooth {

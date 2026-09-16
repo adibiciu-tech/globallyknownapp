@@ -445,6 +445,34 @@ function updateHomeChatModeState() {
   if (homeContent) homeContent.classList.toggle("has-messages", hasMsgs);
 }
 
+let hasPlayedFirstLoginEntrance = false;
+
+function triggerSolGrandEntrance() {
+  const solPanel = document.getElementById("panel-sol-chat");
+  if (!solPanel) return;
+
+  const content = solPanel.querySelector(".gemini-home-content") || document.querySelector(".gemini-home-content");
+  if (content) {
+    content.classList.remove("fade-in-anim");
+    content.classList.remove("grand-fade-in-anim");
+    void content.offsetWidth; // Force DOM reflow
+    content.classList.add("grand-fade-in-anim");
+  }
+
+  const solWrapper = solPanel.querySelector(".sol-eye-icon-wrapper");
+  const greeting = solPanel.querySelector(".gemini-home-greeting");
+  const inputBar = solPanel.querySelector(".gemini-input-wrapper");
+
+  [solWrapper, greeting, inputBar].forEach(el => {
+    if (!el) return;
+    el.classList.remove("sol-fade-in-play");
+    el.classList.remove("sol-grand-fade-in-play");
+    void el.offsetWidth; // Force DOM reflow to restart CSS keyframe animation
+    el.classList.add("sol-grand-fade-in-play");
+  });
+}
+window.triggerSolGrandEntrance = triggerSolGrandEntrance;
+
 function triggerSolFadeIn() {
   const solPanel = document.getElementById("panel-sol-chat");
   if (!solPanel) return;
@@ -452,6 +480,7 @@ function triggerSolFadeIn() {
   const content = solPanel.querySelector(".gemini-home-content") || document.querySelector(".gemini-home-content");
   if (content) {
     content.classList.remove("fade-in-anim");
+    content.classList.remove("grand-fade-in-anim");
     void content.offsetWidth; // Force DOM reflow
     content.classList.add("fade-in-anim");
   }
@@ -459,6 +488,7 @@ function triggerSolFadeIn() {
   const targets = solPanel.querySelectorAll(".sol-eye-icon-wrapper, .gemini-home-greeting, .gemini-input-wrapper");
   targets.forEach(el => {
     el.classList.remove("sol-fade-in-play");
+    el.classList.remove("sol-grand-fade-in-play");
     void el.offsetWidth; // Force DOM reflow to restart CSS keyframe animation
     el.classList.add("sol-fade-in-play");
   });
@@ -1750,7 +1780,14 @@ window.switchPanel = function(panelId) {
   } else if (panelId === "random-word") {
     if (typeof initRandomWordPanel === "function") initRandomWordPanel();
   } else if (panelId === "sol-chat") {
-    if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
+    if (!hasPlayedFirstLoginEntrance) {
+      if (typeof triggerSolGrandEntrance === "function") {
+        triggerSolGrandEntrance();
+        hasPlayedFirstLoginEntrance = true;
+      }
+    } else {
+      if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
+    }
     const homeInput = document.getElementById("gemini-home-input");
     if (homeInput) setTimeout(() => homeInput.focus(), 60);
   }
@@ -3956,8 +3993,9 @@ function initAuthSystem() {
       if (typeof window.switchPanel === "function") {
         window.switchPanel("sol-chat");
       }
-      if (typeof triggerSolFadeIn === "function") {
-        triggerSolFadeIn();
+      if (typeof triggerSolGrandEntrance === "function") {
+        triggerSolGrandEntrance();
+        hasPlayedFirstLoginEntrance = true;
       }
       if (typeof showToast === "function") {
         showToast("🧭 Browsing in Guest Preview mode. Sign in anytime!");
@@ -3982,7 +4020,10 @@ function checkActiveSession() {
         if (authModal) authModal.classList.add("hidden");
         renderUserProfile(user);
         renderCircleMembersWidget();
-        if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
+        if (typeof triggerSolGrandEntrance === "function") {
+          triggerSolGrandEntrance();
+          hasPlayedFirstLoginEntrance = true;
+        }
         return;
       }
     } catch (e) {
@@ -3995,7 +4036,10 @@ function checkActiveSession() {
   if (window.solGuestMode === true) {
     if (authModal) authModal.classList.add("hidden");
     renderGuestProfile();
-    if (typeof triggerSolFadeIn === "function") triggerSolFadeIn();
+    if (typeof triggerSolGrandEntrance === "function") {
+      triggerSolGrandEntrance();
+      hasPlayedFirstLoginEntrance = true;
+    }
     return;
   }
 
@@ -4049,8 +4093,9 @@ function loginUserSuccess(user, token, isNew = false) {
   if (typeof window.switchPanel === "function") {
     window.switchPanel("sol-chat");
   }
-  if (typeof triggerSolFadeIn === "function") {
-    triggerSolFadeIn();
+  if (typeof triggerSolGrandEntrance === "function") {
+    triggerSolGrandEntrance();
+    hasPlayedFirstLoginEntrance = true;
   }
 
   if (typeof showToast === "function") {
@@ -4136,6 +4181,7 @@ function renderUserProfile(user) {
         localStorage.removeItem("sol_auth_token");
         try { sessionStorage.removeItem("sol_guest_mode"); } catch(e) {}
         window.solGuestMode = false;
+        hasPlayedFirstLoginEntrance = false;
         checkActiveSession();
         updateGreetingText();
         renderCircleMembersWidget();
