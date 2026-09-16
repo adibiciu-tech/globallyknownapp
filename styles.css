@@ -1,6 +1,13 @@
-/* -------------------------------------------------------------
- * CSS Variable Design System (Premium Yellow & Monochrome Theme)
- * ------------------------------------------------------------- */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --app-dvh: 100dvh;
+  --app-dvw: 100dvw;
+  --header-height: 54px;
+}
+
 :root[data-theme="dark"] {
   --bg-primary: #000000;
   --bg-secondary: #0c0c0d;
@@ -548,15 +555,24 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   height: 100vh;
+  height: 100dvh;
+  height: var(--app-dvh, 100dvh);
   overflow: hidden;
   transition: background-color 0.25s ease;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .app-container {
   display: flex;
   height: 100vh;
+  height: 100dvh;
+  height: var(--app-dvh, 100dvh);
   width: 100vw;
+  width: 100dvw;
+  max-width: 100vw;
   position: relative;
+  overflow: hidden;
 }
 
 /* Custom Scrollbars */

@@ -4495,16 +4495,16 @@ function showToast(message) {
   if (!toast) {
     toast = document.createElement("div");
     toast.id = "global-toast";
-    toast.style.cssText = "position:fixed; bottom:24px; right:24px; background:rgba(15,23,42,0.95); color:#38bdf8; padding:12px 20px; border-radius:8px; border:1px solid rgba(56,189,248,0.3); font-weight:600; z-index:99999; box-shadow:0 10px 25px rgba(0,0,0,0.5); transition:all 0.3s ease; opacity:0; transform:translateY(10px); pointer-events:none;";
+    toast.style.cssText = "position:fixed; top:max(16px, env(safe-area-inset-top, 16px)); left:50%; transform:translate(-50%, -12px); background:rgba(15,23,42,0.96); color:#38bdf8; padding:10px 18px; border-radius:24px; border:1px solid rgba(56,189,248,0.35); font-weight:600; font-size:0.88rem; z-index:99999; box-shadow:0 8px 24px rgba(0,0,0,0.6); transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); opacity:0; pointer-events:none; max-width:min(90vw, 420px); text-align:center; backdrop-filter:blur(8px);";
     document.body.appendChild(toast);
   }
   toast.textContent = message;
   toast.style.opacity = "1";
-  toast.style.transform = "translateY(0)";
+  toast.style.transform = "translate(-50%, 0)";
   setTimeout(() => {
     toast.style.opacity = "0";
-    toast.style.transform = "translateY(10px)";
-  }, 3000);
+    toast.style.transform = "translate(-50%, -12px)";
+  }, 3200);
 }
 
 let adminUnlockedState = false;
@@ -5625,6 +5625,38 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// Dynamic Mobile Viewport & Screen Resolution Synchronizer
+function syncDynamicViewport() {
+  try {
+    const vv = window.visualViewport;
+    const width = vv ? vv.width : (window.innerWidth || document.documentElement.clientWidth);
+    const height = vv ? vv.height : (window.innerHeight || document.documentElement.clientHeight);
+    const dpr = window.devicePixelRatio || 1;
+
+    document.documentElement.style.setProperty('--app-dvh', `${height}px`);
+    document.documentElement.style.setProperty('--app-dvw', `${width}px`);
+    document.documentElement.style.setProperty('--vh', `${height * 0.01}px`);
+    document.documentElement.style.setProperty('--vw', `${width * 0.01}px`);
+    document.documentElement.style.setProperty('--dpr', `${dpr}`);
+
+    // Dynamic scale factor for varying mobile screen resolutions (320px to 480px+)
+    const mobileScale = Math.min(Math.max(width / 390, 0.85), 1.25);
+    document.documentElement.style.setProperty('--mobile-scale', `${mobileScale}`);
+  } catch (e) {
+    console.warn("syncDynamicViewport error:", e);
+  }
+}
+
+window.addEventListener('resize', syncDynamicViewport, { passive: true });
+window.addEventListener('orientationchange', () => {
+  setTimeout(syncDynamicViewport, 120);
+}, { passive: true });
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', syncDynamicViewport, { passive: true });
+  window.visualViewport.addEventListener('scroll', syncDynamicViewport, { passive: true });
+}
+syncDynamicViewport();
+
 // Global Event Delegation for Gemini Input Bars (Mic vs Send button swap)
 ["input", "keyup", "change"].forEach(evtName => {
   document.addEventListener(evtName, (e) => {
@@ -5633,6 +5665,3 @@ document.addEventListener("click", (e) => {
     }
   });
 });
-
-
-
