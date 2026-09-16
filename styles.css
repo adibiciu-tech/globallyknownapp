@@ -5408,6 +5408,12 @@ body {
   color: var(--gray-dark);
   font-weight: 600;
   letter-spacing: 0.02em;
+  text-decoration: none !important;
+}
+
+#rwggp-category-name {
+  text-decoration: none !important;
+  cursor: pointer;
 }
 
 .rwggp-meaning {
