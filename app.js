@@ -4467,7 +4467,7 @@ function parseYouTubeLink(url) {
 // =============================================================
 
 const MET_TEMPO_PRESETS = [
-  { bpm: 40, name: "Grave" },
+  { bpm: 10, name: "Grave" },
   { bpm: 46, name: "Largo" },
   { bpm: 52, name: "Lento" },
   { bpm: 56, name: "Larghetto" },
@@ -4487,8 +4487,9 @@ const MET_TEMPO_PRESETS = [
 ];
 
 function getMetTempoName(bpm) {
+  if (bpm <= 45) return "Grave";
   let closest = MET_TEMPO_PRESETS[0];
-  let minDiff = Math.abs(bpm - MET_TEMPO_PRESETS[0].bpm);
+  let minDiff = Infinity;
   for (const p of MET_TEMPO_PRESETS) {
     const diff = Math.abs(bpm - p.bpm);
     if (diff < minDiff) {
@@ -4497,6 +4498,20 @@ function getMetTempoName(bpm) {
     }
   }
   return closest.name;
+}
+
+function getNextTempoPreset(currentBpm) {
+  for (const p of MET_TEMPO_PRESETS) {
+    if (p.bpm > currentBpm) return p.bpm;
+  }
+  return MET_TEMPO_PRESETS[MET_TEMPO_PRESETS.length - 1].bpm;
+}
+
+function getPrevTempoPreset(currentBpm) {
+  for (let i = MET_TEMPO_PRESETS.length - 1; i >= 0; i--) {
+    if (MET_TEMPO_PRESETS[i].bpm < currentBpm) return MET_TEMPO_PRESETS[i].bpm;
+  }
+  return MET_TEMPO_PRESETS[0].bpm;
 }
 
 function initRandomWordPanel() {
@@ -5235,7 +5250,7 @@ function setupMetronomeControls() {
 
   // Update BPM from slider
   const setBpm = (newVal) => {
-    metBpm = Math.min(220, Math.max(40, newVal));
+    metBpm = Math.min(220, Math.max(10, newVal));
     if (slider) slider.value = metBpm;
     if (bpmVal) bpmVal.textContent = metBpm;
     if (tempoName) tempoName.textContent = getMetTempoName(metBpm);
@@ -5246,11 +5261,11 @@ function setupMetronomeControls() {
   }
 
   if (btnBpmUp) {
-    btnBpmUp.addEventListener("click", () => setBpm(metBpm + 1));
+    btnBpmUp.addEventListener("click", () => setBpm(getNextTempoPreset(metBpm)));
   }
 
   if (btnBpmDown) {
-    btnBpmDown.addEventListener("click", () => setBpm(metBpm - 1));
+    btnBpmDown.addEventListener("click", () => setBpm(getPrevTempoPreset(metBpm)));
   }
 
   // Time Signatures
