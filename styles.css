@@ -3811,6 +3811,7 @@ body {
   align-items: center;
   gap: 0.55rem;
   margin-bottom: 0.35rem;
+  flex-wrap: wrap;
 }
 
 .category-header h3 {
@@ -3833,6 +3834,29 @@ body {
   font-weight: 600;
   margin-left: 0.3rem;
   opacity: 0.9;
+}
+
+.header-add-video-btn {
+  background: rgba(246, 202, 33, 0.12);
+  border: 1px solid rgba(246, 202, 33, 0.35);
+  color: var(--accent-yellow, #f6ca21);
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.header-add-video-btn:hover {
+  background: var(--accent-yellow, #f6ca21);
+  color: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(246, 202, 33, 0.4);
 }
 
 /* Netflix progress bar indicators at top right (thin lines) */
@@ -3890,11 +3914,13 @@ body {
 
 /* Category Horizontal Slider — Pure HTML/CSS Custom Horizontal Track Slider Bar */
 .netflix-slider-container {
+  container-type: inline-size;
+  container-name: sliderContainer;
   position: relative;
   width: 100%;
   overflow-x: auto !important;
   overflow-y: hidden !important;
-  scroll-behavior: auto;
+  scroll-behavior: smooth;
   border-radius: 10px;
   padding: 0.35rem 0 0.5rem 0;
   margin-bottom: 0.25rem;
@@ -4049,21 +4075,50 @@ body {
 }
 
 /* Long scrolling flex row track */
+:root {
+  --slider-cards-per-view: 4;
+  --video-gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --slider-cards-per-view: 3;
+    --video-gap: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --slider-cards-per-view: 2.15;
+    --video-gap: 12px;
+  }
+}
+
+@media (max-width: 500px) {
+  :root {
+    --slider-cards-per-view: 1.15;
+    --video-gap: 10px;
+  }
+}
+
 .netflix-slider-track {
   display: flex;
-  gap: 0.85rem;
+  gap: var(--video-gap);
   width: max-content !important;
   min-width: 100%;
-  padding-right: 8rem !important;
+  padding-right: 2.5rem !important;
   box-sizing: border-box;
 }
 
-/* Video Card Sizing: Dynamic resolution scaling based on screen size */
+/* Video Card Sizing: Strictly locked to 4 cards per row on desktop */
 .netflix-slider-track .video-card {
   position: relative;
-  flex: 0 0 280px !important;
-  min-width: 280px !important;
-  max-width: 320px !important;
+  /* Exactly 4 items visible across the container width: (W - 3*gap)/4 */
+  --single-card-width: calc((var(--container-px, 100cqw) - ((var(--slider-cards-per-view) - 1) * var(--video-gap))) / var(--slider-cards-per-view));
+  flex: 0 0 var(--single-card-width) !important;
+  width: var(--single-card-width) !important;
+  min-width: var(--single-card-width) !important;
+  max-width: var(--single-card-width) !important;
   box-sizing: border-box;
   background-color: var(--bg-secondary, #181818);
   border-radius: 12px;
@@ -4076,38 +4131,16 @@ body {
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
 }
 
-/* High Resolution Display Adaptations (1080p, 2K & 4K Monitors) */
-@media (min-width: 1600px) {
-  .netflix-slider-track .video-card {
-    flex: 0 0 clamp(250px, 15vw, 320px) !important;
-    min-width: clamp(250px, 15vw, 320px) !important;
-    max-width: clamp(250px, 15vw, 320px) !important;
-  }
-}
-
 @media (min-width: 2560px) {
-  .netflix-slider-track .video-card {
-    flex: 0 0 clamp(320px, 16vw, 440px) !important;
-    min-width: clamp(320px, 16vw, 440px) !important;
-    max-width: clamp(320px, 16vw, 440px) !important;
-  }
   .category-header h3 {
     font-size: 1.5rem !important;
   }
   .classic-scrollbar-container {
-    height: 34px !important;
+    height: 30px !important;
   }
   .classic-scrollbar-arrow {
     width: 34px !important;
     font-size: 16px !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .netflix-slider-track .video-card {
-    flex: 0 0 clamp(160px, 42vw, 210px) !important;
-    min-width: clamp(160px, 42vw, 210px) !important;
-    max-width: clamp(160px, 42vw, 210px) !important;
   }
 }
 
@@ -4315,7 +4348,9 @@ body {
   background: var(--bg-secondary, rgba(15, 23, 42, 0.7)) !important;
   border: 2px dashed var(--accent-yellow, #f6ca21) !important;
   border-radius: 12px;
-  height: 155px;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
   box-sizing: border-box;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 14px var(--shadow-sm);
@@ -4382,7 +4417,8 @@ body {
 .video-player-frame {
   position: relative;
   width: 100%;
-  height: 160px;
+  aspect-ratio: 16 / 9;
+  height: auto;
   z-index: 10;
   background: #000000;
   border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
@@ -4550,27 +4586,6 @@ body {
   border-bottom-left-radius: 4px;
 }
 
-/* Responsive columns scaling for tablet/mobile viewports */
-@media (max-width: 1200px) {
-  .netflix-slider-track .video-card {
-    flex: 0 0 calc((100% - (3 * 1.25rem)) / 4);
-    min-width: calc((100% - (3 * 1.25rem)) / 4);
-  }
-}
-
-@media (max-width: 900px) {
-  .netflix-slider-track .video-card {
-    flex: 0 0 calc((100% - (2 * 1.25rem)) / 3);
-    min-width: calc((100% - (2 * 1.25rem)) / 3);
-  }
-}
-
-@media (max-width: 600px) {
-  .netflix-slider-track .video-card {
-    flex: 0 0 100%;
-    min-width: 100%;
-  }
-}
 
 /* =============================================================
    WhatsApp Web Layout Style Overlays (Full Screen inside Workspace Panel)

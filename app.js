@@ -4744,6 +4744,9 @@ async function initVideosPanel() {
           <span class="category-flag">${category.flag}</span>
           <h3>${escapeHtml(category.title)}</h3>
           <span class="category-count">(${category.count})</span>
+          <button class="header-add-video-btn" title="Add Video to ${escapeHtml(category.title)}" data-cat="${category.id}">
+            <i class="fa-solid fa-plus"></i> Add Video
+          </button>
         </div>
         <div class="netflix-header-indicators" id="netflix-indicators-${category.id}"></div>
       </div>
@@ -4775,35 +4778,174 @@ async function initVideosPanel() {
     const thumbEl = row.querySelector(`#slider-thumb-${category.id}`);
     const btnLeft = row.querySelector(`#arrow-left-${category.id}`);
     const btnRight = row.querySelector(`#arrow-right-${category.id}`);
+    const headerAddBtn = row.querySelector(".header-add-video-btn");
+    const indicatorsContainer = row.querySelector(`#netflix-indicators-${category.id}`);
 
+    if (headerAddBtn) {
+      headerAddBtn.addEventListener("click", () => {
+        openAddVideoModal(category.id);
+      });
+    }
+
+    const updateContainerMetrics = () => {
+      if (!sliderContainer) return;
+      const w = sliderContainer.clientWidth;
+      if (w > 0) {
+        sliderContainer.style.setProperty("--container-px", `${w}px`);
+      }
+    };
+    updateContainerMetrics();
+
+    // Netflix page indicator dots/pills
+    const updateIndicators = () => {
+      if (!indicatorsContainer || !sliderContainer) return;
+      const totalCards = category.videos.length;
+      const cardsPerPage = window.innerWidth <= 600 ? 1 : (window.innerWidth <= 960 ? 2 : 4);
+      const totalPages = Math.ceil(totalCards / cardsPerPage);
+
+      if (totalPages <= 1) {
+        indicatorsContainer.innerHTML = "";
+        return;
+      }
+
+      const maxScroll = sliderContainer.scrollWidth - sliderContainer.clientWidth;
+      const scrollRatio = maxScroll > 0 ? sliderContainer.scrollLeft / maxScroll : 0;
+      const currentPage = Math.min(totalPages - 1, Math.round(scrollRatio * (totalPages - 1)));
+
+      if (indicatorsContainer.children.length !== totalPages) {
+        indicatorsContainer.innerHTML = "";
+        for (let p = 0; p < totalPages; p++) {
+          const pill = document.createElement("div");
+          pill.className = `netflix-page-pill ${p === currentPage ? 'active' : ''}`;
+          pill.title = `Page ${p + 1} of ${totalPages}`;
+          pill.addEventListener("click", () => {
+            const targetScroll = (p / (totalPages - 1)) * (sliderContainer.scrollWidth - sliderContainer.clientWidth);
+            sliderContainer.scrollTo({ left: targetScroll, behavior: "smooth" });
+          });
+          indicatorsContainer.appendChild(pill);
+        }
+      } else {
+        Array.from(indicatorsContainer.children).forEach((pill, idx) => {
+          pill.classList.toggle("active", idx === currentPage);
+        });
+      }
+    };
+
+    // Netflix continuous cycling arrows
     if (btnLeft && sliderContainer) {
       btnLeft.addEventListener("click", () => {
-        const dynamicStep = Math.max(300, sliderContainer.clientWidth * 0.75);
-        sliderContainer.scrollBy({ left: -dynamicStep, behavior: "smooth" });
+        const maxScroll = sliderContainer.scrollWidth - sliderContainer.clientWidth;
+        if (sliderContainer.scrollLeft <= 8) {
+          sliderContainer.scrollTo({ left: maxScroll, behavior: "smooth" });
+        } else {
+          sliderContainer.scrollBy({ left: -sliderContainer.clientWidth, behavior: "smooth" });
+        }
       });
     }
     if (btnRight && sliderContainer) {
       btnRight.addEventListener("click", () => {
-        const dynamicStep = Math.max(300, sliderContainer.clientWidth * 0.75);
-        sliderContainer.scrollBy({ left: dynamicStep, behavior: "smooth" });
+        const maxScroll = sliderContainer.scrollWidth - sliderContainer.clientWidth;
+        if (sliderContainer.scrollLeft >= maxScroll - 8) {
+          sliderContainer.scrollTo({ left: 0, behavior: "smooth" });
+        } else {
+          sliderContainer.scrollBy({ left: sliderContainer.clientWidth, behavior: "smooth" });
+        }
+      });
+    }
+
+    // Horizontal mouse wheel scrolling over video row
+    if (sliderContainer) {
+      sliderContainer.addEventListener("wheel", (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && sliderContainer.scrollWidth > sliderContainer.clientWidth) {
+          e.preventDefault();
+          sliderContainer.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
+
+    // Draggable sliding bar thumb & clickable track
+    let isDraggingThumb = false;
+    let startThumbClientX = 0;
+    let startScrollLeft = 0;
+
+    if (thumbEl && trackBar && sliderContainer) {
+      const onThumbDown = (e) => {
+        isDraggingThumb = true;
+        thumbEl.classList.add("dragging");
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        startThumbClientX = clientX;
+        startScrollLeft = sliderContainer.scrollLeft;
+        document.body.style.userSelect = "none";
+        e.preventDefault();
+      };
+
+      const onThumbMove = (e) => {
+        if (!isDraggingThumb) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const deltaX = clientX - startThumbClientX;
+        const trackWidth = trackBar.clientWidth;
+        const thumbWidth = thumbEl.clientWidth;
+        const maxThumbLeft = trackWidth - thumbWidth;
+        const maxScroll = sliderContainer.scrollWidth - sliderContainer.clientWidth;
+        if (maxThumbLeft > 0 && maxScroll > 0) {
+          const scrollDelta = (deltaX / maxThumbLeft) * maxScroll;
+          sliderContainer.scrollLeft = Math.max(0, Math.min(maxScroll, startScrollLeft + scrollDelta));
+        }
+      };
+
+      const onThumbUp = () => {
+        if (isDraggingThumb) {
+          isDraggingThumb = false;
+          thumbEl.classList.remove("dragging");
+          document.body.style.userSelect = "";
+        }
+      };
+
+      thumbEl.addEventListener("mousedown", onThumbDown);
+      thumbEl.addEventListener("touchstart", onThumbDown, { passive: false });
+      window.addEventListener("mousemove", onThumbMove);
+      window.addEventListener("touchmove", onThumbMove, { passive: false });
+      window.addEventListener("mouseup", onThumbUp);
+      window.addEventListener("touchend", onThumbUp);
+
+      trackBar.addEventListener("click", (e) => {
+        if (e.target === thumbEl) return;
+        const rect = trackBar.getBoundingClientRect();
+        const clickPos = (e.clientX - rect.left) - (thumbEl.clientWidth / 2);
+        const trackWidth = trackBar.clientWidth;
+        const maxThumbLeft = trackWidth - thumbEl.clientWidth;
+        const maxScroll = sliderContainer.scrollWidth - sliderContainer.clientWidth;
+        if (maxThumbLeft > 0 && maxScroll > 0) {
+          const targetPct = Math.min(1, Math.max(0, clickPos / maxThumbLeft));
+          sliderContainer.scrollTo({ left: targetPct * maxScroll, behavior: "smooth" });
+        }
       });
     }
 
     const syncSliderPosition = () => {
       if (!sliderContainer) return;
+      updateContainerMetrics();
       const maxScroll = sliderContainer.scrollWidth - sliderContainer.clientWidth;
-      if (maxScroll <= 0) {
-        if (thumbEl) thumbEl.style.left = "0px";
+      if (maxScroll <= 2) {
+        if (thumbEl) {
+          thumbEl.style.width = "60px";
+          thumbEl.style.left = "0px";
+          thumbEl.style.opacity = "0.35";
+        }
+        updateIndicators();
         return;
       }
+      if (thumbEl) thumbEl.style.opacity = "1";
       const pct = Math.min(1, Math.max(0, sliderContainer.scrollLeft / maxScroll));
       if (trackBar && thumbEl) {
         const trackWidth = trackBar.clientWidth;
-        const thumbWidth = Math.max(40, (sliderContainer.clientWidth / sliderContainer.scrollWidth) * trackWidth);
+        const visibleRatio = sliderContainer.clientWidth / sliderContainer.scrollWidth;
+        const thumbWidth = Math.max(48, Math.min(trackWidth * 0.8, visibleRatio * trackWidth));
         thumbEl.style.width = `${thumbWidth}px`;
         const maxThumbLeft = trackWidth - thumbWidth;
         thumbEl.style.left = `${pct * maxThumbLeft}px`;
       }
+      updateIndicators();
     };
 
     if (sliderContainer) {
