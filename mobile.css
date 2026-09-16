@@ -558,7 +558,7 @@ html, body {
   max-width: 100% !important;
   box-sizing: border-box !important;
   padding: 0.85rem 0.75rem !important;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06) !important;
   border-radius: 16px !important;
 }
 
@@ -602,7 +602,7 @@ html, body {
   width: 100% !important;
   box-sizing: border-box !important;
   border-radius: 16px !important;
-  box-shadow: 0 8px 24px -3px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
   border: 1px solid #e2e8f0 !important;
   position: relative !important;
 }
@@ -629,8 +629,8 @@ html, body {
   overflow-wrap: break-word !important;
   padding: 1.25rem 0.65rem 1.15rem !important;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.07) !important;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.09)) !important;
-  box-shadow: 0 3px 14px -2px rgba(0, 0, 0, 0.05) !important;
+  filter: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
   border: 1px solid #e2e8f0 !important;
 }
 
@@ -693,6 +693,7 @@ html, body {
   border-radius: 16px !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
 }
 
 .history-word-text {

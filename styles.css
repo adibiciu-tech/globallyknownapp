@@ -5264,7 +5264,7 @@ body {
   border: 1px solid #eaeef4;
   border-radius: 18px;
   padding: 1.5rem 1.75rem;
-  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
   transition: box-shadow 0.2s ease;
 }
 
@@ -5273,7 +5273,7 @@ body {
   text-align: center;
   padding: 2rem 2rem 2.25rem;
   position: relative;
-  box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
   border: 1px solid #e2e8f0;
 }
 
@@ -5367,12 +5367,11 @@ body {
   border-radius: 16px;
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   line-height: 1.05;
   text-align: center;
   letter-spacing: -0.02em;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.07);
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.09));
   transition: color 0.3s ease, text-shadow 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -5444,19 +5443,19 @@ body {
   align-items: center;
   gap: 0.55rem;
   letter-spacing: 0.01em;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28), 0 1px 3px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 2px 5px rgba(79, 70, 229, 0.2), 0 1px 2px rgba(79, 70, 229, 0.1);
   transition: all 0.22s ease;
 }
 
 .rwggp-generate-btn:hover {
   background: linear-gradient(135deg, #6460f5 0%, #5b52f0 60%, #4f46e5 100%);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.38), 0 2px 6px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 3px 8px rgba(79, 70, 229, 0.25), 0 1px 3px rgba(79, 70, 229, 0.15);
   transform: translateY(-1px);
 }
 
 .rwggp-generate-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.22);
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.18);
 }
 
 .rwggp-search-wrapper {
@@ -5823,7 +5822,7 @@ body {
   max-width: calc(100vw - 28px);
   box-sizing: border-box;
   border-radius: 18px;
-  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
   padding: 1rem 0.9rem;
   position: relative;
   color: #334155;
