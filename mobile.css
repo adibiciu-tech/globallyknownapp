@@ -501,6 +501,7 @@ html, body {
 }
 
 .delete-video-btn.mini,
+.edit-video-btn.mini,
 .fullscreen-video-btn.mini {
   padding: 3px 6px !important;
   font-size: 0.7rem !important;

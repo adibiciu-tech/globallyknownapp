@@ -4717,6 +4717,105 @@ function openAddVideoModal(defaultCategoryId = "city") {
   }
 }
 
+let editVideoModalInitialized = false;
+
+function openEditVideoModal(video) {
+  if (!video) return;
+  const modal = document.getElementById("modal-edit-video");
+  const idInput = document.getElementById("edit-video-id-input");
+  const titleInput = document.getElementById("edit-video-title-input");
+
+  if (!modal || !titleInput) {
+    const newTitle = prompt("Edit video title:", video.title || "");
+    if (newTitle !== null && newTitle.trim() !== "" && newTitle.trim() !== video.title) {
+      handleSaveVideoTitle(video.id, newTitle.trim());
+    }
+    return;
+  }
+
+  if (idInput) idInput.value = video.id;
+  titleInput.value = video.title || "";
+
+  modal.classList.remove("hidden");
+  setTimeout(() => {
+    titleInput.focus();
+    titleInput.select();
+  }, 100);
+
+  if (!editVideoModalInitialized) {
+    editVideoModalInitialized = true;
+    const btnClose = document.getElementById("btn-close-edit-video-modal");
+    const btnCancel = document.getElementById("btn-cancel-edit-video");
+    const form = document.getElementById("form-edit-video");
+
+    const closeModal = () => modal.classList.add("hidden");
+
+    if (btnClose) btnClose.addEventListener("click", closeModal);
+    if (btnCancel) btnCancel.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    const handleEditSubmit = async (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const vidId = idInput ? idInput.value : "";
+      const newTitle = titleInput ? titleInput.value.trim() : "";
+      if (!newTitle) {
+        showToast("⚠️ Video title cannot be empty.");
+        if (titleInput) titleInput.focus();
+        return;
+      }
+      closeModal();
+      await handleSaveVideoTitle(vidId, newTitle);
+    };
+
+    if (form) form.addEventListener("submit", handleEditSubmit);
+    const btnSubmit = document.getElementById("btn-submit-edit-video");
+    if (btnSubmit) btnSubmit.addEventListener("click", handleEditSubmit);
+  }
+}
+
+async function handleSaveVideoTitle(videoId, newTitle) {
+  try {
+    let currentVideos = await fetchServerVideos();
+    let found = false;
+    currentVideos = currentVideos.map(v => {
+      if (v && v.id === videoId) {
+        found = true;
+        return { ...v, title: newTitle };
+      }
+      return v;
+    });
+
+    if (!found) {
+      let localVids = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+      localVids = localVids.map(v => (v && v.id === videoId) ? { ...v, title: newTitle } : v);
+      currentVideos = localVids;
+    }
+
+    try {
+      await fetch("/api/videos/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: videoId, title: newTitle })
+      });
+    } catch (err) {
+      console.warn("Could not reach /api/videos/update:", err);
+    }
+
+    await syncVideosToServer(currentVideos);
+    showToast(`✏️ Title updated to "${newTitle}"`);
+    await initVideosPanel();
+  } catch (err) {
+    console.error("Error updating video title:", err);
+    showToast("⚠️ Could not update video title.");
+  }
+}
+
 let currentVideosRenderId = 0;
 
 async function initVideosPanel() {
@@ -5042,7 +5141,7 @@ async function initVideosPanel() {
           <div class="video-card-title-row">
             <h4 class="video-card-title" title="${escapeHtml(video.title)}">${escapeHtml(video.title)}</h4>
             <div class="video-card-actions">
-              <button class="fullscreen-video-btn mini" title="Fullscreen Video"><i class="fa-solid fa-expand"></i> <span class="action-btn-label">Fullscreen</span></button>
+              <button class="edit-video-btn mini" data-id="${video.id}" title="Edit Video Title"><i class="fa-solid fa-pen"></i> <span class="action-btn-label">Edit</span></button>
               ${video.isUserAdded ? `<button class="delete-video-btn mini" data-id="${video.id}" title="Delete Video"><i class="fa-solid fa-trash-can"></i> <span class="delete-btn-label">Delete</span></button>` : ""}
             </div>
           </div>
@@ -5069,9 +5168,20 @@ async function initVideosPanel() {
         floatingFsBtn.addEventListener("click", triggerFullscreen);
       }
 
-      const fsBtn = card.querySelector(".fullscreen-video-btn.mini");
-      if (fsBtn) {
-        fsBtn.addEventListener("click", triggerFullscreen);
+      const editBtn = card.querySelector(".edit-video-btn.mini");
+      if (editBtn) {
+        editBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openEditVideoModal(video);
+        });
+      }
+
+      const titleEl = card.querySelector(".video-card-title");
+      if (titleEl) {
+        titleEl.addEventListener("dblclick", (e) => {
+          e.stopPropagation();
+          openEditVideoModal(video);
+        });
       }
 
       const deleteBtn = card.querySelector(".delete-video-btn.mini");

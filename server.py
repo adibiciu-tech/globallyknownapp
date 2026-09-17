@@ -442,6 +442,36 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(resp)
             return
 
+        if self.path.startswith("/api/videos/update"):
+            try:
+                payload = json.loads(body)
+                vid_id = payload.get("id")
+                new_title = payload.get("title")
+                data = load_data()
+                existing = data.get("videos", [])
+                for v in existing:
+                    if isinstance(v, dict) and v.get("id") == vid_id:
+                        if new_title:
+                            v["title"] = str(new_title).strip()
+                        break
+                data["videos"] = existing
+                save_data(data)
+                save_permanent_videos(existing)
+                resp = json.dumps({"success": True, "count": len(existing), "videos": existing}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
         if self.path.startswith("/api/videos/delete"):
             try:
                 payload = json.loads(body)

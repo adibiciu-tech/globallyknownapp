@@ -1,21 +1,40 @@
 {
   "videos": [
     {
-      "id": "vid_test_123",
+      "id": "custom_1789590958187_kh8fh",
       "categoryId": "city",
       "title": "Episode 1",
-      "desc": "Custom embedded YouTube video",
-      "embedUrl": "https://www.youtube.com/embed/gCWYp2zJpB8",
-      "isUserAdded": true
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube.com/embed/RJbUtcaoNCY?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789590958187
     },
     {
-      "id": "custom_1789590071219_0liw7",
+      "id": "custom_1789591030434_9u429",
       "categoryId": "city",
-      "title": "City Streets at Dusk",
+      "title": "Episode 2",
       "desc": "Custom embedded video lesson",
-      "embedUrl": "https://www.youtube.com/embed/3i_JmO7zM0A",
+      "embedUrl": "https://www.youtube.com/embed/8Oc7eMzT-W4?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
       "isUserAdded": true,
-      "addedAt": 1789590071219
+      "addedAt": 1789591030434
+    },
+    {
+      "id": "custom_1789591180087_oexph",
+      "categoryId": "city",
+      "title": "Episode 3",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube.com/embed/adyiqxAdGpY?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789591180087
+    },
+    {
+      "id": "custom_1789591221788_7328h",
+      "categoryId": "city",
+      "title": "Episode 4",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube.com/embed/X7YApMWGu-g?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789591221788
     },
     {
       "id": "custom_1789590112159_1zwrb",

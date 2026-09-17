@@ -4519,6 +4519,7 @@ body {
   flex-shrink: 0;
 }
 
+.edit-video-btn.mini,
 .fullscreen-video-btn.mini {
   background: rgba(56, 189, 248, 0.15) !important;
   color: #38bdf8 !important;
@@ -4536,6 +4537,7 @@ body {
   flex-shrink: 0;
 }
 
+.edit-video-btn.mini:hover,
 .fullscreen-video-btn.mini:hover {
   background: #0284c7 !important;
   color: #ffffff !important;
@@ -4595,10 +4597,12 @@ body {
 
 @media (max-width: 480px) {
   .delete-video-btn.mini .delete-btn-label,
+  .edit-video-btn.mini .action-btn-label,
   .fullscreen-video-btn.mini .action-btn-label {
     display: none;
   }
   .delete-video-btn.mini,
+  .edit-video-btn.mini,
   .fullscreen-video-btn.mini {
     padding: 0.25rem 0.45rem;
   }
