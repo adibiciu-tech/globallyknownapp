@@ -463,46 +463,55 @@ html, body {
 }
 
 .netflix-slider-track .video-card {
-  flex: 0 0 clamp(230px, 68vw, 275px) !important;
-  min-width: clamp(230px, 68vw, 275px) !important;
-  max-width: clamp(230px, 68vw, 275px) !important;
+  flex: 0 0 clamp(175px, 54vw, 215px) !important;
+  min-width: clamp(175px, 54vw, 215px) !important;
+  max-width: clamp(175px, 54vw, 215px) !important;
 }
 
 .add-video-frame,
 .add-video-blue-frame {
-  min-height: 140px !important;
-  padding: 0.75rem 0.4rem !important;
+  min-height: 115px !important;
+  padding: 0.5rem 0.3rem !important;
 }
 
 .add-video-plus-circle {
-  width: 36px !important;
-  height: 36px !important;
-  margin-bottom: 6px !important;
+  width: 32px !important;
+  height: 32px !important;
+  margin-bottom: 4px !important;
 }
 
 .add-video-plus-circle i {
-  font-size: 1.05rem !important;
+  font-size: 0.95rem !important;
 }
 
 .add-video-title {
-  font-size: 13px !important;
+  font-size: 12px !important;
 }
 
 .add-video-sub {
-  font-size: 10px !important;
+  font-size: 9.5px !important;
 }
 
 .video-card-info-footer {
-  padding: 6px 10px !important;
+  padding: 5px 8px !important;
 }
 
 .video-card-title {
-  font-size: 0.82rem !important;
+  font-size: 0.8rem !important;
 }
 
-.delete-video-btn.mini {
-  padding: 3px 8px !important;
-  font-size: 0.72rem !important;
+.delete-video-btn.mini,
+.fullscreen-video-btn.mini {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+}
+
+.player-floating-fs-btn {
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 0.75rem !important;
+  top: 6px !important;
+  right: 6px !important;
 }
 
 /* 6. Mobile Sol Chat & Describing Lab (Full Dynamic Resolution Adaptation) */
