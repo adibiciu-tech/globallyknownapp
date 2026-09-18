@@ -9,6 +9,7 @@ import uuid
 import secrets
 import time
 import urllib.parse
+import re
 
 PORT = int(os.environ.get("PORT", 8000))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -164,6 +165,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         if self.path.startswith("/api/"):
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.send_header("Pragma", "no-cache")
@@ -559,17 +561,30 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 posted_videos = json.loads(body)
                 if isinstance(posted_videos, list):
                     data = load_data()
-                    existing = data.get("videos", [])
-                    # Union merge by id so no client can accidentally erase another client's embeds
-                    vmap = {v["id"]: v for v in existing if isinstance(v, dict) and "id" in v}
+                    blacklist_ids = {"vid_test_123", "custom_1789590071219_0liw7", "custom_1789590112159_1zwrb"}
+                    blacklist_urls = {"3i_JmO7zM0A", "gCWYp2zJpB8"}
+                    cleaned = []
+                    seen = set()
                     for v in posted_videos:
-                        if isinstance(v, dict) and "id" in v:
-                            vmap[v["id"]] = v
-                    merged = list(vmap.values())
-                    data["videos"] = merged
+                        if not isinstance(v, dict) or "id" not in v:
+                            continue
+                        vid_id = str(v.get("id", ""))
+                        url = str(v.get("embedUrl", ""))
+                        if vid_id in blacklist_ids or any(b in url for b in blacklist_urls):
+                            continue
+                        if vid_id in seen:
+                            continue
+                        seen.add(vid_id)
+                        if "youtube" in url and "videoseries" not in url:
+                            url = re.sub(r'[?&]list=[a-zA-Z0-9_-]+', '', url)
+                            url = re.sub(r'\?&', '?', url)
+                            url = re.sub(r'\?$', '', url)
+                            v["embedUrl"] = url
+                        cleaned.append(v)
+                    data["videos"] = cleaned
                     save_data(data)
-                    save_permanent_videos(merged)
-                    resp = json.dumps({"success": True, "count": len(merged), "videos": merged}).encode("utf-8")
+                    save_permanent_videos(cleaned)
+                    resp = json.dumps({"success": True, "count": len(cleaned), "videos": cleaned}).encode("utf-8")
                 else:
                     resp = json.dumps({"error": "Array expected"}).encode("utf-8")
                 self.send_response(200)

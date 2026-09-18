@@ -4,7 +4,7 @@
     "categoryId": "city",
     "title": "Episode 1: English By Jay",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube.com/embed/RJbUtcaoNCY?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube.com/embed/RJbUtcaoNCY",
     "isUserAdded": true,
     "addedAt": 1789590958187
   },
@@ -13,7 +13,7 @@
     "categoryId": "city",
     "title": "Episode 2",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube.com/embed/8Oc7eMzT-W4?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube.com/embed/8Oc7eMzT-W4",
     "isUserAdded": true,
     "addedAt": 1789591030434
   },
@@ -22,7 +22,7 @@
     "categoryId": "city",
     "title": "Episode 3",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube.com/embed/adyiqxAdGpY?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube.com/embed/adyiqxAdGpY",
     "isUserAdded": true,
     "addedAt": 1789591180087
   },
@@ -31,7 +31,7 @@
     "categoryId": "city",
     "title": "Episode 4",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube.com/embed/X7YApMWGu-g?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube.com/embed/X7YApMWGu-g",
     "isUserAdded": true,
     "addedAt": 1789591221788
   },
@@ -40,7 +40,7 @@
     "categoryId": "city",
     "title": "Episode 5",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/BJsOHCUPnWY?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/BJsOHCUPnWY",
     "isUserAdded": true,
     "addedAt": 1789756861178
   },
@@ -49,7 +49,7 @@
     "categoryId": "city",
     "title": "Episode 6",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/n7GBzexsilE?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/n7GBzexsilE",
     "isUserAdded": true,
     "addedAt": 1789756882492
   },
@@ -58,7 +58,7 @@
     "categoryId": "city",
     "title": "Episode 7",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/eX_M_zjze8I?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/eX_M_zjze8I",
     "isUserAdded": true,
     "addedAt": 1789756899184
   },
@@ -67,7 +67,7 @@
     "categoryId": "city",
     "title": "Episode 8",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/U9ZU88zZPFc?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/U9ZU88zZPFc",
     "isUserAdded": true,
     "addedAt": 1789757356977
   },
@@ -76,7 +76,7 @@
     "categoryId": "city",
     "title": "Episode 9",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/K5SnwXUb3N8?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/K5SnwXUb3N8",
     "isUserAdded": true,
     "addedAt": 1789759375815
   },
@@ -85,7 +85,7 @@
     "categoryId": "city",
     "title": "Lesson 10",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/kip3YG4_AYk?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/kip3YG4_AYk",
     "isUserAdded": true,
     "addedAt": 1789759395742
   },
@@ -94,7 +94,7 @@
     "categoryId": "city",
     "title": "Lesson 11",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/z7PH_S4x-_k?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/z7PH_S4x-_k",
     "isUserAdded": true,
     "addedAt": 1789759416164
   },
@@ -103,7 +103,7 @@
     "categoryId": "city",
     "title": "Lesson 12",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/ODqYt6mN7Ds?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/ODqYt6mN7Ds",
     "isUserAdded": true,
     "addedAt": 1789759453607
   },
@@ -112,7 +112,7 @@
     "categoryId": "city",
     "title": "Lesson 13",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/SSIpq-ny9Kc?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/SSIpq-ny9Kc",
     "isUserAdded": true,
     "addedAt": 1789759496101
   },
@@ -121,7 +121,7 @@
     "categoryId": "city",
     "title": "Lesson 14",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/9WVrHem8cwg?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/9WVrHem8cwg",
     "isUserAdded": true,
     "addedAt": 1789759559481
   },
@@ -130,7 +130,7 @@
     "categoryId": "city",
     "title": "Lesson 15",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/Dkg-9bQm7k8?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/Dkg-9bQm7k8",
     "isUserAdded": true,
     "addedAt": 1789759592992
   },
@@ -139,7 +139,7 @@
     "categoryId": "city",
     "title": "Lesson 16",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/fOlPWRGSUp0?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/fOlPWRGSUp0",
     "isUserAdded": true,
     "addedAt": 1789759732628
   },
@@ -148,7 +148,7 @@
     "categoryId": "city",
     "title": "Lesson 17",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/vub4dz7NRXA?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/vub4dz7NRXA",
     "isUserAdded": true,
     "addedAt": 1789759763180
   },
@@ -157,7 +157,7 @@
     "categoryId": "city",
     "title": "Lesson 18",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/UzeBIKPwOoM?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/UzeBIKPwOoM",
     "isUserAdded": true,
     "addedAt": 1789759793720
   },
@@ -166,7 +166,7 @@
     "categoryId": "city",
     "title": "Lesson 19",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/VespH2F_Jyc?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/VespH2F_Jyc",
     "isUserAdded": true,
     "addedAt": 1789759821409
   },
@@ -175,7 +175,7 @@
     "categoryId": "city",
     "title": "Lesson 20",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/dKpB9JT0CNs?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/dKpB9JT0CNs",
     "isUserAdded": true,
     "addedAt": 1789759844393
   },
@@ -184,7 +184,7 @@
     "categoryId": "city",
     "title": "Lesson 21",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/A7MgqFcYnkI?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/A7MgqFcYnkI",
     "isUserAdded": true,
     "addedAt": 1789759939030
   },
@@ -193,7 +193,7 @@
     "categoryId": "city",
     "title": "Lesson 22",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/H4xB0xyE3ZM?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/H4xB0xyE3ZM",
     "isUserAdded": true,
     "addedAt": 1789759962724
   },
@@ -202,7 +202,7 @@
     "categoryId": "city",
     "title": "Lesson 23",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/rQreJ6uvy8k?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/rQreJ6uvy8k",
     "isUserAdded": true,
     "addedAt": 1789759978375
   },
@@ -211,7 +211,7 @@
     "categoryId": "city",
     "title": "Lesson 24",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/5IDjknB0Wr4?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/5IDjknB0Wr4",
     "isUserAdded": true,
     "addedAt": 1789759995015
   },
@@ -220,7 +220,7 @@
     "categoryId": "city",
     "title": "Lesson 25",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/TgptXAAmKX8?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/TgptXAAmKX8",
     "isUserAdded": true,
     "addedAt": 1789760015029
   },
@@ -229,7 +229,7 @@
     "categoryId": "house",
     "title": "Lesson 1",
     "desc": "Custom embedded video lesson",
-    "embedUrl": "https://www.youtube-nocookie.com/embed/9aV1onEwMjs?list=PLPSdgTGGxv5N2dtrMUiWwqcTdCGn-D-eC",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/9aV1onEwMjs",
     "isUserAdded": true,
     "addedAt": 1789760325926
   }

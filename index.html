@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>SOL - Globally Known</title>
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   
   <!-- PWA & App Icons -->
   <link rel="manifest" href="manifest.json">
@@ -946,7 +947,7 @@
 
                    <!-- Main Active Video Player -->
                    <div class="main-video-player-container">
-                     <iframe id="main-playlist-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                      <iframe id="main-playlist-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
                    </div>
 
                    <!-- Netflix-Style Horizontal Episodes Carousel -->
@@ -2008,6 +2009,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35050"></script>
+  <script type="module" src="app.js?v=35060"></script>
 </body>
 </html>

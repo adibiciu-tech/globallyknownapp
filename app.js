@@ -4551,6 +4551,38 @@ const PLAYLIST_CATEGORIES = [
 // -------------------------------------------------------------
 // Universal Video Embed URL Parser & Formatter
 // -------------------------------------------------------------
+const BLACKLISTED_DUMMY_VIDEO_IDS = new Set([
+  "vid_test_123",
+  "custom_1789590071219_0liw7",
+  "custom_1789590112159_1zwrb"
+]);
+const BLACKLISTED_DUMMY_URL_PARTS = ["3i_JmO7zM0A", "gCWYp2zJpB8"];
+
+function sanitizeVideoList(videoList) {
+  if (!Array.isArray(videoList)) return [];
+  const cleaned = [];
+  const seen = new Set();
+  for (const v of videoList) {
+    if (!v || v.isAddTemplate || !v.id || !v.embedUrl) continue;
+    const vidId = String(v.id);
+    const url = String(v.embedUrl);
+    if (BLACKLISTED_DUMMY_VIDEO_IDS.has(vidId)) continue;
+    if (BLACKLISTED_DUMMY_URL_PARTS.some(part => url.includes(part))) continue;
+    if (seen.has(vidId)) continue;
+    seen.add(vidId);
+
+    // Sanitize embedUrl: strip ?list= or &list= on standard single video embeds
+    let cleanUrl = url.trim();
+    if (cleanUrl.includes("youtube") && !cleanUrl.includes("videoseries")) {
+      cleanUrl = cleanUrl.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
+      cleanUrl = cleanUrl.replace(/\?&/g, "?").replace(/\?$/g, "");
+      v.embedUrl = cleanUrl;
+    }
+    cleaned.push(v);
+  }
+  return cleaned;
+}
+
 function parseEmbedVideoUrl(rawInput) {
   if (!rawInput || typeof rawInput !== "string") return "";
   let text = rawInput.trim();
@@ -4573,14 +4605,11 @@ function parseEmbedVideoUrl(rawInput) {
     return `https://www.youtube-nocookie.com/embed/videoseries?list=${playlistOnlyMatch[1]}`;
   }
 
-  // 3. YouTube Watch, youtu.be, or existing /embed/
+  // 3. YouTube Watch, youtu.be, or existing /embed/ (DO NOT append ?list= to avoid 403 / unavailable errors)
   const ytMatch = text.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]+)/i);
-  const listMatch = text.match(/[?&]list=([a-zA-Z0-9_-]+)/i);
   if (ytMatch) {
     const videoId = ytMatch[1];
-    let res = `https://www.youtube-nocookie.com/embed/${videoId}`;
-    if (listMatch) res += `?list=${listMatch[1]}`;
-    return res;
+    return `https://www.youtube-nocookie.com/embed/${videoId}`;
   }
 
   // 4. Vimeo: https://vimeo.com/VIDEO_ID or https://player.vimeo.com/video/VIDEO_ID
@@ -4591,6 +4620,10 @@ function parseEmbedVideoUrl(rawInput) {
 
   // 5. Direct or already formatted URL
   if (text.startsWith("http://") || text.startsWith("https://")) {
+    if (text.includes("youtube") && !text.includes("videoseries")) {
+      text = text.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
+      text = text.replace(/\?&/g, "?").replace(/\?$/g, "");
+    }
     return text;
   }
 
@@ -4627,7 +4660,7 @@ async function fetchServerVideos() {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        serverVids = data;
+        serverVids = sanitizeVideoList(data);
         serverAvailable = true;
       }
     }
@@ -4635,34 +4668,31 @@ async function fetchServerVideos() {
     console.warn("Could not reach /api/videos, using localStorage cache:", err);
   }
 
-  const localVids = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
-  const validLocal = Array.isArray(localVids) ? localVids.filter(v => v && !v.isAddTemplate && v.embedUrl) : [];
+  const rawLocal = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+  const validLocal = sanitizeVideoList(rawLocal);
 
-  // Two-way union merge by ID so no video is EVER dropped or overwritten
-  const mergedMap = new Map();
-  serverVids.forEach(v => {
-    if (v && v.id) mergedMap.set(v.id, v);
-  });
-  validLocal.forEach(v => {
-    if (v && v.id && !mergedMap.has(v.id)) {
-      mergedMap.set(v.id, v);
-    }
-  });
-
-  const mergedList = Array.from(mergedMap.values());
-  localStorage.setItem("sol_user_added_videos", JSON.stringify(mergedList));
-
-  // If local had videos the server didn't have, push merged list to server
-  if (serverAvailable && mergedList.length > serverVids.length) {
-    await syncVideosToServer(mergedList);
+  let finalList = [];
+  if (serverAvailable) {
+    // Purge any blacklisted dummy items from localStorage immediately
+    const serverIdSet = new Set(serverVids.map(v => v.id));
+    const newLocalVids = validLocal.filter(v => !serverIdSet.has(v.id) && v.isUserAdded && (Date.now() - (v.addedAt || 0) < 86400000));
+    finalList = [...serverVids, ...newLocalVids];
+  } else {
+    finalList = validLocal;
   }
 
-  updateVideoSettingsBadge(mergedList.length, serverAvailable);
-  return mergedList;
+  localStorage.setItem("sol_user_added_videos", JSON.stringify(finalList));
+
+  if (serverAvailable && finalList.length > serverVids.length) {
+    await syncVideosToServer(finalList);
+  }
+
+  updateVideoSettingsBadge(finalList.length, serverAvailable);
+  return finalList;
 }
 
 async function syncVideosToServer(videos) {
-  const filtered = Array.isArray(videos) ? videos.filter(v => v && !v.isAddTemplate && v.embedUrl && v.embedUrl.trim() !== "") : [];
+  const filtered = sanitizeVideoList(videos);
   localStorage.setItem("sol_user_added_videos", JSON.stringify(filtered));
   let serverAvailable = false;
   try {
@@ -4675,9 +4705,10 @@ async function syncVideosToServer(videos) {
       serverAvailable = true;
       const data = await res.json();
       if (data && Array.isArray(data.videos)) {
-        localStorage.setItem("sol_user_added_videos", JSON.stringify(data.videos));
-        updateVideoSettingsBadge(data.videos.length, true);
-        return data.videos;
+        const cleaned = sanitizeVideoList(data.videos);
+        localStorage.setItem("sol_user_added_videos", JSON.stringify(cleaned));
+        updateVideoSettingsBadge(cleaned.length, true);
+        return cleaned;
       }
     }
   } catch (err) {
@@ -4688,6 +4719,10 @@ async function syncVideosToServer(videos) {
 }
 
 async function deleteVideoFromServer(videoId) {
+  let localVids = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+  localVids = localVids.filter(v => v && v.id !== videoId);
+  localStorage.setItem("sol_user_added_videos", JSON.stringify(localVids));
+
   let serverAvailable = false;
   try {
     const res = await fetch("/api/videos/delete", {
@@ -4699,17 +4734,15 @@ async function deleteVideoFromServer(videoId) {
       serverAvailable = true;
       const data = await res.json();
       if (data && Array.isArray(data.videos)) {
-        localStorage.setItem("sol_user_added_videos", JSON.stringify(data.videos));
-        updateVideoSettingsBadge(data.videos.length, true);
-        return data.videos;
+        const cleaned = sanitizeVideoList(data.videos);
+        localStorage.setItem("sol_user_added_videos", JSON.stringify(cleaned));
+        updateVideoSettingsBadge(cleaned.length, true);
+        return cleaned;
       }
     }
   } catch (err) {
     console.warn("Could not delete from server:", err);
   }
-  let localVids = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
-  localVids = localVids.filter(v => v.id !== videoId);
-  localStorage.setItem("sol_user_added_videos", JSON.stringify(localVids));
   updateVideoSettingsBadge(localVids.length, serverAvailable);
   return localVids;
 }
@@ -5218,6 +5251,10 @@ async function initVideosPanel() {
       card.className = "video-card";
 
       let activeEmbedUrl = video.embedUrl || "";
+      if (activeEmbedUrl.includes("youtube") && !activeEmbedUrl.includes("videoseries")) {
+        activeEmbedUrl = activeEmbedUrl.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
+        activeEmbedUrl = activeEmbedUrl.replace(/\?&/g, "?").replace(/\?$/g, "");
+      }
       if (activeEmbedUrl.includes("youtube.com/embed/")) {
         activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
       }
@@ -5238,6 +5275,7 @@ async function initVideosPanel() {
               allowfullscreen="true"
               webkitallowfullscreen="true"
               mozallowfullscreen="true"
+              referrerpolicy="strict-origin-when-cross-origin"
             ></iframe>
             <button class="player-floating-fs-btn" title="Open Fullscreen Video" aria-label="Fullscreen">
               <i class="fa-solid fa-expand"></i>
