@@ -3911,6 +3911,327 @@ function setupSettingsHandlers() {
       reader.readAsText(file);
     });
   }
+  // -------------------------------------------------------------
+  // Registered Users Directory & Google Client ID Settings
+  // -------------------------------------------------------------
+  const btnExportUsersCsv = document.getElementById("btn-export-users-csv");
+  if (btnExportUsersCsv) {
+    btnExportUsersCsv.addEventListener("click", () => {
+      window.location.href = "/api/admin/users/export.csv";
+      showToast("📥 Exporting users directory (.csv)...");
+    });
+  }
+
+  const btnCopyAllEmails = document.getElementById("btn-copy-all-emails");
+  if (btnCopyAllEmails) {
+    btnCopyAllEmails.addEventListener("click", () => {
+      if (!allRegisteredUsers || allRegisteredUsers.length === 0) {
+        showToast("⚠️ No registered emails to copy.");
+        return;
+      }
+      const emails = allRegisteredUsers.map(u => u.email).filter(Boolean);
+      const csvStr = emails.join(", ");
+      navigator.clipboard.writeText(csvStr);
+      showToast(`📋 Copied ${emails.length} email addresses to clipboard!`);
+    });
+  }
+
+  const btnRefreshUsersList = document.getElementById("btn-refresh-users-list");
+  if (btnRefreshUsersList) {
+    btnRefreshUsersList.addEventListener("click", () => {
+      refreshAdminUsersDirectory();
+      showToast("🔄 Users directory refreshed!");
+    });
+  }
+
+  const userSearchInput = document.getElementById("admin-user-search-input");
+  if (userSearchInput) {
+    userSearchInput.addEventListener("input", (e) => {
+      const q = (e.target.value || "").toLowerCase().trim();
+      if (!q) {
+        renderAdminUsersTable(allRegisteredUsers);
+      } else {
+        const filtered = allRegisteredUsers.filter(u => 
+          (u.name && u.name.toLowerCase().includes(q)) || 
+          (u.email && u.email.toLowerCase().includes(q))
+        );
+        renderAdminUsersTable(filtered);
+      }
+    });
+  }
+
+  const inputGoogleClientId = document.getElementById("admin-google-client-id-input");
+  const btnSaveGoogleClientId = document.getElementById("btn-save-google-client-id");
+
+  fetchGoogleClientId().then(cid => {
+    if (inputGoogleClientId && cid) {
+      inputGoogleClientId.value = cid;
+    }
+  });
+
+  if (btnSaveGoogleClientId && inputGoogleClientId) {
+    btnSaveGoogleClientId.addEventListener("click", async () => {
+      const newCid = inputGoogleClientId.value.trim();
+      try {
+        btnSaveGoogleClientId.disabled = true;
+        btnSaveGoogleClientId.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+        await fetch("/api/config/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ googleClientId: newCid })
+        });
+        localStorage.setItem("sol_google_client_id", newCid);
+        googleClientId = newCid;
+        initOfficialGoogleIdentity();
+        showToast("✅ Google OAuth Client ID saved successfully!");
+      } catch (err) {
+        console.error("Error saving Google Client ID:", err);
+        showToast("⚠️ Could not save Google Client ID.");
+      } finally {
+        btnSaveGoogleClientId.disabled = false;
+        btnSaveGoogleClientId.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Client ID';
+      }
+    });
+  }
+
+  // Load initial directory
+  refreshAdminUsersDirectory();
+}
+
+// -------------------------------------------------------------
+// Official Google Identity Services & Registered Users Helpers
+// -------------------------------------------------------------
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("JWT parse error:", e);
+    return null;
+  }
+}
+
+let googleClientId = "";
+
+async function fetchGoogleClientId() {
+  try {
+    const res = await fetch("/api/config/google");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.googleClientId) {
+        googleClientId = data.googleClientId.trim();
+        return googleClientId;
+      }
+    }
+  } catch (e) {
+    console.warn("Could not fetch Google Client ID from server:", e);
+  }
+  googleClientId = localStorage.getItem("sol_google_client_id") || "";
+  return googleClientId;
+}
+
+function initOfficialGoogleIdentity() {
+  const container = document.getElementById("g_id_signin_button_container");
+  const fallbackBtn = document.getElementById("btn-trigger-official-google");
+  const alertBox = document.getElementById("google-auth-alert");
+
+  if (!googleClientId) {
+    if (fallbackBtn) {
+      fallbackBtn.style.display = "flex";
+      fallbackBtn.onclick = () => {
+        if (alertBox) {
+          alertBox.className = "auth-alert";
+          alertBox.style.background = "rgba(66, 133, 244, 0.15)";
+          alertBox.style.border = "1px solid rgba(66, 133, 244, 0.4)";
+          alertBox.style.color = "#93c5fd";
+          alertBox.innerHTML = '<i class="fa-solid fa-circle-info"></i> <span>Google Sign-In requires an OAuth Client ID from Google Cloud Console. You can configure it anytime in <strong>Settings &gt; Registered Users & Email Directory</strong>.</span>';
+          alertBox.classList.remove("hidden");
+        }
+      };
+    }
+    return;
+  }
+
+  if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
+    try {
+      google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+
+      if (container) {
+        container.innerHTML = "";
+        google.accounts.id.renderButton(container, {
+          theme: "outline",
+          size: "large",
+          shape: "pill",
+          text: "continue_with",
+          width: 300
+        });
+        if (fallbackBtn) fallbackBtn.style.display = "none";
+      }
+    } catch (err) {
+      console.warn("Google Identity initialization error:", err);
+    }
+  }
+
+  if (fallbackBtn) {
+    fallbackBtn.onclick = () => {
+      if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
+        try {
+          google.accounts.id.prompt();
+        } catch (err) {
+          console.warn("Google prompt error:", err);
+        }
+      }
+    };
+  }
+}
+
+async function handleGoogleCredentialResponse(response) {
+  const alertBox = document.getElementById("google-auth-alert");
+  try {
+    if (!response || !response.credential) {
+      throw new Error("No credential returned from Google.");
+    }
+    const payload = parseJwt(response.credential);
+    if (!payload || !payload.email) {
+      throw new Error("Invalid credential payload received from Google.");
+    }
+    if (!payload.email_verified) {
+      throw new Error("This Google email is not verified.");
+    }
+
+    const email = payload.email.toLowerCase().trim();
+    const name = payload.name || payload.given_name || "Google User";
+    const picture = payload.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4285F4&color=fff&bold=true`;
+
+    const res = await fetch("/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email,
+        name: name,
+        picture: picture,
+        sub: payload.sub
+      })
+    });
+    const data = await res.json();
+    if (data.success && data.user) {
+      const googleModal = document.getElementById("modal-google-auth");
+      if (googleModal) googleModal.classList.add("hidden");
+      loginUserSuccess(data.user, data.token);
+      showToast(`👋 Welcome, ${data.user.name || "User"}!`);
+      refreshAdminUsersDirectory();
+    } else {
+      throw new Error(data.error || "Google Sign-In failed on server.");
+    }
+  } catch (err) {
+    console.error("Google authentication error:", err);
+    if (alertBox) {
+      alertBox.className = "auth-alert error";
+      alertBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>${escapeHtml(err.message || "Google Sign-In error")}</span>`;
+      alertBox.classList.remove("hidden");
+    }
+  }
+}
+
+let allRegisteredUsers = [];
+
+async function refreshAdminUsersDirectory() {
+  const container = document.getElementById("admin-users-table-container");
+  const countBadge = document.getElementById("admin-user-count-badge");
+  if (!container) return;
+
+  container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading registered users...</div>';
+
+  try {
+    const res = await fetch("/api/admin/users", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      allRegisteredUsers = data.users || [];
+      if (countBadge) {
+        countBadge.textContent = `${allRegisteredUsers.length} User${allRegisteredUsers.length === 1 ? '' : 's'} Registered`;
+      }
+      renderAdminUsersTable(allRegisteredUsers);
+      return;
+    }
+  } catch (e) {
+    console.warn("Could not load /api/admin/users:", e);
+  }
+
+  container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94a3b8;">No registered users found.</div>';
+}
+
+function renderAdminUsersTable(users) {
+  const container = document.getElementById("admin-users-table-container");
+  if (!container) return;
+
+  if (!users || users.length === 0) {
+    container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94a3b8;">No registered users found matching filter.</div>';
+    return;
+  }
+
+  let html = `
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem; text-align: left;">
+      <thead>
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8; background: rgba(255,255,255,0.03);">
+          <th style="padding: 0.75rem 1rem;">User</th>
+          <th style="padding: 0.75rem 1rem;">Verified Email</th>
+          <th style="padding: 0.75rem 1rem;">Provider</th>
+          <th style="padding: 0.75rem 1rem;">Joined</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  users.forEach(u => {
+    const isGoogle = u.authProvider === "google";
+    const joinedStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "-";
+    const pic = u.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=4f46e5&color=fff&bold=true`;
+    
+    html += `
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.2s;">
+        <td style="padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.6rem;">
+          <img src="${escapeHtml(pic)}" alt="" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);">
+          <span style="font-weight: 600; color: #f8fafc;">${escapeHtml(u.name || "User")}</span>
+        </td>
+        <td style="padding: 0.65rem 1rem; color: #cbd5e1; font-family: monospace;">
+          <span>${escapeHtml(u.email || "-")}</span>
+          <button type="button" class="copy-email-mini-btn" data-email="${escapeHtml(u.email || "")}" style="background: none; border: none; color: #38bdf8; cursor: pointer; margin-left: 6px; padding: 2px 4px;" title="Copy email">
+            <i class="fa-solid fa-copy"></i>
+          </button>
+        </td>
+        <td style="padding: 0.65rem 1rem;">
+          <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 600; ${isGoogle ? 'background: rgba(66, 133, 244, 0.15); color: #93c5fd; border: 1px solid rgba(66, 133, 244, 0.35);' : 'background: rgba(99, 102, 241, 0.15); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.35);'}">
+            ${isGoogle ? '<i class="fa-brands fa-google"></i> Google' : '<i class="fa-solid fa-envelope"></i> Email'}
+          </span>
+        </td>
+        <td style="padding: 0.65rem 1rem; color: #94a3b8; font-size: 0.78rem;">
+          ${joinedStr}
+        </td>
+      </tr>
+    `;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  container.querySelectorAll(".copy-email-mini-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const em = btn.getAttribute("data-email");
+      if (em) {
+        navigator.clipboard.writeText(em);
+        showToast(`📋 Copied: ${em}`);
+      }
+    });
+  });
 }
 
 function applyTheme(themeName) {
@@ -4180,16 +4501,16 @@ function initAuthSystem() {
     });
   }
 
-  // Google Sign-In Dedicated Modal Setup
+  // Google Sign-In Dedicated Modal Setup (Official Google Identity Services)
   const googleModal = document.getElementById("modal-google-auth");
   const btnCloseGoogleModal = document.getElementById("btn-close-google-modal");
-  const formGoogleSignin = document.getElementById("form-google-signin");
   const googleAlert = document.getElementById("google-auth-alert");
 
   const openGoogleModal = () => {
     hideAlert();
     if (googleAlert) googleAlert.classList.add("hidden");
     if (googleModal) googleModal.classList.remove("hidden");
+    initOfficialGoogleIdentity();
   };
 
   const closeGoogleModal = () => {
@@ -4207,71 +4528,10 @@ function initAuthSystem() {
     });
   }
 
-  if (formGoogleSignin) {
-    formGoogleSignin.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const nameInput = document.getElementById("google-input-name");
-      const emailInput = document.getElementById("google-input-email");
-      const submitBtn = document.getElementById("btn-submit-google-auth");
-
-      const name = nameInput ? nameInput.value.trim() : "";
-      const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
-
-      if (!name || !email) {
-        if (googleAlert) {
-          googleAlert.className = "auth-alert error";
-          googleAlert.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <span>Please enter your name and Google email.</span>';
-          googleAlert.classList.remove("hidden");
-        }
-        return;
-      }
-
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Connecting Google...</span>';
-      }
-
-      try {
-        const res = await fetch("/api/auth/google", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: name,
-            email: email,
-            picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4285F4&color=fff&bold=true`
-          })
-        });
-        const data = await res.json();
-        if (data.success && data.user) {
-          closeGoogleModal();
-          loginUserSuccess(data.user, data.token);
-        } else {
-          throw new Error(data.error || "Google sign-in failed.");
-        }
-      } catch (err) {
-        const localUser = {
-          name: name,
-          email: email,
-          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4285F4&color=fff&bold=true`,
-          role: "free"
-        };
-        closeGoogleModal();
-        loginUserSuccess(localUser, "tok_local");
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = `
-            <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18" style="margin-right: 6px;">
-              <path fill="#fff" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-              <path fill="#fff" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-              <path fill="#fff" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-              <path fill="#fff" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-            </svg>
-            <span class="btn-text">Connect Account</span>`;
-        }
-      }
-    });
-  }
+  // Initialize official Google Identity Services
+  fetchGoogleClientId().then(() => {
+    initOfficialGoogleIdentity();
+  });
 
   // Clear any legacy persistent guest flag from sessionStorage
   try {

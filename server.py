@@ -322,10 +322,42 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(payload)
             return
-        elif self.path.startswith("/api/auth/users"):
+        elif self.path.startswith("/api/admin/users/export.csv"):
+            data = load_data()
+            users = data.get("users", [])
+            lines = ["Name,Email,Provider,JoinedDate,LastActive"]
+            for u in users:
+                if not isinstance(u, dict): continue
+                nm = '"' + u.get("name", "").replace('"', '""') + '"'
+                em = '"' + u.get("email", "").replace('"', '""') + '"'
+                pr = u.get("authProvider", "email")
+                created = time.strftime('%Y-%m-%d %H:%M', time.gmtime(u.get("createdAt", 0)/1000)) if u.get("createdAt") else ""
+                last = time.strftime('%Y-%m-%d %H:%M', time.gmtime(u.get("lastLogin", u.get("createdAt", 0))/1000)) if (u.get("lastLogin") or u.get("createdAt")) else ""
+                lines.append(f"{nm},{em},{pr},{created},{last}")
+            csv_data = "\n".join(lines).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/csv; charset=utf-8")
+            self.send_header("Content-Disposition", 'attachment; filename="globallyknown_users.csv"')
+            self.send_header("Content-Length", str(len(csv_data)))
+            self.end_headers()
+            self.wfile.write(csv_data)
+            return
+
+        elif self.path.startswith("/api/admin/users") or self.path.startswith("/api/auth/users"):
             data = load_data()
             users = [sanitize_user(u) for u in data.get("users", [])]
-            payload = json.dumps(users).encode("utf-8")
+            payload = json.dumps({"count": len(users), "users": users}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
+        elif self.path.startswith("/api/config/google"):
+            data = load_data()
+            cid = data.get("googleClientId", os.environ.get("GOOGLE_CLIENT_ID", ""))
+            payload = json.dumps({"googleClientId": cid}).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(payload)))
@@ -419,6 +451,28 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(resp)
             return
 
+        elif self.path.startswith("/api/config/google"):
+            try:
+                payload = json.loads(body)
+                cid = (payload.get("googleClientId") or "").strip()
+                data = load_data()
+                data["googleClientId"] = cid
+                save_data(data)
+                resp = json.dumps({"success": True, "googleClientId": cid}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
         elif self.path.startswith("/api/auth/google"):
             try:
                 payload = json.loads(body)
@@ -433,6 +487,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 users = data.get("users", [])
                 user = next((u for u in users if u.get("email") == email), None)
 
+                now_ts = int(time.time() * 1000)
                 if not user:
                     user = {
                         "id": "usr_g_" + uuid.uuid4().hex[:10],
@@ -441,15 +496,21 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                         "picture": picture,
                         "role": "free",
                         "authProvider": "google",
-                        "createdAt": int(time.time() * 1000)
+                        "createdAt": now_ts,
+                        "lastLogin": now_ts,
+                        "loginCount": 1
                     }
                     users.append(user)
                     data["users"] = users
                     save_data(data)
                 else:
+                    user["lastLogin"] = now_ts
+                    user["loginCount"] = user.get("loginCount", 1) + 1
+                    if name and user.get("name") in ("Google User", ""):
+                        user["name"] = name
                     if picture and not user.get("picture"):
                         user["picture"] = picture
-                        save_data(data)
+                    save_data(data)
 
                 token = "tok_" + secrets.token_hex(24)
                 resp = json.dumps({"success": True, "token": token, "user": sanitize_user(user)}).encode("utf-8")
