@@ -113,6 +113,15 @@ def sanitize_user(user):
     copy.pop("passwordHash", None)
     return copy
 
+def get_master_gemini_key(data=None):
+    if data is None:
+        data = load_data()
+    for env_var in ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_APIKEY", "API_KEY", "GEMINI"]:
+        val = (os.environ.get(env_var) or "").strip()
+        if val:
+            return val
+    return (data.get("geminiApiKey") or "").strip()
+
 WORDS_FILE = os.path.join(BASE_DIR, "data", "words.json")
 CATEGORIES_FILE = os.path.join(BASE_DIR, "data", "categories.json")
 SAVING_LISTS_FILE = os.path.join(BASE_DIR, "data", "saving_lists.json")
@@ -370,7 +379,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         elif self.path.startswith("/api/config/gemini-status"):
             data = load_data()
-            master_key = os.environ.get("GEMINI_API_KEY", "").strip() or (data.get("geminiApiKey") or "").strip()
+            master_key = get_master_gemini_key(data)
             is_active = bool(master_key)
             masked = ""
             if master_key:
@@ -533,7 +542,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 is_title = payload.get("isTitle", False)
 
                 data = load_data()
-                master_key = os.environ.get("GEMINI_API_KEY", "").strip() or (data.get("geminiApiKey") or "").strip()
+                master_key = get_master_gemini_key(data)
                 if not master_key:
                     resp = json.dumps({"error": "No platform Gemini API key configured on the server."}).encode("utf-8")
                     self.send_response(503)
