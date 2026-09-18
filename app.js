@@ -1735,6 +1735,21 @@ function updateEngineBadgeUI() {
       platformBadge.style.border = "1px solid rgba(239, 68, 68, 0.3)";
     }
   }
+
+  const topBadge = document.getElementById("top-ai-badge");
+  if (topBadge) {
+    if (hasKey) {
+      topBadge.textContent = "Active (Connected)";
+      topBadge.style.background = "rgba(16, 185, 129, 0.15)";
+      topBadge.style.color = "#10b981";
+      topBadge.style.border = "1px solid rgba(16, 185, 129, 0.3)";
+    } else {
+      topBadge.textContent = "Not Configured";
+      topBadge.style.background = "rgba(239, 68, 68, 0.15)";
+      topBadge.style.color = "#ef4444";
+      topBadge.style.border = "1px solid rgba(239, 68, 68, 0.3)";
+    }
+  }
 }
 
 function renderTrainingExamplesList() {
@@ -3842,15 +3857,41 @@ function setupSettingsHandlers() {
     icon.classList.toggle("fa-eye-slash");
   });
 
-  // Save Settings Click
-  saveSettingsBtn.addEventListener("click", () => {
+  // Save Settings Click - Activates Gemini AI platform-wide for all devices & mobile phones
+  saveSettingsBtn.addEventListener("click", async () => {
     const rawKey = apiKeyInput.value.trim().replace(/^["']|["']$/g, '');
     geminiService.setApiKey(rawKey);
-    updateApiStatusIndicator();
-    if (typeof showToast === "function") {
-      showToast(rawKey ? "API Key updated successfully!" : "Switched to Demo Mode");
-    } else {
-      alert(rawKey ? "API Key configuration updated successfully!" : "Switched to Demo Mode.");
+
+    try {
+      saveSettingsBtn.disabled = true;
+      saveSettingsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Activating...';
+      const res = await fetch("/api/config/gemini-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: rawKey })
+      });
+      const data = await res.json();
+      await geminiService.checkPlatformStatus();
+      updateEngineBadgeUI();
+      updateApiStatusIndicator();
+      if (rawKey) {
+        if (typeof showToast === "function") {
+          showToast("🎉 Gemini AI activated for all devices & mobile phones!");
+        } else {
+          alert("🎉 Gemini AI activated for all devices & mobile phones!");
+        }
+      } else {
+        if (typeof showToast === "function") showToast("Switched to Demo Mode.");
+      }
+    } catch (e) {
+      console.warn("Could not sync to platform server:", e);
+      updateApiStatusIndicator();
+      if (typeof showToast === "function") {
+        showToast(rawKey ? "API Key saved locally!" : "Switched to Demo Mode");
+      }
+    } finally {
+      saveSettingsBtn.disabled = false;
+      saveSettingsBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Save & Activate Platform AI';
     }
   });
 
