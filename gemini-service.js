@@ -65,7 +65,28 @@ export class GeminiService {
   constructor() {
     this.apiKey = localStorage.getItem("gemini_api_key") || "";
     this.genAI = null;
+    this.hasPlatformKey = false;
+    this.platformModel = "gemini-1.5-flash";
     this.initGenAI();
+    this.checkPlatformStatus();
+  }
+
+  async checkPlatformStatus() {
+    try {
+      const resp = await fetch("/api/config/gemini-status");
+      if (resp.ok) {
+        const data = await resp.json();
+        this.hasPlatformKey = !!data.active;
+        if (data.model) this.platformModel = data.model;
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("sol_platform_status_updated", { detail: data }));
+        }
+        return data;
+      }
+    } catch (e) {
+      console.warn("Could not query platform gemini status:", e);
+    }
+    return { active: false };
   }
 
   async initGenAI() {
@@ -96,7 +117,7 @@ export class GeminiService {
   }
 
   hasApiKey() {
-    return !!this.apiKey;
+    return !!this.apiKey || this.hasPlatformKey;
   }
 
   async getSupportedModels() {
@@ -198,8 +219,44 @@ export class GeminiService {
     throw lastError || new Error("Failed to connect to Google Gemini API.");
   }
 
+  async fetchGeminiPlatformProxy(modelName, messages, systemInstruction, onChunk, onComplete) {
+    const formattedContents = messages
+      .filter(m => m.role === "user" || m.role === "model")
+      .map(m => {
+        const text = m.content || (m.parts && m.parts[0] ? m.parts[0].text : "");
+        return {
+          role: m.role === "model" ? "model" : "user",
+          parts: [{ text: text }]
+        };
+      });
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: formattedContents,
+        systemInstruction: systemInstruction,
+        model: modelName || this.platformModel || "gemini-1.5-flash"
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.reply) {
+      throw new Error(data.error || `Platform AI returned status ${response.status}`);
+    }
+
+    const replyText = cleanGeminiResponse(data.reply);
+    const words = replyText.split(" ");
+    for (let i = 0; i < words.length; i += 3) {
+      const chunk = words.slice(i, i + 3).join(" ") + " ";
+      onChunk(chunk);
+      await new Promise(r => setTimeout(r, 20));
+    }
+    if (onComplete) onComplete(replyText);
+    return true;
+  }
+
   async generateDirectTitle(userQuery, aiReply = "") {
-    if (!this.apiKey) return "";
     const prompt = `Based on this initial conversation exchange:
 User: "${(userQuery || "").slice(0, 160)}"
 ${aiReply ? `AI: "${aiReply.slice(0, 160)}"` : ""}
@@ -211,27 +268,50 @@ Rules:
 - Capitalize like a title (e.g. "Spanish Verb Conjugation", "Daily Practice Routine").
 - Return ONLY the title words and nothing else.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 16, temperature: 0.3 }
-        })
-      });
-      const data = await response.json();
-      if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
-        const parts = data.candidates[0].content.parts || [];
-        const text = parts[0]?.text || "";
-        const clean = text.replace(/["'`*\n\r]/g, "").replace(/^title:\s*/i, "").trim();
-        if (clean && clean.length >= 2 && clean.length <= 40) {
-          return clean;
+    if (this.apiKey) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 16, temperature: 0.3 }
+          })
+        });
+        const data = await response.json();
+        if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
+          const parts = data.candidates[0].content.parts || [];
+          const text = parts[0]?.text || "";
+          const clean = text.replace(/["'`*\n\r]/g, "").replace(/^title:\s*/i, "").trim();
+          if (clean && clean.length >= 2 && clean.length <= 40) {
+            return clean;
+          }
         }
+      } catch (e) {
+        console.warn("Direct title generation failed:", e);
       }
-    } catch (e) {
-      console.warn("Direct title generation failed:", e);
+    } else if (this.hasPlatformKey) {
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [{ role: "user", content: prompt }],
+            model: "gemini-1.5-flash",
+            isTitle: true
+          })
+        });
+        const data = await response.json();
+        if (response.ok && data.reply) {
+          const clean = data.reply.replace(/["'`*\n\r]/g, "").replace(/^title:\s*/i, "").trim();
+          if (clean && clean.length >= 2 && clean.length <= 40) {
+            return clean;
+          }
+        }
+      } catch (e) {
+        console.warn("Platform title generation failed:", e);
+      }
     }
     return "";
   }
@@ -391,19 +471,32 @@ Rules:
   async generateResponseStream(messages, systemInstruction, modelName, onChunk, onError, onComplete) {
     const trainedInstruction = this.buildTrainedSystemInstruction(systemInstruction);
 
-    if (!this.hasApiKey()) {
-      this.simulateStreamingResponse(messages, trainedInstruction, onChunk, onComplete);
-      return;
+    // 1. Direct client-side call if user configured personal developer key
+    if (this.apiKey) {
+      try {
+        const directSuccess = await this.fetchGeminiDirect(modelName, messages, trainedInstruction, onChunk, onComplete);
+        if (directSuccess) return;
+      } catch (err) {
+        console.warn("Direct Gemini API call failed, attempting platform proxy fallback:", err);
+      }
     }
 
-    try {
-      const directSuccess = await this.fetchGeminiDirect(modelName, messages, trainedInstruction, onChunk, onComplete);
-      if (directSuccess) return;
-    } catch (err) {
-      console.warn("Direct Gemini API call failed:", err);
-      const errMsg = err ? (err.message || String(err)) : "API key connection failed.";
-      this.simulateStreamingResponse(messages, trainedInstruction, onChunk, onComplete, true, errMsg);
+    // 2. Centralized Turnkey Platform AI Proxy (Zero client API key needed!)
+    if (this.hasPlatformKey) {
+      try {
+        const proxySuccess = await this.fetchGeminiPlatformProxy(modelName, messages, trainedInstruction, onChunk, onComplete);
+        if (proxySuccess) return;
+      } catch (err) {
+        console.warn("Platform Gemini proxy failed:", err);
+        const errMsg = err ? (err.message || String(err)) : "Platform AI connection error.";
+        if (onError) onError(errMsg);
+        this.simulateStreamingResponse(messages, trainedInstruction, onChunk, onComplete, true, errMsg);
+        return;
+      }
     }
+
+    // 3. Fallback to offline simulation if no keys configured
+    this.simulateStreamingResponse(messages, trainedInstruction, onChunk, onComplete);
   }
 
   simulateStreamingResponse(messages, systemInstruction, onChunk, onComplete, isApiKeyError = false, errorMsg = "") {

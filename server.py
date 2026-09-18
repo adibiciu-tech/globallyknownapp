@@ -9,6 +9,9 @@ import uuid
 import secrets
 import time
 import urllib.parse
+import urllib.request
+import urllib.error
+import ssl
 import re
 
 PORT = int(os.environ.get("PORT", 8000))
@@ -365,6 +368,25 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(payload)
             return
 
+        elif self.path.startswith("/api/config/gemini-status"):
+            data = load_data()
+            master_key = os.environ.get("GEMINI_API_KEY", "").strip() or (data.get("geminiApiKey") or "").strip()
+            is_active = bool(master_key)
+            masked = ""
+            if master_key:
+                masked = (master_key[:6] + "..." + master_key[-4:]) if len(master_key) > 10 else "***"
+            payload = json.dumps({
+                "active": is_active,
+                "maskedKey": masked,
+                "model": data.get("geminiModel", "gemini-1.5-flash")
+            }).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
         super().do_GET()
 
     def do_POST(self):
@@ -464,6 +486,140 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header("Content-Length", str(len(resp)))
                 self.end_headers()
                 self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
+        elif self.path.startswith("/api/config/gemini-key"):
+            try:
+                payload = json.loads(body)
+                key_val = (payload.get("geminiApiKey") or payload.get("apiKey") or "").strip()
+                data = load_data()
+                data["geminiApiKey"] = key_val
+                save_data(data)
+                masked = (key_val[:6] + "..." + key_val[-4:]) if len(key_val) > 10 else ("***" if key_val else "")
+                resp = json.dumps({
+                    "success": True,
+                    "active": bool(key_val),
+                    "maskedKey": masked
+                }).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
+        elif self.path.startswith("/api/chat"):
+            try:
+                payload = json.loads(body)
+                messages = payload.get("messages", [])
+                system_instruction = payload.get("systemInstruction", "")
+                requested_model = payload.get("model") or "gemini-1.5-flash"
+                is_title = payload.get("isTitle", False)
+
+                data = load_data()
+                master_key = os.environ.get("GEMINI_API_KEY", "").strip() or (data.get("geminiApiKey") or "").strip()
+                if not master_key:
+                    resp = json.dumps({"error": "No platform Gemini API key configured on the server."}).encode("utf-8")
+                    self.send_response(503)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                    return
+
+                # Build Gemini API request contents
+                contents = []
+                for m in messages:
+                    role = "model" if m.get("role") == "model" else "user"
+                    text = m.get("content") or ""
+                    if not text and m.get("parts") and len(m.get("parts")) > 0:
+                        text = m["parts"][0].get("text", "")
+                    contents.append({"role": role, "parts": [{"text": text}]})
+
+                req_body = {"contents": contents}
+                if system_instruction:
+                    req_body["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+
+                if is_title:
+                    req_body["generationConfig"] = {"maxOutputTokens": 16, "temperature": 0.3}
+
+                # Try models in priority order
+                models_to_try = [
+                    requested_model,
+                    "gemini-1.5-flash",
+                    "gemini-2.0-flash",
+                    "gemini-2.0-flash-lite",
+                    "gemini-pro"
+                ]
+                seen = set()
+                candidate_models = []
+                for m in models_to_try:
+                    if m and m not in seen:
+                        seen.add(m)
+                        candidate_models.append(m)
+
+                ctx = ssl.create_default_context()
+                last_error = None
+                reply_text = None
+                used_model = None
+
+                for mod in candidate_models:
+                    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={master_key}"
+                    req = urllib.request.Request(
+                        gemini_url,
+                        data=json.dumps(req_body).encode("utf-8"),
+                        headers={"Content-Type": "application/json"},
+                        method="POST"
+                    )
+                    try:
+                        with urllib.request.urlopen(req, context=ctx, timeout=30) as g_resp:
+                            res_json = json.loads(g_resp.read().decode("utf-8"))
+                            candidates = res_json.get("candidates", [])
+                            if candidates and "content" in candidates[0]:
+                                parts = candidates[0]["content"].get("parts", [])
+                                valid_parts = [p for p in parts if not p.get("thought")]
+                                target_parts = valid_parts if valid_parts else parts
+                                reply_text = "\n".join([p.get("text", "") for p in target_parts])
+                                used_model = mod
+                                break
+                    except urllib.error.HTTPError as e:
+                        err_content = e.read().decode("utf-8")
+                        try:
+                            err_json = json.loads(err_content)
+                            last_error = err_json.get("error", {}).get("message", str(e))
+                        except Exception:
+                            last_error = err_content
+                    except Exception as e:
+                        last_error = str(e)
+
+                if reply_text is not None:
+                    resp = json.dumps({"success": True, "reply": reply_text, "model": used_model}).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                else:
+                    resp = json.dumps({"error": f"Gemini API request failed: {last_error}"}).encode("utf-8")
+                    self.send_response(502)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
             except Exception as e:
                 resp = json.dumps({"error": str(e)}).encode("utf-8")
                 self.send_response(400)

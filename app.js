@@ -333,11 +333,25 @@ function updateApiStatusIndicator() {
   
   if (typeof geminiService !== "undefined" && geminiService && geminiService.hasApiKey()) {
     if (dot) dot.className = "status-dot online";
-    if (text) text.textContent = "Gemini Active";
+    if (geminiService.apiKey) {
+      if (text) text.textContent = "Gemini Active";
+    } else {
+      if (text) text.textContent = "Sol AI Platform";
+    }
   } else {
     if (dot) dot.className = "status-dot warning";
     if (text) text.textContent = "Demo Mode";
   }
+}
+
+// Global listener for platform AI availability updates
+if (typeof window !== "undefined") {
+  window.addEventListener("sol_platform_status_updated", () => {
+    updateApiStatusIndicator();
+    if (typeof updateEngineBadgeUI === "function") {
+      updateEngineBadgeUI();
+    }
+  });
 }
 
 // -------------------------------------------------------------
@@ -1686,8 +1700,11 @@ function updateEngineBadgeUI() {
   const badge = document.getElementById("training-engine-badge");
   const hasKey = geminiService.hasApiKey();
   if (badge) {
-    if (hasKey) {
-      badge.textContent = "⚡ Live Neural Gemini (Active)";
+    if (geminiService.apiKey) {
+      badge.textContent = "⚡ Live Neural Gemini (User Key)";
+      badge.className = "engine-status-badge active";
+    } else if (geminiService.hasPlatformKey) {
+      badge.textContent = "🟢 Platform AI Active (Turnkey)";
       badge.className = "engine-status-badge active";
     } else {
       badge.textContent = "💡 Demo Mode (No Key)";
@@ -1700,11 +1717,26 @@ function updateEngineBadgeUI() {
     const textEl = apiStatusBadge.querySelector(".status-text");
     const dotEl = apiStatusBadge.querySelector(".status-dot");
     if (hasKey) {
-      if (textEl) textEl.textContent = "Live Gemini";
+      if (textEl) textEl.textContent = geminiService.apiKey ? "Live Gemini" : "Sol AI Platform";
       if (dotEl) { dotEl.className = "status-dot online"; }
     } else {
       if (textEl) textEl.textContent = "Demo Mode";
       if (dotEl) { dotEl.className = "status-dot warning"; }
+    }
+  }
+
+  const platformBadge = document.getElementById("platform-ai-badge");
+  if (platformBadge) {
+    if (geminiService.hasPlatformKey) {
+      platformBadge.textContent = "Active (Connected)";
+      platformBadge.style.background = "rgba(16, 185, 129, 0.15)";
+      platformBadge.style.color = "#10b981";
+      platformBadge.style.border = "1px solid rgba(16, 185, 129, 0.3)";
+    } else {
+      platformBadge.textContent = "Not Configured";
+      platformBadge.style.background = "rgba(239, 68, 68, 0.15)";
+      platformBadge.style.color = "#ef4444";
+      platformBadge.style.border = "1px solid rgba(239, 68, 68, 0.3)";
     }
   }
 }
@@ -3990,6 +4022,67 @@ function setupSettingsHandlers() {
       } finally {
         btnSaveGoogleClientId.disabled = false;
         btnSaveGoogleClientId.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Client ID';
+      }
+    });
+  }
+
+  // Platform Master Gemini AI Engine Controls
+  const inputPlatformKey = document.getElementById("admin-platform-gemini-key-input");
+  const btnSavePlatformKey = document.getElementById("btn-save-platform-gemini-key");
+  const btnTogglePlatformKey = document.getElementById("btn-toggle-platform-gemini-key");
+
+  if (btnTogglePlatformKey && inputPlatformKey) {
+    btnTogglePlatformKey.addEventListener("click", () => {
+      const isPwd = inputPlatformKey.type === "password";
+      inputPlatformKey.type = isPwd ? "text" : "password";
+      btnTogglePlatformKey.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    });
+  }
+
+  // Fetch current platform status for placeholder
+  fetch("/api/config/gemini-status")
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.active && inputPlatformKey && data.maskedKey) {
+        inputPlatformKey.placeholder = `Platform Active (${data.maskedKey})`;
+      }
+    })
+    .catch(() => {});
+
+  if (btnSavePlatformKey && inputPlatformKey) {
+    btnSavePlatformKey.addEventListener("click", async () => {
+      const rawKey = inputPlatformKey.value.trim();
+      try {
+        btnSavePlatformKey.disabled = true;
+        btnSavePlatformKey.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Activating...';
+        const res = await fetch("/api/config/gemini-key", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apiKey: rawKey })
+        });
+        const resData = await res.json();
+        if (res.ok && resData.success) {
+          await geminiService.checkPlatformStatus();
+          updateEngineBadgeUI();
+          updateApiStatusIndicator();
+          if (resData.active) {
+            inputPlatformKey.value = "";
+            inputPlatformKey.placeholder = `Platform Active (${resData.maskedKey})`;
+            showToast("🎉 Platform Master Gemini AI activated for all devices & users!");
+          } else {
+            inputPlatformKey.value = "";
+            inputPlatformKey.placeholder = "AIzaSy... (Paste Master Gemini API Key)";
+            showToast("ℹ️ Platform Gemini Key cleared.");
+          }
+        } else {
+          showToast("⚠️ Could not save Platform Gemini Key: " + (resData.error || "Unknown error"));
+        }
+      } catch (err) {
+        console.error("Error saving Platform Gemini Key:", err);
+        showToast("⚠️ Error saving Platform Gemini Key.");
+      } finally {
+        btnSavePlatformKey.disabled = false;
+        btnSavePlatformKey.innerHTML = '<i class="fa-solid fa-bolt"></i> Save & Activate Platform AI';
       }
     });
   }

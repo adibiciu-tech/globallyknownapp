@@ -1268,8 +1268,7 @@
                   </button>
                 </div>
                 <p class="setting-help">
-                  SOL runs client-side directly on top of the Gemini API. Your API Key is saved locally in your browser and never sent to any external servers. 
-                  Get a free API key at the <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Google AI Studio <i class="fa-solid fa-external-link-alt"></i></a>.
+                  <strong>Personal API Key (Optional):</strong> If you want to use your own personal key instead of the platform AI, enter it here. Otherwise, SOL automatically routes through the centralized platform AI engine so you and your friends don't have to configure any API keys on mobile or guest sessions.
                 </p>
               </div>
 
@@ -1443,6 +1442,33 @@
                   <input type="text" id="admin-google-client-id-input" placeholder="e.g. 1234567890-abcdef.apps.googleusercontent.com" style="flex: 1; min-width: 260px; padding: 0.55rem 0.85rem; border-radius: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.84rem; font-family: monospace; outline: none;">
                   <button type="button" class="primary-btn" id="btn-save-google-client-id" style="padding: 0.55rem 1rem; font-size: 0.84rem; border-radius: 10px;">
                     <i class="fa-solid fa-floppy-disk"></i> Save Client ID
+                  </button>
+                </div>
+              </div>
+
+              <!-- Platform Master Gemini AI Engine (Central Turnkey Agent) -->
+              <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                  <span style="font-size: 0.85rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-brain" style="color: #10b981;"></i> Platform Master Gemini AI Engine
+                    <span id="platform-ai-badge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600;">Checking...</span>
+                  </span>
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="font-size: 0.78rem; color: #38bdf8; text-decoration: none;">
+                    Google AI Studio Key <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </a>
+                </div>
+                <p style="font-size: 0.78rem; color: #94a3b8; margin: 0 0 0.6rem 0; line-height: 1.4;">
+                  Enter your master Google Gemini API Key here once. This transforms SOL into a true platform agent: <strong>all users on mobile phones, tablets, desktops, and guests</strong> automatically chat with live Gemini AI with 0 setup required and without needing their own API key.
+                </p>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; position: relative;">
+                  <div style="position: relative; flex: 1; min-width: 260px;">
+                    <input type="password" id="admin-platform-gemini-key-input" placeholder="AIzaSy... (Paste Master Gemini API Key)" style="width: 100%; box-sizing: border-box; padding: 0.55rem 2.4rem 0.55rem 0.85rem; border-radius: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.84rem; font-family: monospace; outline: none;">
+                    <button type="button" id="btn-toggle-platform-gemini-key" title="Show/Hide API Key" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
+                  <button type="button" class="primary-btn" id="btn-save-platform-gemini-key" style="padding: 0.55rem 1rem; font-size: 0.84rem; border-radius: 10px; background: linear-gradient(135deg, #10b981, #059669); border: none;">
+                    <i class="fa-solid fa-bolt"></i> Save & Activate Platform AI
                   </button>
                 </div>
               </div>
