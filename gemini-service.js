@@ -66,7 +66,7 @@ export class GeminiService {
     this.apiKey = localStorage.getItem("gemini_api_key") || "";
     this.genAI = null;
     this.hasPlatformKey = false;
-    this.platformModel = "gemini-1.5-flash";
+    this.platformModel = "gemini-3.6-flash";
     this.initGenAI();
     this.checkPlatformStatus();
   }
@@ -162,10 +162,8 @@ export class GeminiService {
     // NEVER put thinking models ahead of fast conversational production models!
     const preferredOrder = [
       modelName,
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-pro",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
       "gemini-2.5-flash"
     ].filter(Boolean);
 
@@ -242,7 +240,7 @@ export class GeminiService {
       body: JSON.stringify({
         messages: formattedContents,
         systemInstruction: systemInstruction,
-        model: modelName || this.platformModel || "gemini-1.5-flash"
+        model: modelName || this.platformModel || "gemini-3.6-flash"
       })
     });
 
@@ -304,7 +302,7 @@ Rules:
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: [{ role: "user", content: prompt }],
-            model: "gemini-1.5-flash",
+            model: "gemini-3.6-flash",
             isTitle: true
           })
         });

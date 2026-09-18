@@ -133,7 +133,7 @@ let communityPosts = [
 // -------------------------------------------------------------
 let activePanel = "sol-chat";
 let activeChatMessages = JSON.parse(localStorage.getItem("sol_chat_history")) || [];
-let activeModel = "gemini-1.5-flash";
+let activeModel = "gemini-3.6-flash";
 let activeAgentId = "general";
 let currentTheme = localStorage.getItem("sol_theme") || "dark";
 
@@ -713,7 +713,7 @@ Key Conversational Principles:
       await geminiService.generateResponseStream(
         homeConversationHistory,
         systemInstruction,
-        activeModel || "gemini-1.5-flash",
+        activeModel || "gemini-3.6-flash",
         (chunk) => {
           if (responseText === "") aiBody.innerHTML = "";
           responseText += chunk;
@@ -798,24 +798,20 @@ Key Conversational Principles:
     const savedModelName = localStorage.getItem("sol_active_model_name") || "Flash";
     if (modelNameText) modelNameText.textContent = savedModelName;
     if (savedModelName === "Pro") {
-      activeModel = "gemini-1.5-pro";
+      activeModel = "gemini-3.6-flash";
     } else {
-      activeModel = "gemini-1.5-flash";
+      activeModel = "gemini-3.6-flash";
     }
 
     modelSelector.addEventListener("click", () => {
-      const models = ["Flash", "Pro", "SOL Engine"];
+      const models = ["Flash", "SOL Engine"];
       const current = modelNameText ? modelNameText.textContent.trim() : "Flash";
       const nextIndex = (models.indexOf(current) + 1) % models.length;
       const nextModel = models[nextIndex];
       if (modelNameText) modelNameText.textContent = nextModel;
       localStorage.setItem("sol_active_model_name", nextModel);
 
-      if (nextModel === "Pro") {
-        activeModel = "gemini-1.5-pro";
-      } else {
-        activeModel = "gemini-1.5-flash";
-      }
+      activeModel = "gemini-3.6-flash";
       
       const headerModelBadge = document.getElementById("header-model-badge");
       if (headerModelBadge) {
@@ -3183,7 +3179,7 @@ Provide your feedback and guidance in character as Sol (${roleCfg.name}).`;
         await geminiService.generateResponseStream(
           messages,
           systemInstruction,
-          "gemini-1.5-flash",
+          "gemini-3.6-flash",
           (chunk) => {
             if (responseText === "") aiBody.innerHTML = "";
             responseText += chunk;
@@ -3741,7 +3737,7 @@ CRITICAL SPOKEN DIRECTIVE: You are in a real-time live spoken conversation with 
         await geminiService.generateResponseStream(
           messages,
           systemInstruction,
-          "gemini-1.5-flash",
+          "gemini-3.6-flash",
           (chunk) => {
             if (responseText === "") aiBody.innerHTML = "";
             responseText += chunk;

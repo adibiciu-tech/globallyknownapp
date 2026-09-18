@@ -378,7 +378,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             payload = json.dumps({
                 "active": is_active,
                 "maskedKey": masked,
-                "model": data.get("geminiModel", "gemini-1.5-flash")
+                "model": data.get("geminiModel", "gemini-3.6-flash")
             }).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -527,7 +527,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 payload = json.loads(body)
                 messages = payload.get("messages", [])
                 system_instruction = payload.get("systemInstruction", "")
-                requested_model = payload.get("model") or "gemini-1.5-flash"
+                requested_model = payload.get("model") or "gemini-3.6-flash"
+                if requested_model in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-pro", "gemini-1.5-pro"]:
+                    requested_model = "gemini-3.6-flash"
                 is_title = payload.get("isTitle", False)
 
                 data = load_data()
@@ -557,13 +559,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 if is_title:
                     req_body["generationConfig"] = {"maxOutputTokens": 16, "temperature": 0.3}
 
-                # Try models in priority order (never gemini-pro which is deprecated)
+                # Try production models in priority order
                 models_to_try = [
                     requested_model,
-                    "gemini-2.0-flash",
-                    "gemini-1.5-flash",
-                    "gemini-2.0-flash-lite",
-                    "gemini-1.5-pro",
+                    "gemini-3.6-flash",
+                    "gemini-3.5-flash-lite",
                     "gemini-2.5-flash"
                 ]
                 seen = set()
