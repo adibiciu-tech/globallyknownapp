@@ -400,24 +400,51 @@ const GREETING_TEMPLATES = [
 
 let lastGreetingIndex = -1;
 
+function getActiveUserProfile() {
+  try {
+    const raw = localStorage.getItem("sol_user_profile");
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p && (p.name || p.email)) return p;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function isGuestUser() {
+  return !getActiveUserProfile();
+}
+
+function getActiveUserName() {
+  const p = getActiveUserProfile();
+  if (p && p.name) {
+    return p.name.split(" ")[0];
+  }
+  return "Guest";
+}
+
+function getActiveUserStorageKey(prefix) {
+  const p = getActiveUserProfile();
+  if (p && p.email) {
+    const cleanEmail = p.email.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+    return `${prefix}_${cleanEmail}`;
+  }
+  return `${prefix}_guest`;
+}
+
 function updateGreetingText() {
   const greetingEl = document.getElementById("gemini-greeting-text");
   const outputGreetingEl = document.getElementById("output-greeting-text");
   const labGreetingEl = document.getElementById("lab-greeting-text");
   
-  let name = "Adrian";
-  try {
-    const profile = JSON.parse(localStorage.getItem("sol_user_profile"));
-    if (profile && profile.name) {
-      name = profile.name.split(" ")[0];
-    }
-  } catch (e) {}
+  const isGuest = isGuestUser();
+  const name = getActiveUserName();
 
   if (outputGreetingEl) {
-    outputGreetingEl.textContent = `Speak with Sol, ${name}!`;
+    outputGreetingEl.textContent = isGuest ? "Speak with Sol, Guest!" : `Speak with Sol, ${name}!`;
   }
   if (labGreetingEl) {
-    labGreetingEl.textContent = `Describe the scene, ${name}!`;
+    labGreetingEl.textContent = isGuest ? "Describe the scene, Guest!" : `Describe the scene, ${name}!`;
   }
 
   if (!greetingEl) return;
@@ -430,6 +457,11 @@ function updateGreetingText() {
   const template = GREETING_TEMPLATES[randomIndex];
   greetingEl.textContent = template.replace("{name}", name);
 }
+window.updateGreetingText = updateGreetingText;
+window.getActiveUserProfile = getActiveUserProfile;
+window.getActiveUserName = getActiveUserName;
+window.isGuestUser = isGuestUser;
+window.getActiveUserStorageKey = getActiveUserStorageKey;
 
 let homeConversationHistory = [];
 let currentHomeConvId = null;
@@ -644,12 +676,20 @@ function initStartHerePanel() {
     const aiBody = aiDiv.querySelector(".gemini-ai-body");
     let responseText = "";
 
+    const activeName = getActiveUserName();
+    const isGuest = isGuestUser();
+    const greetingGuidance = isGuest
+      ? 'When greeted ("hi", "hey", "hello", "hi sol"), respond naturally like a friendly host welcoming someone (e.g., "Hello Guest! Great to meet you. What\'s on your mind today?" or "Hey there! How\'s your day going?"). Never call the user Adrian and do NOT assume any personal name unless they tell you.'
+      : `When greeted ("hi", "hey", "hello", "hi sol"), respond naturally and warmly like a friend catching up (e.g., "Hey ${activeName}! Great to see you. How's your day going?" or "Hey there! What's on your mind today?").`;
+
     const systemInstruction = `You are Sol, an exceptionally perceptive, intelligent, and authentic AI companion powered by Google Gemini on Globally Known.
 You speak with genuine human-like energy—natural, spontaneous, warm, sharp, and engaging.
 
+Current User Context: ${isGuest ? "Browsing as Guest. Address them warmly as 'Guest' or 'friend'. NEVER call them Adrian." : `Signed-in member: ${activeName}.`}
+
 Key Conversational Principles:
 1. Tone & Voice: Speak like Gemini in its best, most authentic form. Be an active, charismatic conversation partner. Never sound like an automated corporate tutor, an ESL worksheet, or a robotic customer service bot.
-2. Natural Interactions: When greeted ("hi", "hey", "hello", "hi sol"), respond naturally and warmly like a friend catching up (e.g., "Hey Adrian! Great to see you. How's your day going?" or "Hey there! What's on your mind today?"). Never recite robotic menus or tell the user what they should practice unless they specifically ask.
+2. Natural Interactions: ${greetingGuidance} Never recite robotic menus or tell the user what they should practice unless they specifically ask.
 3. Matching Vibe: Match the user's conversational vibe and pace. If they are playful, be witty. If they want deep explanations, provide vivid intuition, analogies, and clarity.
 4. Language & Culture: When discussing language, vocabulary, or idioms, explain real-world intuition, colloquial nuances, and how native speakers actually talk—not dry textbook definitions.
 5. Formatting: Use clean, elegant markdown formatting (bold text, lists, code blocks) whenever it makes the response easier and more pleasant to read.
@@ -1021,7 +1061,8 @@ async function requestAiTitleUpdate(convId, userQuery, aiReply = "") {
 let defaultSolConversations = [];
 
 function getSolConversations() {
-  const saved = localStorage.getItem("sol_saved_conversations_list");
+  const key = getActiveUserStorageKey("sol_saved_conversations");
+  const saved = localStorage.getItem(key);
   if (saved) {
     try {
       const list = JSON.parse(saved);
@@ -1040,22 +1081,27 @@ function getSolConversations() {
 
 async function syncConversationsToServer(convs) {
   try {
-    await fetch("/api/conversations", {
+    const profile = getActiveUserProfile();
+    const userEmail = (profile && profile.email) ? profile.email : "guest";
+    await fetch(`/api/conversations?email=${encodeURIComponent(userEmail)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(convs)
+      body: JSON.stringify({ email: userEmail, conversations: convs })
     });
   } catch(e) {}
 }
 
 async function fetchServerConversations() {
   try {
-    const res = await fetch("/api/conversations", { cache: "no-store" });
+    const profile = getActiveUserProfile();
+    const userEmail = (profile && profile.email) ? profile.email : "guest";
+    const res = await fetch(`/api/conversations?email=${encodeURIComponent(userEmail)}`, { cache: "no-store" });
     if (res.ok) {
       const serverConvs = await res.json();
       if (Array.isArray(serverConvs)) {
+        const key = getActiveUserStorageKey("sol_saved_conversations");
         if (serverConvs.length > 0) {
-          localStorage.setItem("sol_saved_conversations_list", JSON.stringify(serverConvs));
+          localStorage.setItem(key, JSON.stringify(serverConvs));
           return serverConvs;
         } else {
           const local = getSolConversations();
@@ -1070,9 +1116,12 @@ async function fetchServerConversations() {
 }
 
 function saveSolConversations(list) {
-  localStorage.setItem("sol_saved_conversations_list", JSON.stringify(list));
+  const key = getActiveUserStorageKey("sol_saved_conversations");
+  localStorage.setItem(key, JSON.stringify(list));
   syncConversationsToServer(list);
 }
+window.getSolConversations = getSolConversations;
+window.saveSolConversations = saveSolConversations;
 
 function saveActiveConversationMessages() {
   if (!currentHomeConvId) return;
@@ -1807,18 +1856,6 @@ function switchPanel(panelId) { window.switchPanel(panelId); }
 // -------------------------------------------------------------
 let activeFeedTab = "posts"; // "posts" or "members"
 
-function getActiveUserProfile() {
-  try {
-    const saved = localStorage.getItem("sol_user_profile");
-    if (saved) {
-      const user = JSON.parse(saved);
-      if (user && (user.name || user.email)) {
-        return user;
-      }
-    }
-  } catch (e) {}
-  return null;
-}
 
 function getUserInitials(name) {
   if (!name) return "U";
@@ -3306,15 +3343,11 @@ function updateOutputGreetingText() {
   const greetingEl = document.getElementById("output-greeting-text");
   if (!greetingEl) return;
   
-  let name = "Adrian";
-  try {
-    const profile = JSON.parse(localStorage.getItem("sol_user_profile"));
-    if (profile && profile.name) {
-      name = profile.name.split(" ")[0];
-    }
-  } catch (e) {}
-
-  greetingEl.textContent = `Speak with Sol, ${name}!`;
+  if (isGuestUser()) {
+    greetingEl.textContent = "Speak with Sol, Guest!";
+  } else {
+    greetingEl.textContent = `Speak with Sol, ${getActiveUserName()}!`;
+  }
 }
 
 function initOutputPracticingPanel() {
@@ -4147,45 +4180,97 @@ function initAuthSystem() {
     });
   }
 
-  // Google Sign-In button
-  const handleGoogleSignIn = async () => {
+  // Google Sign-In Dedicated Modal Setup
+  const googleModal = document.getElementById("modal-google-auth");
+  const btnCloseGoogleModal = document.getElementById("btn-close-google-modal");
+  const formGoogleSignin = document.getElementById("form-google-signin");
+  const googleAlert = document.getElementById("google-auth-alert");
+
+  const openGoogleModal = () => {
     hideAlert();
-    const defaultName = "Adrian Milla";
-    const name = prompt("Continue with Google:\n\nEnter your name or Google email to connect:", defaultName);
-    if (!name || !name.trim()) return;
-
-    const trimmed = name.trim();
-    const email = trimmed.includes("@") ? trimmed : `${trimmed.toLowerCase().replace(/\s+/g, ".")}@gmail.com`;
-
-    try {
-      const res = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: trimmed,
-          email: email,
-          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmed)}&background=4285F4&color=fff&bold=true`
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.user) {
-        loginUserSuccess(data.user, data.token);
-      } else {
-        throw new Error(data.error || "Google sign-in failed.");
-      }
-    } catch (err) {
-      const localUser = {
-        name: trimmed,
-        email: email,
-        picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmed)}&background=4285F4&color=fff&bold=true`,
-        role: "free"
-      };
-      loginUserSuccess(localUser, "tok_local");
-    }
+    if (googleAlert) googleAlert.classList.add("hidden");
+    if (googleModal) googleModal.classList.remove("hidden");
   };
 
+  const closeGoogleModal = () => {
+    if (googleModal) googleModal.classList.add("hidden");
+    if (googleAlert) googleAlert.classList.add("hidden");
+  };
+
+  if (btnCloseGoogleModal) {
+    btnCloseGoogleModal.addEventListener("click", closeGoogleModal);
+  }
+
   if (btnGoogleModal) {
-    btnGoogleModal.addEventListener("click", handleGoogleSignIn);
+    btnGoogleModal.addEventListener("click", () => {
+      openGoogleModal();
+    });
+  }
+
+  if (formGoogleSignin) {
+    formGoogleSignin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById("google-input-name");
+      const emailInput = document.getElementById("google-input-email");
+      const submitBtn = document.getElementById("btn-submit-google-auth");
+
+      const name = nameInput ? nameInput.value.trim() : "";
+      const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
+
+      if (!name || !email) {
+        if (googleAlert) {
+          googleAlert.className = "auth-alert error";
+          googleAlert.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <span>Please enter your name and Google email.</span>';
+          googleAlert.classList.remove("hidden");
+        }
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Connecting Google...</span>';
+      }
+
+      try {
+        const res = await fetch("/api/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4285F4&color=fff&bold=true`
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.user) {
+          closeGoogleModal();
+          loginUserSuccess(data.user, data.token);
+        } else {
+          throw new Error(data.error || "Google sign-in failed.");
+        }
+      } catch (err) {
+        const localUser = {
+          name: name,
+          email: email,
+          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4285F4&color=fff&bold=true`,
+          role: "free"
+        };
+        closeGoogleModal();
+        loginUserSuccess(localUser, "tok_local");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `
+            <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18" style="margin-right: 6px;">
+              <path fill="#fff" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+              <path fill="#fff" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+              <path fill="#fff" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+              <path fill="#fff" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+            <span class="btn-text">Connect Account</span>`;
+        }
+      }
+    });
   }
 
   // Clear any legacy persistent guest flag from sessionStorage
@@ -4200,6 +4285,7 @@ function initAuthSystem() {
       window.solGuestMode = true;
       if (authModal) authModal.classList.add("hidden");
       renderGuestProfile();
+      loadUserSpecificData();
       if (typeof window.switchPanel === "function") {
         window.switchPanel("sol-chat");
       }
@@ -4297,8 +4383,7 @@ function loginUserSuccess(user, token, isNew = false) {
   }
 
   renderUserProfile(user);
-  syncUserDataToCloud(user);
-  updateGreetingText();
+  loadUserSpecificData();
   renderCircleMembersWidget();
   renderCircleFeed();
 
@@ -4316,6 +4401,35 @@ function loginUserSuccess(user, token, isNew = false) {
     showToast(isNew ? `🎉 Welcome to Globally Known, ${user.name.split(" ")[0]}!` : `👋 Welcome back, ${user.name.split(" ")[0]}!`);
   }
 }
+window.loginUserSuccess = loginUserSuccess;
+
+function loadUserSpecificData() {
+  // 1. Reset in-memory conversation state for clean isolation
+  homeConversationHistory = [];
+  currentHomeConvId = null;
+  const conversationEl = document.getElementById("gemini-home-conversation");
+  if (conversationEl) conversationEl.innerHTML = "";
+  updateHomeChatModeState();
+
+  // 2. Re-render sidebar conversations for the active user
+  if (typeof renderSidebarConversations === "function") {
+    renderSidebarConversations();
+  }
+  if (typeof fetchServerConversations === "function") {
+    fetchServerConversations().then(() => {
+      if (typeof renderSidebarConversations === "function") renderSidebarConversations();
+    });
+  }
+
+  // 3. Re-load user's word history and saved lists
+  if (typeof loadRwggpData === "function") {
+    loadRwggpData();
+  }
+
+  // 4. Update greetings across Sol, Describing Lab, and Spoken Practice
+  updateGreetingText();
+}
+window.loadUserSpecificData = loadUserSpecificData;
 
 function renderSignInButton() {
   const authContainer = document.getElementById("user-auth-container");
@@ -4397,7 +4511,7 @@ function renderUserProfile(user) {
         window.solGuestMode = false;
         hasPlayedFirstLoginEntrance = false;
         checkActiveSession();
-        updateGreetingText();
+        loadUserSpecificData();
         renderCircleMembersWidget();
         renderCircleFeed();
       }
@@ -5425,10 +5539,11 @@ async function loadRwggpData() {
     console.warn("Could not load words.json:", e);
   }
 
-  // Saved Lists: check localStorage first, else fetch default
+  // Saved Lists: check localStorage first for active user, else fetch default
   let loadedLists = null;
+  const savingsKey = getActiveUserStorageKey("sol_savings_lists");
   try {
-    const local = localStorage.getItem("sol_savings_lists");
+    const local = localStorage.getItem(savingsKey);
     if (local) loadedLists = JSON.parse(local);
   } catch (e) {}
 
@@ -5448,11 +5563,14 @@ async function loadRwggpData() {
   persistRwggpSavingLists();
   renderRwggpSavingsAccordion();
 
-  // History from localStorage
+  // History from localStorage for active user
+  const historyKey = getActiveUserStorageKey("sol_rwggp_history");
   try {
-    const hist = localStorage.getItem("sol_rwggp_history");
-    if (hist) rwggpHistory = JSON.parse(hist);
-  } catch (e) {}
+    const hist = localStorage.getItem(historyKey);
+    rwggpHistory = hist ? JSON.parse(hist) : [];
+  } catch (e) {
+    rwggpHistory = [];
+  }
   renderRwggpHistory();
 
   // Automatically show the first word from history or a random word
@@ -5539,7 +5657,8 @@ function displayRwggpWord(wordData, pushHistory = true) {
   if (pushHistory) {
     rwggpHistory = [wordData, ...rwggpHistory.filter(w => w.word.toLowerCase() !== wordData.word.toLowerCase())].slice(0, 20);
     try {
-      localStorage.setItem("sol_rwggp_history", JSON.stringify(rwggpHistory));
+      const historyKey = getActiveUserStorageKey("sol_rwggp_history");
+      localStorage.setItem(historyKey, JSON.stringify(rwggpHistory));
     } catch (e) {}
     renderRwggpHistory();
   }
@@ -5675,13 +5794,18 @@ function renderRwggpHistory() {
 
 function persistRwggpSavingLists() {
   try {
-    localStorage.setItem("sol_savings_lists", JSON.stringify(rwggpSavingLists));
+    const savingsKey = getActiveUserStorageKey("sol_savings_lists");
+    localStorage.setItem(savingsKey, JSON.stringify(rwggpSavingLists));
   } catch (e) {}
 
-  // Sync to backend if available
+  // Sync to backend progress per user
   try {
-    fetch("/api/savings/lists", {
-      method: "GET"
+    const profile = getActiveUserProfile();
+    const userEmail = (profile && profile.email) ? profile.email : "guest";
+    fetch(`/api/progress?email=${encodeURIComponent(userEmail)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: userEmail, saving_lists: rwggpSavingLists, history: rwggpHistory })
     }).catch(() => {});
   } catch (e) {}
 }

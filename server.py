@@ -281,7 +281,30 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif self.path.startswith("/api/conversations"):
             data = load_data()
-            payload = json.dumps(data.get("conversations", [])).encode("utf-8")
+            parsed = urllib.parse.urlparse(self.path)
+            qs = urllib.parse.parse_qs(parsed.query)
+            user_id = (qs.get("email", [None])[0] or qs.get("user", [None])[0] or "").strip().lower()
+            if user_id:
+                user_convs = data.get("user_conversations", {}).get(user_id, [])
+                payload = json.dumps(user_convs).encode("utf-8")
+            else:
+                payload = json.dumps(data.get("conversations", [])).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        elif self.path.startswith("/api/progress"):
+            data = load_data()
+            parsed = urllib.parse.urlparse(self.path)
+            qs = urllib.parse.parse_qs(parsed.query)
+            user_id = (qs.get("email", [None])[0] or qs.get("user", [None])[0] or "").strip().lower()
+            if user_id:
+                user_prog = data.get("user_progress", {}).get(user_id, {})
+                payload = json.dumps(user_prog).encode("utf-8")
+            else:
+                payload = json.dumps(data.get("progress", {})).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(payload)))
@@ -565,11 +588,63 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         elif self.path.startswith("/api/conversations"):
             try:
-                convs = json.loads(body)
+                parsed = urllib.parse.urlparse(self.path)
+                qs = urllib.parse.parse_qs(parsed.query)
+                user_id = (qs.get("email", [None])[0] or qs.get("user", [None])[0] or "").strip().lower()
+                
+                payload = json.loads(body)
                 data = load_data()
-                data["conversations"] = convs
+                
+                if isinstance(payload, dict) and "conversations" in payload:
+                    if not user_id and payload.get("email"):
+                        user_id = str(payload.get("email")).strip().lower()
+                    convs = payload.get("conversations", [])
+                else:
+                    convs = payload
+
+                if user_id:
+                    if "user_conversations" not in data:
+                        data["user_conversations"] = {}
+                    data["user_conversations"][user_id] = convs
+                else:
+                    data["conversations"] = convs
+                
                 save_data(data)
                 resp = json.dumps({"success": True, "count": len(convs)}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
+        elif self.path.startswith("/api/progress"):
+            try:
+                parsed = urllib.parse.urlparse(self.path)
+                qs = urllib.parse.parse_qs(parsed.query)
+                user_id = (qs.get("email", [None])[0] or qs.get("user", [None])[0] or "").strip().lower()
+                
+                payload = json.loads(body)
+                data = load_data()
+                if isinstance(payload, dict) and not user_id and payload.get("email"):
+                    user_id = str(payload.get("email")).strip().lower()
+
+                if user_id:
+                    if "user_progress" not in data:
+                        data["user_progress"] = {}
+                    data["user_progress"][user_id] = payload
+                else:
+                    data["progress"] = payload
+
+                save_data(data)
+                resp = json.dumps({"success": True}).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(resp)))
@@ -588,12 +663,23 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 payload = json.loads(body)
                 data = load_data()
+                user_id = (payload.get("email") or "").strip().lower()
                 if "videos" in payload:
                     data["videos"] = payload["videos"]
                 if "conversations" in payload:
-                    data["conversations"] = payload["conversations"]
+                    if user_id:
+                        if "user_conversations" not in data:
+                            data["user_conversations"] = {}
+                        data["user_conversations"][user_id] = payload["conversations"]
+                    else:
+                        data["conversations"] = payload["conversations"]
                 if "progress" in payload:
-                    data["progress"] = payload["progress"]
+                    if user_id:
+                        if "user_progress" not in data:
+                            data["user_progress"] = {}
+                        data["user_progress"][user_id] = payload["progress"]
+                    else:
+                        data["progress"] = payload["progress"]
                 save_data(data)
                 resp = json.dumps({"success": True}).encode("utf-8")
                 self.send_response(200)
@@ -608,6 +694,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header("Content-Length", str(len(resp)))
                 self.end_headers()
                 self.wfile.write(resp)
+            return
         elif self.path == "/api/savings/lists" or self.path == "/api/savings/lists/":
             try:
                 payload = json.loads(body)

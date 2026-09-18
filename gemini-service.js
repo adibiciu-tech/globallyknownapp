@@ -236,39 +236,77 @@ Rules:
     return "";
   }
 
+  getActiveUserContext() {
+    let userName = "Guest";
+    let isGuest = true;
+    try {
+      const savedProfile = localStorage.getItem("sol_user_profile");
+      if (savedProfile) {
+        const p = JSON.parse(savedProfile);
+        if (p && p.name) {
+          userName = p.name.split(" ")[0];
+          isGuest = false;
+        }
+      }
+    } catch (e) {}
+    return { userName, isGuest };
+  }
+
   getTrainingProfile() {
+    const { userName, isGuest } = this.getActiveUserContext();
+    const defaultMemory = isGuest
+      ? "The current user is a Guest exploring Globally Known. Address them warmly as 'Guest' or 'friend' (e.g., 'Hello Guest!'). Never call them Adrian or assume any personal name unless they introduce themselves."
+      : `User's name is ${userName}. Focus on natural spoken English intuition, real-world fluency, and modern conversational phrasing.`;
+
+    const defaultGreetingExample = isGuest
+      ? "Hey Guest! Good to see you. How's everything going today? What's on your mind?"
+      : `Hey ${userName}! Good to see you. How's everything going today? What's on your mind?`;
+
     const saved = localStorage.getItem("sol_training_profile");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return {
-          tone: parsed.tone || "natural",
-          customDirectives: parsed.customDirectives !== undefined ? parsed.customDirectives : "Speak with natural, vibrant human energy. Be quick-witted, warm, perceptive, and spontaneous. Never sound like an automated corporate tutor or scripted chatbot.",
-          userMemory: parsed.userMemory !== undefined ? parsed.userMemory : "User's name is Adrian. Focus on natural spoken English intuition, real-world fluency, and modern conversational phrasing.",
-          examples: Array.isArray(parsed.examples) ? parsed.examples : [
+        let userMemory = parsed.userMemory !== undefined ? parsed.userMemory : defaultMemory;
+        // If memory still holds the old hardcoded Adrian for a guest or different user, adjust dynamically
+        if (isGuest && userMemory.includes("Adrian")) {
+          userMemory = defaultMemory;
+        } else if (!isGuest && userMemory.includes("User's name is Adrian") && userName !== "Adrian") {
+          userMemory = defaultMemory;
+        }
+
+        let examples = Array.isArray(parsed.examples) ? parsed.examples : [];
+        if (examples.length === 0) {
+          examples = [
             {
               id: "ex_1",
               userPrompt: "hi sol",
-              idealResponse: "Hey Adrian! Good to see you. How's everything going today? What's on your mind?"
+              idealResponse: defaultGreetingExample
             },
             {
               id: "ex_2",
               userPrompt: "how are you?",
               idealResponse: "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?"
             }
-          ]
+          ];
+        }
+
+        return {
+          tone: parsed.tone || "natural",
+          customDirectives: parsed.customDirectives !== undefined ? parsed.customDirectives : "Speak with natural, vibrant human energy. Be quick-witted, warm, perceptive, and spontaneous. Never sound like an automated corporate tutor or scripted chatbot.",
+          userMemory: userMemory,
+          examples: examples
         };
       } catch (e) {}
     }
     return {
       tone: "natural",
       customDirectives: "Speak with natural, vibrant human energy. Be quick-witted, warm, perceptive, and spontaneous. Never sound like an automated corporate tutor or scripted chatbot.",
-      userMemory: "User's name is Adrian. Focus on natural spoken English intuition, real-world fluency, and modern conversational phrasing.",
+      userMemory: defaultMemory,
       examples: [
         {
           id: "ex_1",
           userPrompt: "hi sol",
-          idealResponse: "Hey Adrian! Good to see you. How's everything going today? What's on your mind?"
+          idealResponse: defaultGreetingExample
         },
         {
           id: "ex_2",
@@ -374,11 +412,7 @@ Rules:
     const prompt = (latestText || "").toLowerCase().trim();
     const cleanPrompt = prompt.replace(/[.,/#!$%^&*;:{}=-_~()?]/g, "").replace(/\s+/g, " ").trim();
 
-    let userName = "Adrian";
-    try {
-      const profile = JSON.parse(localStorage.getItem("sol_user_profile"));
-      if (profile && profile.name) userName = profile.name.split(" ")[0];
-    } catch (e) {}
+    const { userName, isGuest } = this.getActiveUserContext();
 
     // Identify agent from systemInstruction
     let agentName = "General";
@@ -401,7 +435,13 @@ Rules:
         return cleanExPrompt === cleanPrompt || exPrompt === prompt || (cleanExPrompt.length > 3 && cleanPrompt.includes(cleanExPrompt));
       });
       if (matched && matched.idealResponse) {
-        content = matched.idealResponse;
+        let resp = matched.idealResponse;
+        if (isGuest && resp.includes("Adrian")) {
+          resp = resp.replace(/\bAdrian\b/g, "Guest");
+        } else if (!isGuest && resp.includes("Adrian") && userName !== "Adrian") {
+          resp = resp.replace(/\bAdrian\b/g, userName);
+        }
+        content = resp;
       }
     }
 
@@ -411,7 +451,13 @@ Rules:
     // 1. Natural Casual Greetings (Exact Gemini conversational energy)
     else if (/^(hi|hello|hey|hiya|howdy|yo|good\s+(morning|afternoon|evening|day))(\s+sol|\s+there|\s+gemini)?$/i.test(cleanPrompt) || 
         cleanPrompt === "hi" || cleanPrompt === "hello" || cleanPrompt === "hey" || cleanPrompt === "hi sol" || cleanPrompt === "hey sol") {
-      const greetings = [
+      const greetings = isGuest ? [
+        `Hey Guest! Good to see you. How's everything going today? What's on your mind?`,
+        `Hello Guest! Welcome to Globally Known. What would you like to chat about today?`,
+        `Hey there! Great to see you. How's your day going so far?`,
+        `Hi Guest! Great to hear from you. What's on your mind today?`,
+        `Hello Guest! How can I help you practice or explore today?`
+      ] : [
         `Hey ${userName}! Good to see you. How's everything going today? What's on your mind?`,
         `Hey there, ${userName}! How are things with you today? Up to anything interesting?`,
         `Hey ${userName}! How's your day treating you so far? What are you thinking about?`,
@@ -423,8 +469,9 @@ Rules:
 
     // 2. Status Check-in: "How are you?"
     else if (/how('s|\s+is)\s+(it\s+going|everything|your\s+day|life|things)|how\s+are\s+you|you\s+good|what('s|\s+is)\s+up|sup/i.test(prompt)) {
+      const namePart = isGuest ? "" : `, ${userName}`;
       const responses = [
-        `I'm doing really well, thanks for asking, ${userName}! Feeling sharp and ready for whatever you want to chat about. How about yourself? How has your day been going?`,
+        `I'm doing really well, thanks for asking${namePart}! Feeling sharp and ready for whatever you want to chat about. How about yourself? How has your day been going?`,
         `Doing great! Always enjoy our conversations. How are things on your end today? Anything exciting happening?`,
         `I'm in great spirits! How has your day been treating you so far? Keeping busy, or having a relaxed one?`
       ];
@@ -443,7 +490,8 @@ Rules:
 
     // 4. Exhausted / Down / Busy Status
     else if (/^(i('m|\s+am)\s+)?(tired|exhausted|busy|stressed|sleepy|bored|sad|overworked|not\s+great)$/i.test(cleanPrompt) || prompt.includes("tired") || prompt.includes("long day") || prompt.includes("stress")) {
-      content = `Man, I feel you, ${userName}. Some days just drain the battery completely. Make sure you take some time to kick back, relax, and unplug tonight. What made today such a grind?`;
+      const namePart = isGuest ? "" : `, ${userName}`;
+      content = `Man, I feel you${namePart}. Some days just drain the battery completely. Make sure you take some time to kick back, relax, and unplug tonight. What made today such a grind?`;
     }
 
     // 5. Identity & About Sol

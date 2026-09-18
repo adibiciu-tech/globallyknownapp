@@ -64,30 +64,175 @@
       "addedAt": 1789756899184
     },
     {
-      "id": "vid_test_123",
+      "id": "custom_1789757356977_rg1fo",
       "categoryId": "city",
-      "title": "Episode 1",
-      "desc": "Custom embedded YouTube video",
-      "embedUrl": "https://www.youtube.com/embed/gCWYp2zJpB8",
-      "isUserAdded": true
+      "title": "Episode 8",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/U9ZU88zZPFc?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789757356977
     },
     {
-      "id": "custom_1789590071219_0liw7",
+      "id": "custom_1789759375815_ufwm5",
       "categoryId": "city",
-      "title": "City Streets at Dusk",
+      "title": "Episode 9",
       "desc": "Custom embedded video lesson",
-      "embedUrl": "https://www.youtube.com/embed/3i_JmO7zM0A",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/K5SnwXUb3N8?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
       "isUserAdded": true,
-      "addedAt": 1789590071219
+      "addedAt": 1789759375815
     },
     {
-      "id": "custom_1789590112159_1zwrb",
+      "id": "custom_1789759395742_b9h1e",
       "categoryId": "city",
-      "title": "City Streets at Dusk",
+      "title": "Lesson 10",
       "desc": "Custom embedded video lesson",
-      "embedUrl": "https://www.youtube.com/embed/3i_JmO7zM0A",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/kip3YG4_AYk?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
       "isUserAdded": true,
-      "addedAt": 1789590112159
+      "addedAt": 1789759395742
+    },
+    {
+      "id": "custom_1789759416164_cpbab",
+      "categoryId": "city",
+      "title": "Lesson 11",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/z7PH_S4x-_k?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759416164
+    },
+    {
+      "id": "custom_1789759453607_r9jyw",
+      "categoryId": "city",
+      "title": "Lesson 12",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/ODqYt6mN7Ds?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759453607
+    },
+    {
+      "id": "custom_1789759496101_l80yv",
+      "categoryId": "city",
+      "title": "Lesson 13",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/SSIpq-ny9Kc?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759496101
+    },
+    {
+      "id": "custom_1789759559481_7m5we",
+      "categoryId": "city",
+      "title": "Lesson 14",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/9WVrHem8cwg?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759559481
+    },
+    {
+      "id": "custom_1789759592992_z2tcs",
+      "categoryId": "city",
+      "title": "Lesson 15",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/Dkg-9bQm7k8?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759592992
+    },
+    {
+      "id": "custom_1789759732628_uhm2f",
+      "categoryId": "city",
+      "title": "Lesson 16",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/fOlPWRGSUp0?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759732628
+    },
+    {
+      "id": "custom_1789759763180_krahy",
+      "categoryId": "city",
+      "title": "Lesson 17",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/vub4dz7NRXA?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759763180
+    },
+    {
+      "id": "custom_1789759793720_kghiw",
+      "categoryId": "city",
+      "title": "Lesson 18",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/UzeBIKPwOoM?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759793720
+    },
+    {
+      "id": "custom_1789759821409_2i0r8",
+      "categoryId": "city",
+      "title": "Lesson 19",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/VespH2F_Jyc?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759821409
+    },
+    {
+      "id": "custom_1789759844393_nsnco",
+      "categoryId": "city",
+      "title": "Lesson 20",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/dKpB9JT0CNs?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759844393
+    },
+    {
+      "id": "custom_1789759939030_uo8i0",
+      "categoryId": "city",
+      "title": "Lesson 21",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/A7MgqFcYnkI?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759939030
+    },
+    {
+      "id": "custom_1789759962724_looac",
+      "categoryId": "city",
+      "title": "Lesson 22",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/H4xB0xyE3ZM?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759962724
+    },
+    {
+      "id": "custom_1789759978375_b2lrt",
+      "categoryId": "city",
+      "title": "Lesson 23",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/rQreJ6uvy8k?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759978375
+    },
+    {
+      "id": "custom_1789759995015_p8qhk",
+      "categoryId": "city",
+      "title": "Lesson 24",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/5IDjknB0Wr4?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789759995015
+    },
+    {
+      "id": "custom_1789760015029_4l9al",
+      "categoryId": "city",
+      "title": "Lesson 25",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/TgptXAAmKX8?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789760015029
+    },
+    {
+      "id": "custom_1789760325926_xj8dk",
+      "categoryId": "house",
+      "title": "Lesson 1",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/9aV1onEwMjs?list=PLPSdgTGGxv5N2dtrMUiWwqcTdCGn-D-eC",
+      "isUserAdded": true,
+      "addedAt": 1789760325926
     }
   ],
   "conversations": [
@@ -257,6 +402,15 @@
       "role": "free",
       "authProvider": "google",
       "createdAt": 1789288194046
+    },
+    {
+      "id": "usr_g_dbf11f6dc3",
+      "name": "Adrian Milla",
+      "email": "adrian.milla@gmail.com",
+      "picture": "https://ui-avatars.com/api/?name=Adrian%20Milla&background=4285F4&color=fff&bold=true",
+      "role": "free",
+      "authProvider": "google",
+      "createdAt": 1789759705447
     }
   ],
   "saving_lists": [
@@ -337,5 +491,384 @@
       "words": [],
       "id": "list_4_1789506035"
     }
-  ]
+  ],
+  "user_progress": {
+    "guest": {
+      "email": "guest",
+      "saving_lists": [
+        {
+          "name": "🟤 Brown",
+          "words": [
+            {
+              "word": "proud",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "Feeling honoured"
+            },
+            {
+              "word": "surround",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "Anything, such as a fence or border"
+            },
+            {
+              "word": "encounter",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "A meeting, especially one"
+            },
+            {
+              "word": "trousers",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "An article of clothing"
+            },
+            {
+              "word": "mountain",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "An elevation of land of considerable dimensions"
+            },
+            {
+              "word": "stupid",
+              "colorCategory": "BLUE MOON",
+              "stressedVowel": "u",
+              "definition": "A stupid person"
+            }
+          ],
+          "id": "list_1"
+        },
+        {
+          "name": "⚪ Silver Pin",
+          "words": [
+            {
+              "word": "delivery",
+              "colorCategory": "SILVER PIN",
+              "stressedVowel": "i",
+              "definition": "Conveying something"
+            }
+          ],
+          "id": "list_2"
+        },
+        {
+          "name": "🟣 Purple",
+          "words": [
+            {
+              "word": "urban",
+              "colorCategory": "PURPLE SHIRT",
+              "stressedVowel": "ur",
+              "definition": "Related to the"
+            },
+            {
+              "word": "observe",
+              "colorCategory": "PURPLE SHIRT",
+              "stressedVowel": "er",
+              "definition": "To notice or view, especially carefully or with"
+            }
+          ],
+          "id": "list_3"
+        },
+        {
+          "name": "🟡 Yellow Cup",
+          "words": [],
+          "id": "list_4"
+        }
+      ],
+      "history": []
+    },
+    "adrian.milla@gmail.com": {
+      "email": "adrian.milla@gmail.com",
+      "saving_lists": [
+        {
+          "name": "🟤 Brown",
+          "words": [
+            {
+              "word": "proud",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "Feeling honoured"
+            },
+            {
+              "word": "surround",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "Anything, such as a fence or border"
+            },
+            {
+              "word": "encounter",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "A meeting, especially one"
+            },
+            {
+              "word": "trousers",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "An article of clothing"
+            },
+            {
+              "word": "mountain",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "An elevation of land of considerable dimensions"
+            },
+            {
+              "word": "stupid",
+              "colorCategory": "BLUE MOON",
+              "stressedVowel": "u",
+              "definition": "A stupid person"
+            }
+          ],
+          "id": "list_1"
+        },
+        {
+          "name": "⚪ Silver Pin",
+          "words": [
+            {
+              "word": "delivery",
+              "colorCategory": "SILVER PIN",
+              "stressedVowel": "i",
+              "definition": "Conveying something"
+            }
+          ],
+          "id": "list_2"
+        },
+        {
+          "name": "🟣 Purple",
+          "words": [
+            {
+              "word": "urban",
+              "colorCategory": "PURPLE SHIRT",
+              "stressedVowel": "ur",
+              "definition": "Related to the"
+            },
+            {
+              "word": "observe",
+              "colorCategory": "PURPLE SHIRT",
+              "stressedVowel": "er",
+              "definition": "To notice or view, especially carefully or with"
+            }
+          ],
+          "id": "list_3"
+        },
+        {
+          "name": "🟡 Yellow Cup",
+          "words": [],
+          "id": "list_4"
+        }
+      ],
+      "history": []
+    },
+    "adrian@test.com": {
+      "email": "adrian@test.com",
+      "saving_lists": [
+        {
+          "name": "🟤 Brown",
+          "words": [
+            {
+              "word": "proud",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "Feeling honoured"
+            },
+            {
+              "word": "surround",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "Anything, such as a fence or border"
+            },
+            {
+              "word": "encounter",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "A meeting, especially one"
+            },
+            {
+              "word": "trousers",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "An article of clothing"
+            },
+            {
+              "word": "mountain",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "An elevation of land of considerable dimensions"
+            },
+            {
+              "word": "stupid",
+              "colorCategory": "BLUE MOON",
+              "stressedVowel": "u",
+              "definition": "A stupid person"
+            }
+          ],
+          "id": "list_1"
+        },
+        {
+          "name": "⚪ Silver Pin",
+          "words": [
+            {
+              "word": "delivery",
+              "colorCategory": "SILVER PIN",
+              "stressedVowel": "i",
+              "definition": "Conveying something"
+            }
+          ],
+          "id": "list_2"
+        },
+        {
+          "name": "🟣 Purple",
+          "words": [
+            {
+              "word": "urban",
+              "colorCategory": "PURPLE SHIRT",
+              "stressedVowel": "ur",
+              "definition": "Related to the"
+            },
+            {
+              "word": "observe",
+              "colorCategory": "PURPLE SHIRT",
+              "stressedVowel": "er",
+              "definition": "To notice or view, especially carefully or with"
+            }
+          ],
+          "id": "list_3"
+        },
+        {
+          "name": "🟡 Yellow Cup",
+          "words": [],
+          "id": "list_4"
+        }
+      ],
+      "history": []
+    },
+    "alex@test.com": {
+      "email": "alex@test.com",
+      "saving_lists": [
+        {
+          "name": "🟤 Brown",
+          "words": [
+            {
+              "word": "proud",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "Feeling honoured"
+            },
+            {
+              "word": "surround",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "Anything, such as a fence or border"
+            },
+            {
+              "word": "encounter",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "A meeting, especially one"
+            },
+            {
+              "word": "trousers",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "An article of clothing"
+            },
+            {
+              "word": "mountain",
+              "colorCategory": "BROWN COW",
+              "stressedVowel": "ou",
+              "definition": "An elevation of land of considerable dimensions"
+            },
+            {
+              "word": "stupid",
+              "colorCategory": "BLUE MOON",
+              "stressedVowel": "u",
+              "definition": "A stupid person"
+            }
+          ],
+          "id": "list_1"
+        },
+        {
+          "name": "⚪ Silver Pin",
+          "words": [
+            {
+              "word": "delivery",
+              "colorCategory": "SILVER PIN",
+              "stressedVowel": "i",
+              "definition": "Conveying something"
+            }
+          ],
+          "id": "list_2"
+        },
+        {
+          "name": "🟣 Purple",
+          "words": [
+            {
+              "word": "urban",
+              "colorCategory": "PURPLE SHIRT",
+              "stressedVowel": "ur",
+              "definition": "Related to the"
+            },
+            {
+              "word": "observe",
+              "colorCategory": "PURPLE SHIRT",
+              "stressedVowel": "er",
+              "definition": "To notice or view, especially carefully or with"
+            }
+          ],
+          "id": "list_3"
+        },
+        {
+          "name": "🟡 Yellow Cup",
+          "words": [],
+          "id": "list_4"
+        }
+      ],
+      "history": []
+    }
+  },
+  "user_conversations": {
+    "guest": [
+      {
+        "id": "conv_1789760312652",
+        "title": "Friendly Chat",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "hi sol",
+            "parts": [
+              {
+                "text": "hi sol"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Hey Guest! Good to see you. How's everything going today? What's on your mind?",
+            "parts": [
+              {
+                "text": "Hey Guest! Good to see you. How's everything going today? What's on your mind?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1789760312652
+      }
+    ],
+    "adrian@test.com": [
+      {
+        "id": "conv_adrian_1",
+        "title": "Adrian Private Chat",
+        "history": []
+      }
+    ],
+    "alex@test.com": [
+      {
+        "id": "conv_alex_1",
+        "title": "Alex Study Plan",
+        "history": []
+      }
+    ]
+  }
 }
