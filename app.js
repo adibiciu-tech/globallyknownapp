@@ -4015,7 +4015,7 @@ function parseJwt(token) {
   }
 }
 
-let googleClientId = "";
+let googleClientId = "32346631219-r4ttj64i9fbmocui6nukcqrr6f82d95p.apps.googleusercontent.com";
 
 async function fetchGoogleClientId() {
   try {
@@ -4030,7 +4030,8 @@ async function fetchGoogleClientId() {
   } catch (e) {
     console.warn("Could not fetch Google Client ID from server:", e);
   }
-  googleClientId = localStorage.getItem("sol_google_client_id") || "";
+  const localCid = localStorage.getItem("sol_google_client_id");
+  if (localCid) googleClientId = localCid;
   return googleClientId;
 }
 

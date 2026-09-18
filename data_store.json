@@ -350,6 +350,132 @@
       "embedUrl": "https://www.youtube-nocookie.com/embed/rcESd52sp9g",
       "isUserAdded": true,
       "addedAt": 1789762450295
+    },
+    {
+      "id": "custom_1789762521303_61tbq",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/tFe5SlKwWr0",
+      "isUserAdded": true,
+      "addedAt": 1789762521303
+    },
+    {
+      "id": "custom_1789762529824_weyiv",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/UhfQrhYQgO0",
+      "isUserAdded": true,
+      "addedAt": 1789762529824
+    },
+    {
+      "id": "custom_1789762538565_f39lm",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/jpq3TiejmU8",
+      "isUserAdded": true,
+      "addedAt": 1789762538565
+    },
+    {
+      "id": "custom_1789762545876_13x8u",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/IJADNFO3ke8",
+      "isUserAdded": true,
+      "addedAt": 1789762545876
+    },
+    {
+      "id": "custom_1789762558106_8u50n",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/GqA6eydlh8w",
+      "isUserAdded": true,
+      "addedAt": 1789762558106
+    },
+    {
+      "id": "custom_1789762625386_ozry8",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/HRjgUWT0RZQ",
+      "isUserAdded": true,
+      "addedAt": 1789762625386
+    },
+    {
+      "id": "custom_1789762632757_0opdl",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/CKfziSGU2-E",
+      "isUserAdded": true,
+      "addedAt": 1789762632757
+    },
+    {
+      "id": "custom_1789762645407_8voz9",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/1cCqNvcW84U",
+      "isUserAdded": true,
+      "addedAt": 1789762645407
+    },
+    {
+      "id": "custom_1789762664025_tybqz",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/UbbULzDrgFQ",
+      "isUserAdded": true,
+      "addedAt": 1789762664025
+    },
+    {
+      "id": "custom_1789762672614_dkl6j",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/WrVr6KbTNac",
+      "isUserAdded": true,
+      "addedAt": 1789762672614
+    },
+    {
+      "id": "custom_1789762682075_g9ro2",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/xBabo5a_OtA",
+      "isUserAdded": true,
+      "addedAt": 1789762682075
+    },
+    {
+      "id": "custom_1789762703205_prqca",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/uG_Fx0db4JU",
+      "isUserAdded": true,
+      "addedAt": 1789762703205
+    },
+    {
+      "id": "custom_1789762717905_ohtnb",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/2u7kvfEo4RE",
+      "isUserAdded": true,
+      "addedAt": 1789762717905
+    },
+    {
+      "id": "custom_1789762725778_xtx3l",
+      "categoryId": "house",
+      "title": "Embedded Video",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/Ogf6MJPA4MQ",
+      "isUserAdded": true,
+      "addedAt": 1789762725778
     }
   ],
   "conversations": [
@@ -987,5 +1113,6 @@
         "history": []
       }
     ]
-  }
+  },
+  "googleClientId": "32346631219-r4ttj64i9fbmocui6nukcqrr6f82d95p.apps.googleusercontent.com"
 }
