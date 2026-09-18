@@ -141,10 +141,10 @@ export class GeminiService {
     // NEVER put thinking models ahead of fast conversational production models!
     const preferredOrder = [
       modelName,
-      "gemini-1.5-flash",
       "gemini-2.0-flash",
-      "gemini-1.5-pro",
+      "gemini-1.5-flash",
       "gemini-2.0-flash-lite",
+      "gemini-1.5-pro",
       "gemini-pro"
     ].filter(Boolean);
 

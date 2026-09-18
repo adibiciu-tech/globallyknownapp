@@ -3,7 +3,7 @@
     {
       "id": "custom_1789590958187_kh8fh",
       "categoryId": "city",
-      "title": "Episode 1",
+      "title": "Episode 1: English By Jay",
       "desc": "Custom embedded video lesson",
       "embedUrl": "https://www.youtube.com/embed/RJbUtcaoNCY?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
       "isUserAdded": true,
@@ -37,6 +37,50 @@
       "addedAt": 1789591221788
     },
     {
+      "id": "custom_1789756861178_1qzr1",
+      "categoryId": "city",
+      "title": "Episode 5",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/BJsOHCUPnWY?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789756861178
+    },
+    {
+      "id": "custom_1789756882492_4tgdu",
+      "categoryId": "city",
+      "title": "Episode 6",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/n7GBzexsilE?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789756882492
+    },
+    {
+      "id": "custom_1789756899184_2uzgi",
+      "categoryId": "city",
+      "title": "Episode 7",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/eX_M_zjze8I?list=PLPSdgTGGxv5Pfy8Ftf0mzsnG3v2RvijO_",
+      "isUserAdded": true,
+      "addedAt": 1789756899184
+    },
+    {
+      "id": "vid_test_123",
+      "categoryId": "city",
+      "title": "Episode 1",
+      "desc": "Custom embedded YouTube video",
+      "embedUrl": "https://www.youtube.com/embed/gCWYp2zJpB8",
+      "isUserAdded": true
+    },
+    {
+      "id": "custom_1789590071219_0liw7",
+      "categoryId": "city",
+      "title": "City Streets at Dusk",
+      "desc": "Custom embedded video lesson",
+      "embedUrl": "https://www.youtube.com/embed/3i_JmO7zM0A",
+      "isUserAdded": true,
+      "addedAt": 1789590071219
+    },
+    {
       "id": "custom_1789590112159_1zwrb",
       "categoryId": "city",
       "title": "City Streets at Dusk",
@@ -47,6 +91,60 @@
     }
   ],
   "conversations": [
+    {
+      "id": "conv_1789757196340",
+      "title": "Hello Sol How Are",
+      "icon": "fa-comments",
+      "type": "chat",
+      "history": [
+        {
+          "role": "user",
+          "content": "Hello Sol, how are you?",
+          "parts": [
+            {
+              "text": "Hello Sol, how are you?"
+            }
+          ]
+        },
+        {
+          "role": "model",
+          "content": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?",
+          "parts": [
+            {
+              "text": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?"
+            }
+          ]
+        }
+      ],
+      "createdAt": 1789757196341
+    },
+    {
+      "id": "conv_1789757134313",
+      "title": "Hello Sol How Are",
+      "icon": "fa-comments",
+      "type": "chat",
+      "history": [
+        {
+          "role": "user",
+          "content": "Hello Sol, how are you?",
+          "parts": [
+            {
+              "text": "Hello Sol, how are you?"
+            }
+          ]
+        },
+        {
+          "role": "model",
+          "content": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?",
+          "parts": [
+            {
+              "text": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?"
+            }
+          ]
+        }
+      ],
+      "createdAt": 1789757134313
+    },
     {
       "id": "conv_1789039283916",
       "title": "Test 1",

@@ -4428,12 +4428,7 @@ const PLAYLIST_CATEGORIES = [
   { id: "whathouse", flag: "🏠",  title: "What About The House?!",     videos: [], count: "0 Videos" }
 ];
 
-// Start SOL Engine
-if (document.readyState === "loading") {
-  window.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
+// -------------------------------------------------------------
 
 
 
@@ -6387,3 +6382,10 @@ syncDynamicViewport();
     }
   });
 });
+
+// Start SOL Engine safely after entire module has been fully parsed & evaluated
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
