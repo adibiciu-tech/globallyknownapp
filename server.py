@@ -117,10 +117,11 @@ def get_master_gemini_key(data=None):
     if data is None:
         data = load_data()
     for env_var in ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_APIKEY", "API_KEY", "GEMINI"]:
-        val = (os.environ.get(env_var) or "").strip()
+        val = (os.environ.get(env_var) or "").strip().strip("\"' ")
         if val:
             return val
-    return (data.get("geminiApiKey") or "").strip()
+    raw = (data.get("geminiApiKey") or "").strip().strip("\"' ")
+    return raw
 
 WORDS_FILE = os.path.join(BASE_DIR, "data", "words.json")
 CATEGORIES_FILE = os.path.join(BASE_DIR, "data", "categories.json")
@@ -384,10 +385,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             masked = ""
             if master_key:
                 masked = (master_key[:6] + "..." + master_key[-4:]) if len(master_key) > 10 else "***"
+            matched_env_names = [k for k in os.environ.keys() if any(x in k.upper() for x in ['GEMINI', 'GOOGLE', 'KEY', 'API'])]
             payload = json.dumps({
                 "active": is_active,
                 "maskedKey": masked,
-                "model": data.get("geminiModel", "gemini-3.6-flash")
+                "model": data.get("geminiModel", "gemini-3.6-flash"),
+                "envNames": matched_env_names
             }).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
