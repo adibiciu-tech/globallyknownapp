@@ -166,27 +166,33 @@ export class GeminiService {
       "gemini-1.5-flash",
       "gemini-2.0-flash-lite",
       "gemini-1.5-pro",
-      "gemini-pro"
+      "gemini-2.5-flash"
     ].filter(Boolean);
 
     let discovered = await this.getSupportedModels();
     // Exclude thinking models so they don't dump chain-of-thought drafts
-    const nonThinkingDiscovered = discovered.filter(m => !m.toLowerCase().includes("thinking"));
+    const nonThinkingDiscovered = discovered.filter(m => !m.toLowerCase().includes("thinking") && m !== "gemini-pro");
 
     const modelsToTry = [];
     for (const m of [...preferredOrder, ...nonThinkingDiscovered]) {
-      if (!modelsToTry.includes(m)) {
+      if (m && !modelsToTry.includes(m) && m !== "gemini-pro") {
         modelsToTry.push(m);
       }
     }
 
     let lastError = null;
     for (const mId of modelsToTry) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${mId}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+      const url = this.apiKey.startsWith("AQ.")
+        ? `https://generativelanguage.googleapis.com/v1beta/models/${mId}:generateContent`
+        : `https://generativelanguage.googleapis.com/v1beta/models/${mId}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+
       try {
         const response = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "x-goog-api-key": this.apiKey
+          },
           body: JSON.stringify(bodyData)
         });
 

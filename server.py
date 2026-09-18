@@ -557,32 +557,44 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 if is_title:
                     req_body["generationConfig"] = {"maxOutputTokens": 16, "temperature": 0.3}
 
-                # Try models in priority order
+                # Try models in priority order (never gemini-pro which is deprecated)
                 models_to_try = [
                     requested_model,
-                    "gemini-1.5-flash",
                     "gemini-2.0-flash",
+                    "gemini-1.5-flash",
                     "gemini-2.0-flash-lite",
-                    "gemini-pro"
+                    "gemini-1.5-pro",
+                    "gemini-2.5-flash"
                 ]
                 seen = set()
                 candidate_models = []
                 for m in models_to_try:
-                    if m and m not in seen:
+                    if m and m not in seen and m != "gemini-pro":
                         seen.add(m)
                         candidate_models.append(m)
 
                 ctx = ssl.create_default_context()
                 last_error = None
+                errors_by_model = {}
                 reply_text = None
                 used_model = None
 
                 for mod in candidate_models:
-                    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={master_key}"
+                    # For AQ. authentication keys, pass strictly via x-goog-api-key header without query parameter
+                    if master_key.startswith("AQ."):
+                        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent"
+                    else:
+                        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={master_key}"
+
+                    headers = {
+                        "Content-Type": "application/json",
+                        "x-goog-api-key": master_key
+                    }
+
                     req = urllib.request.Request(
                         gemini_url,
                         data=json.dumps(req_body).encode("utf-8"),
-                        headers={"Content-Type": "application/json"},
+                        headers=headers,
                         method="POST"
                     )
                     try:
@@ -603,8 +615,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                             last_error = err_json.get("error", {}).get("message", str(e))
                         except Exception:
                             last_error = err_content
+                        errors_by_model[mod] = last_error
                     except Exception as e:
                         last_error = str(e)
+                        errors_by_model[mod] = last_error
 
                 if reply_text is not None:
                     resp = json.dumps({"success": True, "reply": reply_text, "model": used_model}).encode("utf-8")
@@ -614,7 +628,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(resp)
                 else:
-                    resp = json.dumps({"error": f"Gemini API request failed: {last_error}"}).encode("utf-8")
+                    resp = json.dumps({
+                        "error": f"Gemini API request failed: {last_error}",
+                        "details": errors_by_model
+                    }).encode("utf-8")
                     self.send_response(502)
                     self.send_header("Content-Type", "application/json; charset=utf-8")
                     self.send_header("Content-Length", str(len(resp)))
