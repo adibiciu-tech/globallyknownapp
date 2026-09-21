@@ -1002,3 +1002,58 @@ html, body {
     border-width: 0.5px !important;
   }
 }
+
+/* -------------------------------------------------------------
+   Video Category Headers on Mobile: Icon and Text side-by-side
+   ------------------------------------------------------------- */
+.category-header-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0.2rem 0.25rem !important;
+  margin-bottom: 0.35rem !important;
+  width: 100% !important;
+}
+
+.category-header {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 0.45rem !important;
+  margin-bottom: 0 !important;
+  min-width: 0 !important;
+}
+
+.category-flag {
+  font-size: 1.35rem !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.category-header h3 {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+  flex-shrink: 0 !important;
+}
+
+.category-count {
+  font-size: 0.82rem !important;
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+  margin-left: 0.2rem !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.netflix-header-indicators {
+  display: none !important;
+}
+

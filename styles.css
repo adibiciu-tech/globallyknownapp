@@ -3811,7 +3811,7 @@ body {
   align-items: center;
   gap: 0.55rem;
   margin-bottom: 0.35rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .category-header h3 {
