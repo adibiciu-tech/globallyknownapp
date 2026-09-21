@@ -5405,9 +5405,6 @@ async function initVideosPanel() {
           <span class="category-flag">${category.flag}</span>
           <h3>${escapeHtml(category.title)}</h3>
           <span class="category-count">(${category.count})</span>
-          <button class="header-add-video-btn" title="Add Video to ${escapeHtml(category.title)}" data-cat="${category.id}">
-            <i class="fa-solid fa-plus"></i> Add Video
-          </button>
         </div>
         <div class="netflix-header-indicators" id="netflix-indicators-${category.id}"></div>
       </div>
@@ -5439,14 +5436,7 @@ async function initVideosPanel() {
     const thumbEl = row.querySelector(`#slider-thumb-${category.id}`);
     const btnLeft = row.querySelector(`#arrow-left-${category.id}`);
     const btnRight = row.querySelector(`#arrow-right-${category.id}`);
-    const headerAddBtn = row.querySelector(".header-add-video-btn");
     const indicatorsContainer = row.querySelector(`#netflix-indicators-${category.id}`);
-
-    if (headerAddBtn) {
-      headerAddBtn.addEventListener("click", () => {
-        openAddVideoModal(category.id);
-      });
-    }
 
     const updateContainerMetrics = () => {
       if (!sliderContainer) return;

@@ -3836,28 +3836,6 @@ body {
   opacity: 0.9;
 }
 
-.header-add-video-btn {
-  background: rgba(246, 202, 33, 0.12);
-  border: 1px solid rgba(246, 202, 33, 0.35);
-  color: var(--accent-yellow, #f6ca21);
-  border-radius: 20px;
-  padding: 3px 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  margin-left: 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.header-add-video-btn:hover {
-  background: var(--accent-yellow, #f6ca21);
-  color: #000000;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(246, 202, 33, 0.4);
-}
 
 /* Netflix progress bar indicators at top right (thin lines) */
 .page-indicators {
