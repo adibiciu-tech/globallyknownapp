@@ -267,72 +267,72 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 0.25rem 0.2rem;
+  padding: 0 0 0.75rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .gallery-main-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.85rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: #ffffff;
-  margin: 0 0 0.3rem 0;
+  margin: 0 0 0.2rem 0;
   letter-spacing: -0.02em;
 }
 
 .gallery-subtitle {
   color: #94a3b8;
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   margin: 0;
 }
 
 .gallery-stats-badge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #e2e8f0;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  padding: 6px 14px;
+  padding: 4px 12px;
   border-radius: 999px;
 }
 
 .desktop-categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 1.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: 0.95rem;
   width: 100%;
 }
 
-/* Modern YouTube-Inspired Clean Playlist Card (Single Container, No Back Frames) */
+/* Modern YouTube-Inspired Clean Playlist Card (Compact 3-Row Sizing) */
 .yt-clean-playlist-card {
   background: #0f172a;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   cursor: pointer;
   position: relative;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
   user-select: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 .yt-clean-playlist-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   border-color: rgba(59, 130, 246, 0.45);
-  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7), 0 0 24px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.65), 0 0 18px rgba(59, 130, 246, 0.15);
 }
 
 /* 1. Top 16:9 Hero Thumbnail */
 .yt-hero-preview-box {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   position: relative;
   background: #1e293b;
@@ -352,21 +352,21 @@
 
 .yt-hero-cat-tag {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(15, 23, 42, 0.82);
-  backdrop-filter: blur(8px);
+  top: 7px;
+  left: 7px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #f8fafc;
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 6px;
-  max-width: 80%;
+  gap: 5px;
+  max-width: 85%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -374,19 +374,19 @@
 
 .yt-hero-count-badge {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.85);
+  bottom: 7px;
+  right: 7px;
+  background: rgba(0, 0, 0, 0.88);
   backdrop-filter: blur(4px);
   color: #ffffff;
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 4px 9px;
-  border-radius: 6px;
+  padding: 3px 7px;
+  border-radius: 5px;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -399,9 +399,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.22s ease;
   z-index: 3;
 }
 
@@ -410,17 +410,17 @@
 }
 
 .yt-play-all-circle {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: #3b82f6;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
-  box-shadow: 0 0 22px rgba(59, 130, 246, 0.65);
-  padding-left: 3px;
+  font-size: 0.95rem;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.65);
+  padding-left: 2px;
   transition: transform 0.2s ease;
 }
 
@@ -430,26 +430,26 @@
 
 .yt-play-all-text {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: #ffffff;
   text-transform: uppercase;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
 }
 
 /* 2. Middle 3-Video Peek Strip */
 .yt-mini-previews-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 10px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-top: 7px;
+  margin-bottom: 8px;
 }
 
 .yt-mini-thumb-item {
   aspect-ratio: 16 / 9;
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
   position: relative;
   background: #1e293b;
@@ -472,14 +472,14 @@
 
 .yt-mini-badge {
   position: absolute;
-  bottom: 3px;
-  right: 4px;
-  background: rgba(0, 0, 0, 0.85);
+  bottom: 2px;
+  right: 3px;
+  background: rgba(0, 0, 0, 0.88);
   color: #e2e8f0;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
-  padding: 2px 4px;
-  border-radius: 4px;
+  padding: 1px 3px;
+  border-radius: 3px;
   line-height: 1;
 }
 
@@ -489,13 +489,13 @@
   justify-content: center;
   flex-direction: column;
   color: #475569;
-  font-size: 0.65rem;
-  gap: 4px;
+  font-size: 0.58rem;
+  gap: 2px;
   background: rgba(255, 255, 255, 0.02);
 }
 
 .yt-mini-empty-slot i {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   opacity: 0.5;
 }
 
@@ -503,27 +503,27 @@
 .yt-card-bottom-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 0 4px 4px;
+  gap: 3px;
+  padding: 0 2px 2px;
 }
 
 .yt-card-header-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
 }
 
 .yt-card-clean-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #f8fafc;
-  line-height: 1.3;
+  line-height: 1.25;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -534,9 +534,9 @@
   border: none;
   color: #64748b;
   cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.8rem;
   transition: color 0.15s ease, background 0.15s ease;
   flex-shrink: 0;
 }
@@ -549,8 +549,8 @@
 .yt-card-sub-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
+  gap: 6px;
+  font-size: 0.72rem;
   color: #94a3b8;
 }
 
@@ -563,18 +563,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
-  padding-top: 8px;
+  margin-top: 3px;
+  padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .yt-card-action-link {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #94a3b8;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   transition: color 0.18s ease;
 }
 
@@ -583,8 +583,8 @@
 }
 
 .yt-card-arrow-pill {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -592,7 +592,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   transition: all 0.2s ease;
 }
 
