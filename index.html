@@ -1098,6 +1098,96 @@
               </div>
             </div>
 
+            <!-- MOBILE SYNAPSE VIDEO PLATFORM (Visible strictly on Mobile <= 900px) -->
+            <div class="mobile-synapse-platform" id="mobile-synapse-platform">
+              
+              <!-- 1. Mobile Stage 1: Mobile Playlist Gallery -->
+              <div class="mobile-playlist-gallery" id="mobile-playlist-gallery">
+                <div class="mobile-gallery-top-bar">
+                  <div class="mobile-gallery-title-box">
+                    <h2 class="mobile-gallery-main-title">Playlists</h2>
+                    <span class="mobile-gallery-count-badge" id="mobile-total-playlists-badge">10 Playlists</span>
+                  </div>
+                  <div class="mobile-search-box">
+                    <i class="fa-solid fa-magnifying-glass mobile-search-icon"></i>
+                    <input type="text" id="mobile-playlist-search-input" class="mobile-search-input" placeholder="Search playlists..." />
+                  </div>
+                </div>
+
+                <!-- Vertical Stack of Mobile Playlist Cards -->
+                <div class="mobile-playlists-list" id="mobile-playlists-list">
+                  <!-- Populated dynamically by app.js -->
+                </div>
+              </div>
+
+              <!-- 2. Mobile Stage 2: Mobile Video Player Page -->
+              <div class="mobile-video-player-page hidden" id="mobile-video-player-page">
+                <!-- Top Sticky Navigation Bar -->
+                <div class="mobile-player-top-bar">
+                  <button type="button" class="btn-mobile-back" id="btn-mobile-back-to-gallery" title="Back to Playlists">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Playlists</span>
+                  </button>
+                  <div class="mobile-player-cat-title" id="mobile-player-cat-title">Category Name</div>
+                  <button type="button" class="btn-mobile-add-vid-header" id="btn-mobile-header-add" title="Embed Video into this playlist">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
+                </div>
+
+                <!-- 16:9 Video Player Box -->
+                <div class="mobile-cinema-iframe-wrapper">
+                  <iframe 
+                    id="mobile-cinema-iframe" 
+                    src="" 
+                    title="Mobile Video Player" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
+                    allowfullscreen
+                    referrerpolicy="strict-origin-when-cross-origin"
+                  ></iframe>
+                </div>
+
+                <!-- Active Video Info & Metadata -->
+                <div class="mobile-video-info-box">
+                  <h3 class="mobile-active-video-title" id="mobile-active-video-title">Video Lesson</h3>
+                  <div class="mobile-active-video-meta">
+                    <span class="mobile-curator-name"><i class="fa-solid fa-circle-check" style="color: #38bdf8;"></i> Globally Known</span>
+                    <span class="mobile-meta-bullet">•</span>
+                    <span class="mobile-level-pill" id="mobile-active-level-pill">Level A1</span>
+                    <span class="mobile-meta-bullet">•</span>
+                    <span class="mobile-duration-pill" id="mobile-active-duration-pill">12:30</span>
+                  </div>
+
+                  <!-- Quick Action Buttons -->
+                  <div class="mobile-player-actions-row">
+                    <button type="button" class="btn-mobile-action" id="btn-mobile-embed-video">
+                      <i class="fa-solid fa-plus"></i> Embed Video
+                    </button>
+                    <button type="button" class="btn-mobile-action" id="btn-mobile-save-list">
+                      <i class="fa-solid fa-bookmark"></i> Save
+                    </button>
+                    <button type="button" class="btn-mobile-action" id="btn-mobile-share-vid">
+                      <i class="fa-solid fa-share-nodes"></i> Share
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Playlist Section Header -->
+                <div class="mobile-playlist-section-header">
+                  <div class="mobile-playlist-label-group">
+                    <span class="mobile-playlist-label">PLAYLIST:</span>
+                    <h4 class="mobile-playlist-name" id="mobile-section-playlist-name">Into The City!</h4>
+                  </div>
+                  <span class="mobile-playlist-counter" id="mobile-section-playlist-counter">1 / 25</span>
+                </div>
+
+                <!-- Vertical Playlist Video List -->
+                <div class="mobile-playlist-items-list" id="mobile-playlist-items-list">
+                  <!-- Video items populated dynamically by app.js -->
+                </div>
+              </div>
+
+            </div>
+
             <!-- Categories Video Grid (Active on Mobile) -->
             <div class="video-grid" id="video-grid">
               <!-- Loaded dynamically by app.js for mobile carousels -->

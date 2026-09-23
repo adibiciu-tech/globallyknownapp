@@ -1051,3 +1051,8 @@
 .sidebar-video-item.is-active .sidebar-playing-indicator {
   display: inline-flex;
 }
+
+/* Strictly hide Mobile Synapse Platform on Desktop */
+.mobile-synapse-platform {
+  display: none !important;
+}

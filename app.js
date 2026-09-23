@@ -5754,6 +5754,266 @@ function closeDesktopPlaylistPage() {
   if (galleryEl) galleryEl.classList.remove("hidden");
 }
 
+// -------------------------------------------------------------
+// Mobile Synapse Video Platform (2-Stage Mobile Experience)
+// -------------------------------------------------------------
+let currentMobileActiveCategory = null;
+let currentMobileActiveVideo = null;
+
+function renderMobilePlaylistGallery(categories) {
+  const mobList = document.getElementById("mobile-playlists-list");
+  const countBadge = document.getElementById("mobile-total-playlists-badge");
+  const searchInput = document.getElementById("mobile-playlist-search-input");
+  if (!mobList) return;
+
+  if (countBadge) {
+    countBadge.textContent = `${categories.length} Playlists`;
+  }
+
+  const buildItems = (filterText = "") => {
+    mobList.innerHTML = "";
+    const query = filterText.toLowerCase().trim();
+
+    const filtered = categories.filter(c => {
+      if (!query) return true;
+      const t = (c.title || "").toLowerCase();
+      const catId = (c.id || "").toLowerCase();
+      return t.includes(query) || catId.includes(query);
+    });
+
+    if (filtered.length === 0) {
+      mobList.innerHTML = `
+        <div style="padding: 2rem; text-align: center; color: #94a3b8; font-size: 0.85rem;">
+          <i class="fa-solid fa-search" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+          No playlists matching "${escapeHtml(filterText)}"
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(cat => {
+      const vids = cat.enrichedVideos || [];
+      const count = vids.length;
+      const firstVid = vids[0];
+      const thumbUrl = (firstVid && firstVid.thumbUrl) ? firstVid.thumbUrl : "https://img.youtube.com/vi/RJbUtcaoNCY/hqdefault.jpg";
+      const levelStr = firstVid ? (firstVid.level || "A1") : "A1";
+
+      const card = document.createElement("div");
+      card.className = "mob-playlist-card";
+      card.setAttribute("data-category-id", cat.id);
+
+      card.innerHTML = `
+        <div class="mob-card-thumb-wrap">
+          <img src="${thumbUrl}" alt="${escapeHtml(cat.title)}" class="mob-card-thumb-img" loading="lazy" />
+          <div class="mob-card-deck-layer"></div>
+          <span class="mob-card-badge"><i class="fa-solid fa-layer-group"></i> ${count}</span>
+        </div>
+        <div class="mob-card-info-col">
+          <h3 class="mob-card-title">${cat.flag} ${escapeHtml(cat.title)}</h3>
+          <span class="mob-card-count">${count} Videos</span>
+          <span class="mob-card-curator">By Globally Known • Level ${levelStr}</span>
+        </div>
+        <i class="fa-solid fa-chevron-right mob-card-arrow"></i>
+      `;
+
+      card.addEventListener("click", () => {
+        openMobilePlaylistPage(cat);
+      });
+
+      mobList.appendChild(card);
+    });
+  };
+
+  buildItems(searchInput ? searchInput.value : "");
+
+  if (searchInput && !searchInput.dataset.listening) {
+    searchInput.dataset.listening = "true";
+    searchInput.addEventListener("input", (e) => {
+      buildItems(e.target.value);
+    });
+  }
+}
+
+function openMobilePlaylistPage(cat, videoToPlay = null) {
+  const galleryEl = document.getElementById("mobile-playlist-gallery");
+  const playerPageEl = document.getElementById("mobile-video-player-page");
+  const catTitleEl = document.getElementById("mobile-player-cat-title");
+  const sectionNameEl = document.getElementById("mobile-section-playlist-name");
+  const itemsListEl = document.getElementById("mobile-playlist-items-list");
+  const btnBack = document.getElementById("btn-mobile-back-to-gallery");
+  const btnHeaderAdd = document.getElementById("btn-mobile-header-add");
+  const btnActionEmbed = document.getElementById("btn-mobile-embed-video");
+  const btnActionSave = document.getElementById("btn-mobile-save-list");
+  const btnActionShare = document.getElementById("btn-mobile-share-vid");
+
+  if (!galleryEl || !playerPageEl) return;
+
+  currentMobileActiveCategory = cat;
+  const vids = cat.enrichedVideos || [];
+
+  galleryEl.classList.add("hidden");
+  playerPageEl.classList.remove("hidden");
+
+  if (catTitleEl) catTitleEl.textContent = `${cat.flag} ${cat.title}`;
+  if (sectionNameEl) sectionNameEl.textContent = `${cat.flag} ${cat.title}`;
+
+  if (btnBack) {
+    btnBack.onclick = () => closeMobilePlaylistPage();
+  }
+
+  const handleOpenAddModal = () => {
+    openAddVideoModal(cat.id);
+  };
+  if (btnHeaderAdd) btnHeaderAdd.onclick = handleOpenAddModal;
+  if (btnActionEmbed) btnActionEmbed.onclick = handleOpenAddModal;
+
+  if (btnActionSave) {
+    btnActionSave.onclick = () => {
+      if (currentMobileActiveVideo) {
+        showToast(`⭐ Saved "${currentMobileActiveVideo.title}" to your study list!`);
+      } else {
+        showToast(`⭐ Saved "${cat.title}" playlist!`);
+      }
+    };
+  }
+
+  if (btnActionShare) {
+    btnActionShare.onclick = () => {
+      if (navigator.share && currentMobileActiveVideo) {
+        navigator.share({
+          title: currentMobileActiveVideo.title,
+          text: `Check out this lesson in ${cat.title} on Globally Known!`,
+          url: window.location.href
+        }).catch(() => {});
+      } else {
+        showToast(`🔗 Link copied to clipboard!`);
+      }
+    };
+  }
+
+  // Populate Mobile Playlist Video List
+  if (itemsListEl) {
+    itemsListEl.innerHTML = "";
+    if (vids.length === 0) {
+      itemsListEl.innerHTML = `
+        <div style="padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.82rem;">
+          <i class="fa-solid fa-film" style="font-size: 1.6rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+          No videos in this playlist yet.<br>Tap <strong>Embed Video</strong> above to add one!
+        </div>
+      `;
+    } else {
+      vids.forEach((v, idx) => {
+        const item = document.createElement("div");
+        item.className = "mob-playlist-item";
+        item.setAttribute("data-video-id", v.id);
+
+        item.innerHTML = `
+          <div class="mob-item-thumb-box">
+            <img src="${v.thumbUrl}" alt="${escapeHtml(v.title)}" loading="lazy" />
+            <span class="mob-item-badge">${v.durationStr}</span>
+          </div>
+          <div class="mob-item-info">
+            <h4 class="mob-item-title" title="${escapeHtml(v.title)}">${escapeHtml(v.title)}</h4>
+            <div class="mob-item-sub">
+              <span>Level ${v.level}</span>
+              <span class="mob-playing-tag"><i class="fa-solid fa-volume-high"></i> Playing</span>
+            </div>
+          </div>
+        `;
+
+        item.addEventListener("click", () => {
+          loadMobileCinemaVideo(v, cat, idx, item);
+        });
+
+        itemsListEl.appendChild(item);
+      });
+    }
+  }
+
+  // Initial video to play
+  const targetVideo = videoToPlay || (vids.length > 0 ? vids[0] : null);
+  const targetIdx = targetVideo ? vids.findIndex(v => v.id === targetVideo.id) : 0;
+  const firstItemEl = itemsListEl ? itemsListEl.children[targetIdx >= 0 ? targetIdx : 0] : null;
+
+  if (targetVideo) {
+    loadMobileCinemaVideo(targetVideo, cat, targetIdx >= 0 ? targetIdx : 0, firstItemEl);
+  } else {
+    clearMobileCinemaPlayer();
+  }
+
+  // Smooth scroll up to mobile player
+  playerPageEl.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function loadMobileCinemaVideo(video, cat, index, itemEl) {
+  if (!video) return;
+  currentMobileActiveVideo = video;
+
+  const iframe = document.getElementById("mobile-cinema-iframe");
+  const titleEl = document.getElementById("mobile-active-video-title");
+  const levelPill = document.getElementById("mobile-active-level-pill");
+  const durationPill = document.getElementById("mobile-active-duration-pill");
+  const counterEl = document.getElementById("mobile-section-playlist-counter");
+  const itemsListEl = document.getElementById("mobile-playlist-items-list");
+
+  if (titleEl) titleEl.textContent = video.title;
+  if (levelPill) levelPill.textContent = `Level: ${video.level || "A1"}`;
+  if (durationPill) durationPill.textContent = video.durationStr || "12:00";
+
+  const totalCount = cat.enrichedVideos ? cat.enrichedVideos.length : 1;
+  if (counterEl) counterEl.textContent = `${index + 1} / ${totalCount}`;
+
+  // Embed URL with autoplay
+  if (iframe) {
+    let activeEmbedUrl = video.embedUrl || "";
+    if (activeEmbedUrl.includes("youtube") && !activeEmbedUrl.includes("videoseries")) {
+      activeEmbedUrl = activeEmbedUrl.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
+      activeEmbedUrl = activeEmbedUrl.replace(/\?&/g, "?").replace(/\?$/g, "");
+    }
+    if (activeEmbedUrl.includes("youtube.com/embed/")) {
+      activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
+    }
+    if (activeEmbedUrl.includes("youtube-nocookie.com/embed/") || activeEmbedUrl.includes("youtube.com/embed/")) {
+      if (!activeEmbedUrl.includes("fs=")) {
+        activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
+      }
+    }
+    const autoplayParam = activeEmbedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1";
+    iframe.src = activeEmbedUrl + autoplayParam;
+  }
+
+  // Active class toggle
+  if (itemsListEl) {
+    Array.from(itemsListEl.children).forEach(c => c.classList.remove("is-active"));
+  }
+  if (itemEl) {
+    itemEl.classList.add("is-active");
+  }
+
+  // Immersion streak reward
+  let currentMins = parseInt(localStorage.getItem("sol_immersion_today_mins") || "18", 10);
+  currentMins += 5;
+  localStorage.setItem("sol_immersion_today_mins", currentMins.toString());
+  const streakMinsEl = document.getElementById("streak-minutes-today");
+  if (streakMinsEl) streakMinsEl.textContent = `${currentMins} mins`;
+}
+
+function clearMobileCinemaPlayer() {
+  const iframe = document.getElementById("mobile-cinema-iframe");
+  const titleEl = document.getElementById("mobile-active-video-title");
+  if (iframe) iframe.src = "";
+  if (titleEl) titleEl.textContent = "No videos in this playlist yet";
+}
+
+function closeMobilePlaylistPage() {
+  const iframe = document.getElementById("mobile-cinema-iframe");
+  if (iframe) iframe.src = "";
+  const galleryEl = document.getElementById("mobile-playlist-gallery");
+  const playerPageEl = document.getElementById("mobile-video-player-page");
+  if (playerPageEl) playerPageEl.classList.add("hidden");
+  if (galleryEl) galleryEl.classList.remove("hidden");
+}
+
 let currentVideosRenderId = 0;
 
 async function initVideosPanel() {
@@ -6235,8 +6495,9 @@ async function initVideosPanel() {
     });
   });
 
-  // 3. Render Desktop Synapse Platform Gallery
+  // 3. Render Desktop & Mobile Synapse Platforms
   renderDesktopPlaylistGallery(uniqueCategories);
+  renderMobilePlaylistGallery(uniqueCategories);
 
   // If a category was already open on desktop, refresh its player view
   if (currentDesktopActiveCategory) {
@@ -6247,6 +6508,19 @@ async function initVideosPanel() {
       const playerPageEl = document.getElementById("desktop-video-player-page");
       if (playerPageEl && !playerPageEl.classList.contains("hidden")) {
         openDesktopPlaylistPage(updatedCat, targetVid);
+      }
+    }
+  }
+
+  // If a category was already open on mobile, refresh its player view
+  if (currentMobileActiveCategory) {
+    const updatedMobCat = uniqueCategories.find(c => c.id === currentMobileActiveCategory.id);
+    if (updatedMobCat) {
+      currentMobileActiveCategory = updatedMobCat;
+      const targetVid = currentMobileActiveVideo ? (updatedMobCat.enrichedVideos.find(v => v.id === currentMobileActiveVideo.id) || updatedMobCat.enrichedVideos[0]) : updatedMobCat.enrichedVideos[0];
+      const mobPlayerPageEl = document.getElementById("mobile-video-player-page");
+      if (mobPlayerPageEl && !mobPlayerPageEl.classList.contains("hidden")) {
+        openMobilePlaylistPage(updatedMobCat, targetVid);
       }
     }
   }
