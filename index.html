@@ -26,9 +26,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=35090">
-  <link rel="stylesheet" href="desktop.css?v=1010" media="(min-width: 901px)">
-  <link rel="stylesheet" href="mobile.css?v=1030" media="(max-width: 900px)">
+  <link rel="stylesheet" href="styles.css?v=35100">
+  <link rel="stylesheet" href="desktop.css?v=1020" media="(min-width: 901px)">
+  <link rel="stylesheet" href="mobile.css?v=1040" media="(max-width: 900px)">
   <!-- CodeMirror CSS for Code Editor -->
   <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
   
@@ -925,13 +925,183 @@
 
         <!-- 4. Panel: Organized Comprehensible Input Videos -->
         <div class="workspace-panel" id="panel-videos">
-          <div class="panel-section">
-            <h2>📺 Comprehensible Input Library</h2>
-            <p class="section-subtitle">Watch curated content graded to your language level for optimal acquisition.</p>
+          <div class="panel-section videos-section-container">
+            
+            <!-- Top Immersion & Monetization Status Ribbon -->
+            <div class="immersion-streak-ribbon" id="immersion-streak-ribbon">
+              <div class="streak-left-info">
+                <span class="streak-live-dot"></span>
+                <span class="streak-label">Daily Immersion Streak:</span>
+                <span class="streak-count" id="streak-days-count"><i class="fa-solid fa-fire"></i> 5 Days</span>
+                <span class="streak-divider">|</span>
+                <span class="streak-time">Today: <strong id="streak-minutes-today">18 mins</strong> / 30m Goal</span>
+              </div>
+              <div class="streak-right-actions">
+                <span class="tier-pill" id="tier-status-pill">Free Member</span>
+                <button type="button" class="btn-unlock-pro" id="btn-unlock-pro" title="Upgrade to Pro Membership">
+                  <i class="fa-solid fa-crown"></i> Unlock Unlimited PRO
+                </button>
+              </div>
+            </div>
 
-             <div class="video-grid" id="video-grid">
-               <!-- Loaded dynamically by app.js -->
-             </div>
+            <!-- Cinematic Spotlight Hero Banner -->
+            <div class="spotlight-hero-container" id="spotlight-hero-container">
+              <div class="spotlight-hero-backdrop" id="spotlight-hero-backdrop"></div>
+              <div class="spotlight-hero-content">
+                <div class="spotlight-badge-row">
+                  <span class="spotlight-tag-pill trending"><i class="fa-solid fa-fire"></i> Video of the Day</span>
+                  <span class="spotlight-tag-pill level" id="spotlight-level-pill">Level: A2 Elementary</span>
+                  <span class="spotlight-tag-pill duration" id="spotlight-duration-pill"><i class="fa-regular fa-clock"></i> 14 mins</span>
+                </div>
+                <h2 class="spotlight-title" id="spotlight-title">Lost In Manhattan: Ordering Coffee & Directions</h2>
+                <p class="spotlight-desc" id="spotlight-desc">Super slow, comprehensible real-life English input with high-frequency phrases and visual cues. Specially designed for natural fluency building.</p>
+                <div class="spotlight-actions">
+                  <button type="button" class="spotlight-btn-primary" id="btn-spotlight-watch">
+                    <i class="fa-solid fa-play"></i> Watch Now
+                  </button>
+                  <button type="button" class="spotlight-btn-secondary" id="btn-spotlight-save">
+                    <i class="fa-solid fa-plus"></i> Add to My List
+                  </button>
+                  <button type="button" class="spotlight-btn-ghost" id="btn-spotlight-vocab" title="View Key Words">
+                    <i class="fa-solid fa-book-open"></i> Key Vocab (18 words)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Filter Chips Bar -->
+            <div class="library-filter-bar" id="library-filter-bar">
+              <div class="filter-chips-wrapper">
+                <span class="filter-label">Filter:</span>
+                <button type="button" class="filter-chip active" data-filter="all">All Lessons</button>
+                <button type="button" class="filter-chip" data-filter="a1">🌱 Beginner (A1)</button>
+                <button type="button" class="filter-chip" data-filter="a2">🚶 Elementary (A2)</button>
+                <button type="button" class="filter-chip" data-filter="b1">⚡ Intermediate (B1)</button>
+                <button type="button" class="filter-chip vip-chip" data-filter="vip"><i class="fa-solid fa-crown"></i> VIP Masterclass</button>
+              </div>
+              <div class="filter-meta-count">
+                <i class="fa-solid fa-layer-group"></i> 10 Categories • 250+ Lessons
+              </div>
+            </div>
+
+            <!-- DESKTOP SYNAPSE VIDEO PLATFORM (Visible strictly on Desktop >= 901px) -->
+            <div class="desktop-synapse-platform" id="desktop-synapse-platform">
+              
+              <!-- 1. Layout 1: Desktop Playlist Gallery (Grid View) -->
+              <div class="desktop-playlist-gallery" id="desktop-playlist-gallery">
+                <div class="gallery-header-row">
+                  <div class="gallery-title-group">
+                    <h2 class="gallery-main-title">Your Playlists</h2>
+                    <p class="gallery-subtitle">Select a category window to open its dedicated cinema player and curated lesson stream.</p>
+                  </div>
+                  <div class="gallery-stats-badge" id="gallery-total-categories-badge">
+                    <i class="fa-solid fa-layer-group"></i> 10 Playlists Available
+                  </div>
+                </div>
+
+                <!-- Responsive Grid of Category Window Cards -->
+                <div class="desktop-categories-grid" id="desktop-categories-grid">
+                  <!-- Populated dynamically by app.js -->
+                </div>
+              </div>
+
+              <!-- 2. Layout 2: Desktop Video Player Page (Split Screen Cinema View) -->
+              <div class="desktop-video-player-page hidden" id="desktop-video-player-page">
+                <!-- Top Navigation / Breadcrumbs -->
+                <div class="player-page-top-nav">
+                  <button type="button" class="btn-desktop-back-gallery" id="btn-desktop-back-to-gallery">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Back to Playlists</span>
+                  </button>
+                  <div class="player-page-breadcrumbs">
+                    <span class="crumb-root">Comprehensible Input</span>
+                    <i class="fa-solid fa-chevron-right crumb-sep"></i>
+                    <span class="crumb-category" id="desktop-player-category-crumb">Category</span>
+                  </div>
+                  <div class="player-page-cat-meta" id="desktop-player-cat-meta">
+                    <span class="cat-video-count-pill" id="desktop-player-cat-count-pill">0 Videos</span>
+                  </div>
+                </div>
+
+                <!-- Two-Column Split Grid -->
+                <div class="desktop-player-layout-grid">
+                  <!-- Left Column: Primary Cinema Player (~70%) -->
+                  <div class="desktop-cinema-player-col" id="desktop-cinema-player-col">
+                    <div class="desktop-cinema-iframe-wrapper">
+                      <iframe 
+                        id="desktop-cinema-iframe" 
+                        src="" 
+                        title="Desktop Video Player" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
+                        allowfullscreen
+                        referrerpolicy="strict-origin-when-cross-origin"
+                      ></iframe>
+                    </div>
+
+                    <!-- Under Player Details & Action Bar -->
+                    <div class="cinema-details-card">
+                      <div class="cinema-title-row">
+                        <div class="cinema-title-wrap">
+                          <div class="cinema-badges-row">
+                            <span class="cinema-level-pill" id="desktop-cinema-level-pill">Level: A2</span>
+                            <span class="cinema-duration-pill" id="desktop-cinema-duration-pill"><i class="fa-regular fa-clock"></i> 12 mins</span>
+                            <span class="cinema-category-pill" id="desktop-cinema-cat-pill">Category</span>
+                          </div>
+                          <h1 class="desktop-cinema-video-title" id="desktop-cinema-video-title">Select a video to play</h1>
+                        </div>
+                        <div class="cinema-admin-actions" id="desktop-cinema-admin-actions">
+                          <!-- Edit & delete buttons if admin mode enabled -->
+                        </div>
+                      </div>
+
+                      <div class="cinema-action-buttons-bar">
+                        <button type="button" class="cinema-btn" id="btn-cinema-save-list">
+                          <i class="fa-solid fa-bookmark"></i> <span>Save to My List</span>
+                        </button>
+                        <button type="button" class="cinema-btn" id="btn-cinema-vocab">
+                          <i class="fa-solid fa-book-open"></i> <span>Key Vocabulary</span>
+                        </button>
+                        <button type="button" class="cinema-btn" id="btn-cinema-share">
+                          <i class="fa-solid fa-share-nodes"></i> <span>Share</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Right Column: Vertical Playlist Sidebar (~30%) -->
+                  <div class="desktop-playlist-sidebar-col" id="desktop-playlist-sidebar-col">
+                    <div class="playlist-sidebar-header">
+                      <div class="sidebar-header-title-wrap">
+                        <span class="playlist-header-label">PLAYLIST:</span>
+                        <h3 class="playlist-sidebar-title" id="desktop-sidebar-category-title">Category Name</h3>
+                      </div>
+                      <span class="playlist-sidebar-counter" id="desktop-sidebar-progress-counter">1 / 25</span>
+                    </div>
+
+                    <!-- Embed / + Add Video Window Card -->
+                    <div class="sidebar-add-video-card" id="btn-sidebar-add-video" title="Embed a new video into this playlist">
+                      <div class="sidebar-add-icon-circle">
+                        <i class="fa-solid fa-plus"></i>
+                      </div>
+                      <div class="sidebar-add-text-wrap">
+                        <span class="sidebar-add-main-text">Embed New Video</span>
+                        <span class="sidebar-add-sub-text">Add YouTube URL to this playlist</span>
+                      </div>
+                    </div>
+
+                    <!-- Scrollable Playlist Video Track -->
+                    <div class="desktop-playlist-items-track" id="desktop-playlist-items-track">
+                      <!-- Video items populated dynamically by app.js -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Categories Video Grid (Active on Mobile) -->
+            <div class="video-grid" id="video-grid">
+              <!-- Loaded dynamically by app.js for mobile carousels -->
+            </div>
 
              <!-- Playlist Modal Window (Netflix-style horizontal carousel popup, hidden by default) -->
              <div id="playlist-modal" class="modal-overlay hidden">
@@ -2065,6 +2235,59 @@
     </div>
   </div>
 
+  <!-- Sol Immersion Pro Upgrade Modal (Lucrative Monetization Engine) -->
+  <div class="modal-overlay hidden" id="pro-upgrade-modal">
+    <div class="auth-modal-card pro-upgrade-card" style="max-width: 500px; position: relative; border: 1px solid rgba(246, 202, 33, 0.4); background: radial-gradient(circle at top, rgba(30, 27, 75, 0.95), rgba(15, 23, 42, 0.98)); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(246, 202, 33, 0.15);">
+      <button type="button" class="modal-close-corner-btn" id="btn-close-pro-upgrade" title="Close" style="position: absolute; top: 1.15rem; right: 1.15rem; width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #94a3b8; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div style="text-align: center; padding: 0.5rem 0.5rem 1.25rem 0.5rem;">
+        <div style="width: 58px; height: 58px; border-radius: 18px; background: linear-gradient(135deg, #f6ca21, #d97706); display: inline-flex; align-items: center; justify-content: center; color: #0b1120; font-size: 1.75rem; margin-bottom: 0.85rem; box-shadow: 0 10px 25px rgba(246, 202, 33, 0.35);">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <h3 style="margin: 0; font-size: 1.55rem; font-weight: 800; color: #ffffff; font-family: 'Outfit', sans-serif;">Unlock SOL Immersion PRO</h3>
+        <p style="margin: 0.4rem 0 0 0; font-size: 0.88rem; color: #94a3b8; line-height: 1.45;">
+          Supercharge your language acquisition with unlimited video immersion, interactive Sol AI tutoring, and native-level fluency tools.
+        </p>
+
+        <!-- Feature List -->
+        <div style="margin: 1.5rem 0 1.75rem 0; text-align: left; display: flex; flex-direction: column; gap: 0.75rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); padding: 1rem 1.25rem; border-radius: 14px;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: #e2e8f0;">
+            <i class="fa-solid fa-circle-check" style="color: #f6ca21;"></i>
+            <span><strong>Unlimited Access</strong> to all 250+ Lessons across 10 categories</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: #e2e8f0;">
+            <i class="fa-solid fa-circle-check" style="color: #f6ca21;"></i>
+            <span><strong>VIP Masterclasses</strong> & Native Slang breakdowns</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: #e2e8f0;">
+            <i class="fa-solid fa-circle-check" style="color: #f6ca21;"></i>
+            <span><strong>Sol AI Immersion Partner</strong> (instant speech & comprehension practice)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: #e2e8f0;">
+            <i class="fa-solid fa-circle-check" style="color: #f6ca21;"></i>
+            <span><strong>Smart Flashcards</strong> & Vocabulary auto-saved to your lists</span>
+          </div>
+        </div>
+
+        <!-- Plan Pricing & Action -->
+        <div style="margin-bottom: 1.25rem;">
+          <button type="button" id="btn-confirm-pro-membership" class="primary-btn" style="width: 100%; padding: 0.85rem; border-radius: 12px; background: linear-gradient(135deg, #f6ca21, #eab308); color: #0b1120; font-weight: 800; font-size: 1rem; border: none; cursor: pointer; box-shadow: 0 8px 24px rgba(246, 202, 33, 0.35); transition: transform 0.2s ease;">
+            <i class="fa-solid fa-bolt" style="margin-right: 6px;"></i> Start 7-Day Free Trial — $9.99/mo
+          </button>
+          <div style="margin-top: 0.5rem; font-size: 0.76rem; color: #64748b;">
+            Cancel anytime with 1 click • Instant activation across all devices
+          </div>
+        </div>
+
+        <button type="button" id="btn-dismiss-pro-upgrade" style="background: none; border: none; color: #94a3b8; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
+          Maybe later
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Synchronous pre-paint check: if authenticated, hide modal instantly before first paint (prevents 1ms flash) -->
   <script>
     (function() {
@@ -2099,6 +2322,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35080"></script>
+  <script type="module" src="app.js?v=35100"></script>
 </body>
 </html>

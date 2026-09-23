@@ -1082,9 +1082,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     os.chdir(BASE_DIR)
-    socketserver.TCPServer.allow_reuse_address = True
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
     local_ip = get_local_ip()
-    with socketserver.TCPServer(("", PORT), CustomHandler) as httpd:
+    with socketserver.ThreadingTCPServer(("", PORT), CustomHandler) as httpd:
         print("\n" + "=" * 60)
         print("  GLOBALLY KNOWN SERVER RUNNING & READY!")
         print(f"  Laptop/PC URL:  http://localhost:{PORT}")

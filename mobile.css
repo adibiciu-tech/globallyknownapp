@@ -1057,3 +1057,115 @@ html, body {
   display: none !important;
 }
 
+/* Lucrative Overhaul: Mobile Immersion Ribbon, Hero Card & Touch Snapping */
+.immersion-streak-ribbon {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  padding: 0.65rem 0.85rem !important;
+  margin-bottom: 1.15rem !important;
+  border-radius: 12px !important;
+}
+
+.streak-left-info {
+  flex-wrap: wrap !important;
+  font-size: 0.78rem !important;
+  gap: 0.4rem !important;
+}
+
+.streak-right-actions {
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.tier-pill {
+  font-size: 0.7rem !important;
+  padding: 2px 8px !important;
+}
+
+.btn-unlock-pro {
+  font-size: 0.72rem !important;
+  padding: 5px 10px !important;
+}
+
+.spotlight-hero-container {
+  min-height: 220px !important;
+  border-radius: 16px !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.spotlight-hero-content {
+  padding: 1.15rem 1rem !important;
+}
+
+.spotlight-title {
+  font-size: 1.25rem !important;
+  line-height: 1.25 !important;
+  margin-bottom: 0.4rem !important;
+}
+
+.spotlight-desc {
+  font-size: 0.78rem !important;
+  line-height: 1.4 !important;
+  margin-bottom: 0.85rem !important;
+  -webkit-line-clamp: 2 !important;
+}
+
+.spotlight-actions {
+  gap: 0.5rem !important;
+}
+
+.spotlight-btn-primary {
+  padding: 0.6rem 1rem !important;
+  font-size: 0.8rem !important;
+  flex: 1 1 auto !important;
+  justify-content: center !important;
+}
+
+.spotlight-btn-secondary,
+.spotlight-btn-ghost {
+  padding: 0.6rem 0.85rem !important;
+  font-size: 0.76rem !important;
+}
+
+.library-filter-bar {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  margin-bottom: 1rem !important;
+}
+
+.filter-chips-wrapper {
+  width: 100% !important;
+  overflow-x: auto !important;
+  padding-bottom: 4px !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.filter-chips-wrapper::-webkit-scrollbar {
+  display: none !important;
+}
+
+.filter-chip {
+  padding: 4px 10px !important;
+  font-size: 0.72rem !important;
+}
+
+.filter-meta-count {
+  display: none !important;
+}
+
+.netflix-slider-track .video-card {
+  --single-card-width: 185px !important;
+  flex: 0 0 185px !important;
+  width: 185px !important;
+  min-width: 185px !important;
+  max-width: 185px !important;
+}
+
+/* Strictly hide Desktop Synapse Platform on mobile */
+.desktop-synapse-platform {
+  display: none !important;
+}
+
+

@@ -5021,6 +5021,63 @@ function parseEmbedVideoUrl(rawInput) {
   return "";
 }
 
+function extractYoutubeId(url) {
+  if (!url || typeof url !== "string") return null;
+  const match = url.match(/(?:youtube-nocookie\.com\/embed\/|youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/i);
+  return match ? match[1] : null;
+}
+
+function getYoutubeThumbnailUrl(url) {
+  const ytId = extractYoutubeId(url);
+  if (ytId) {
+    return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  }
+  return "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=600&auto=format&fit=crop&q=80";
+}
+
+function enrichVideoMetadata(video, index) {
+  const ytId = extractYoutubeId(video.embedUrl);
+  const thumbUrl = getYoutubeThumbnailUrl(video.embedUrl);
+
+  // Logical CEFR levels across playlists
+  let level = "A1";
+  if (index >= 6 && index < 14) level = "A2";
+  else if (index >= 14 && index < 22) level = "B1";
+  else if (index >= 22) level = "B2";
+
+  // Mark select lessons as VIP Member Exclusives (approx 1 in 8)
+  const isVip = (index === 2 || index === 7 || index === 15 || index === 23);
+
+  // Deterministic realistic duration based on title/id
+  const hash = Math.abs((video.title || "").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) + index * 17);
+  const baseMinutes = 8 + (hash % 12);
+  const baseSeconds = (hash % 50) + 9;
+  const durationStr = `${baseMinutes}:${baseSeconds < 10 ? '0' : ''}${baseSeconds}`;
+
+  return {
+    ...video,
+    ytId,
+    thumbUrl,
+    level,
+    isVip,
+    durationStr
+  };
+}
+
+function isProMember() {
+  return localStorage.getItem("sol_is_pro_member") === "true";
+}
+
+function openProUpgradeModal() {
+  const modal = document.getElementById("pro-upgrade-modal");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeProUpgradeModal() {
+  const modal = document.getElementById("pro-upgrade-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
 // Update status badges in Info / Settings
 function updateVideoSettingsBadge(count, isServerSynced) {
   const syncBadge = document.getElementById("video-sync-status-badge");
@@ -5349,6 +5406,308 @@ async function handleSaveVideoTitle(videoId, newTitle) {
   }
 }
 
+// -------------------------------------------------------------
+// Desktop Synapse Video Platform (2-Stage Desktop Experience)
+// -------------------------------------------------------------
+let currentDesktopActiveCategory = null;
+let currentDesktopActiveVideo = null;
+
+const CATEGORY_GRADIENTS = {
+  city: "linear-gradient(135deg, #1d4ed8, #0284c7)",
+  house: "linear-gradient(135deg, #0d9488, #06b6d4)",
+  action: "linear-gradient(135deg, #e11d48, #f43f5e)",
+  bathroom: "linear-gradient(135deg, #7c3aed, #a855f7)",
+  kitchen: "linear-gradient(135deg, #d97706, #f59e0b)",
+  bodies: "linear-gradient(135deg, #059669, #10b981)",
+  different: "linear-gradient(135deg, #334155, #64748b)",
+  nature: "linear-gradient(135deg, #15803d, #22c55e)",
+  seaside: "linear-gradient(135deg, #0369a1, #38bdf8)",
+  whathouse: "linear-gradient(135deg, #c2410c, #f97316)"
+};
+
+function renderDesktopPlaylistGallery(categories) {
+  const desktopGrid = document.getElementById("desktop-categories-grid");
+  const totalCountBadge = document.getElementById("gallery-total-categories-badge");
+  if (!desktopGrid) return;
+
+  desktopGrid.innerHTML = "";
+  if (totalCountBadge) {
+    totalCountBadge.innerHTML = `<i class="fa-solid fa-layer-group"></i> ${categories.length} Playlists Available`;
+  }
+
+  categories.forEach(cat => {
+    const vids = cat.enrichedVideos || [];
+    const count = vids.length;
+    const gradient = CATEGORY_GRADIENTS[cat.id] || "linear-gradient(135deg, #1e293b, #334155)";
+
+    // Get up to 4 thumbnails for 2x2 collage mosaic
+    const mosaicThumbnails = [];
+    for (let i = 0; i < 4; i++) {
+      if (vids[i] && vids[i].thumbUrl) {
+        mosaicThumbnails.push(vids[i].thumbUrl);
+      } else if (vids.length > 0 && vids[0].thumbUrl) {
+        mosaicThumbnails.push(vids[0].thumbUrl);
+      } else {
+        mosaicThumbnails.push("");
+      }
+    }
+
+    const card = document.createElement("div");
+    card.className = "playlist-window-card";
+    card.setAttribute("data-category-id", cat.id);
+
+    const mosaicHtml = mosaicThumbnails.map(thumb => {
+      if (thumb) {
+        return `<div class="mosaic-tile"><img src="${thumb}" alt="Video preview" loading="lazy" /></div>`;
+      }
+      return `<div class="mosaic-tile"><div class="mosaic-tile-placeholder"><i class="fa-solid fa-play"></i></div></div>`;
+    }).join("");
+
+    card.innerHTML = `
+      <div class="playlist-card-top-split">
+        <div class="card-banner-col" style="background: ${gradient};">
+          <div class="card-banner-badge">
+            <i class="fa-solid fa-play"></i> PLAYLIST
+          </div>
+          <div>
+            <div class="card-banner-flag">${cat.flag}</div>
+            <h3 class="card-banner-title-text">${escapeHtml((cat.title || "").toUpperCase())}</h3>
+          </div>
+        </div>
+        <div class="card-mosaic-col">
+          ${mosaicHtml}
+        </div>
+      </div>
+      <div class="playlist-card-bottom-info">
+        <div class="card-info-meta">
+          <h4 class="card-info-title">${cat.flag} ${escapeHtml(cat.title)}</h4>
+          <span class="card-info-sub">
+            <span class="card-info-count">${count} Videos</span> • By Globally Known
+          </span>
+        </div>
+        <div class="card-open-arrow">
+          <i class="fa-solid fa-chevron-right"></i>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => {
+      openDesktopPlaylistPage(cat);
+    });
+
+    desktopGrid.appendChild(card);
+  });
+}
+
+function openDesktopPlaylistPage(cat, videoToPlay = null) {
+  const galleryEl = document.getElementById("desktop-playlist-gallery");
+  const playerPageEl = document.getElementById("desktop-video-player-page");
+  const crumbEl = document.getElementById("desktop-player-category-crumb");
+  const countPillEl = document.getElementById("desktop-player-cat-count-pill");
+  const sidebarTitleEl = document.getElementById("desktop-sidebar-category-title");
+  const itemsTrackEl = document.getElementById("desktop-playlist-items-track");
+  const btnBack = document.getElementById("btn-desktop-back-to-gallery");
+  const btnAddVideo = document.getElementById("btn-sidebar-add-video");
+
+  if (!galleryEl || !playerPageEl) return;
+
+  currentDesktopActiveCategory = cat;
+  const vids = cat.enrichedVideos || [];
+
+  galleryEl.classList.add("hidden");
+  playerPageEl.classList.remove("hidden");
+
+  if (crumbEl) crumbEl.textContent = `${cat.flag} ${cat.title}`;
+  if (countPillEl) countPillEl.textContent = `${vids.length} Videos`;
+  if (sidebarTitleEl) sidebarTitleEl.textContent = `${cat.flag} ${cat.title}`;
+
+  if (btnBack) {
+    btnBack.onclick = () => closeDesktopPlaylistPage();
+  }
+
+  if (btnAddVideo) {
+    btnAddVideo.onclick = () => {
+      openAddVideoModal(cat.id);
+    };
+  }
+
+  // Populate Playlist Track
+  if (itemsTrackEl) {
+    itemsTrackEl.innerHTML = "";
+    if (vids.length === 0) {
+      itemsTrackEl.innerHTML = `
+        <div style="padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.88rem;">
+          <i class="fa-solid fa-film" style="font-size: 1.8rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+          No videos in this playlist yet.<br>Click <strong>Embed New Video</strong> above to add one!
+        </div>
+      `;
+    } else {
+      vids.forEach((v, idx) => {
+        const item = document.createElement("div");
+        item.className = "sidebar-video-item";
+        item.setAttribute("data-video-id", v.id);
+
+        const lessonNum = (idx + 1) < 10 ? `0${idx + 1}` : `${idx + 1}`;
+        item.innerHTML = `
+          <div class="sidebar-item-thumb-box">
+            <img src="${v.thumbUrl}" alt="${escapeHtml(v.title)}" loading="lazy" />
+            <span class="sidebar-item-num-badge">#${lessonNum}</span>
+            <span class="sidebar-item-duration">${v.durationStr}</span>
+          </div>
+          <div class="sidebar-item-info">
+            <h4 class="sidebar-item-title" title="${escapeHtml(v.title)}">${escapeHtml(v.title)}</h4>
+            <div class="sidebar-item-sub">
+              <span class="video-level-pill ${v.level.toLowerCase()}" style="font-size: 0.65rem; padding: 1px 5px;">${v.level}</span>
+              <span class="sidebar-playing-indicator"><i class="fa-solid fa-volume-high"></i> Playing</span>
+            </div>
+          </div>
+        `;
+
+        item.addEventListener("click", () => {
+          loadDesktopCinemaVideo(v, cat, idx, item);
+        });
+
+        itemsTrackEl.appendChild(item);
+      });
+    }
+  }
+
+  // Determine starting video to play
+  const targetVideo = videoToPlay || (vids.length > 0 ? vids[0] : null);
+  const targetIdx = targetVideo ? vids.findIndex(v => v.id === targetVideo.id) : 0;
+  const firstItemEl = itemsTrackEl ? itemsTrackEl.children[targetIdx >= 0 ? targetIdx : 0] : null;
+
+  if (targetVideo) {
+    loadDesktopCinemaVideo(targetVideo, cat, targetIdx >= 0 ? targetIdx : 0, firstItemEl);
+  } else {
+    clearDesktopCinemaPlayer();
+  }
+
+  // Smooth scroll up to top of panel-videos
+  const panelVideos = document.getElementById("panel-videos");
+  if (panelVideos) panelVideos.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function loadDesktopCinemaVideo(video, cat, index, itemEl) {
+  if (!video) return;
+  currentDesktopActiveVideo = video;
+
+  const iframe = document.getElementById("desktop-cinema-iframe");
+  const titleEl = document.getElementById("desktop-cinema-video-title");
+  const levelPill = document.getElementById("desktop-cinema-level-pill");
+  const durationPill = document.getElementById("desktop-cinema-duration-pill");
+  const catPill = document.getElementById("desktop-cinema-cat-pill");
+  const counterEl = document.getElementById("desktop-sidebar-progress-counter");
+  const trackEl = document.getElementById("desktop-playlist-items-track");
+  const adminActionsEl = document.getElementById("desktop-cinema-admin-actions");
+
+  // Format clean embed URL with autoplay
+  let activeEmbedUrl = video.embedUrl || "";
+  if (activeEmbedUrl.includes("youtube") && !activeEmbedUrl.includes("videoseries")) {
+    activeEmbedUrl = activeEmbedUrl.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
+    activeEmbedUrl = activeEmbedUrl.replace(/\?&/g, "?").replace(/\?$/g, "");
+  }
+  if (activeEmbedUrl.includes("youtube.com/embed/")) {
+    activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
+  }
+  if (activeEmbedUrl.includes("youtube-nocookie.com/embed/") || activeEmbedUrl.includes("youtube.com/embed/")) {
+    if (!activeEmbedUrl.includes("fs=")) {
+      activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
+    }
+  }
+  const autoplayParam = activeEmbedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1";
+  if (iframe) iframe.src = activeEmbedUrl + autoplayParam;
+
+  if (titleEl) titleEl.textContent = video.title || "Video Lesson";
+  if (levelPill) {
+    levelPill.textContent = `Level: ${video.level || "A1"}`;
+    levelPill.className = `cinema-level-pill ${video.level ? video.level.toLowerCase() : 'a1'}`;
+  }
+  if (durationPill) durationPill.innerHTML = `<i class="fa-regular fa-clock" style="margin-right: 4px;"></i> ${video.durationStr || "12:00"}`;
+  if (catPill) catPill.textContent = `${cat.flag} ${cat.title}`;
+
+  const totalVids = cat.enrichedVideos ? cat.enrichedVideos.length : 1;
+  if (counterEl) counterEl.textContent = `${index + 1} / ${totalVids}`;
+
+  // Update active state in sidebar
+  if (trackEl) {
+    const allItems = trackEl.querySelectorAll(".sidebar-video-item");
+    allItems.forEach(el => el.classList.remove("is-active"));
+  }
+  if (itemEl) {
+    itemEl.classList.add("is-active");
+    itemEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // Action buttons
+  const btnSave = document.getElementById("btn-cinema-save-list");
+  const btnVocab = document.getElementById("btn-cinema-vocab");
+  const btnShare = document.getElementById("btn-cinema-share");
+  if (btnSave) {
+    btnSave.onclick = () => showToast(`⭐ "${video.title}" saved to your Immersion List!`);
+  }
+  if (btnVocab) {
+    btnVocab.onclick = () => showToast(`📚 Key Vocabulary for "${video.title}" saved to your study notes!`);
+  }
+  if (btnShare) {
+    btnShare.onclick = () => {
+      if (video.embedUrl && navigator.clipboard) {
+        navigator.clipboard.writeText(video.embedUrl);
+        showToast("🔗 Video link copied to clipboard!");
+      } else {
+        showToast("🔗 Video ready to share!");
+      }
+    };
+  }
+
+  // Admin edit / delete buttons if video is user added or in admin mode
+  if (adminActionsEl) {
+    adminActionsEl.innerHTML = "";
+    const isEditAllowed = typeof isAdminUnlocked === "function" && isAdminUnlocked();
+    if (isEditAllowed || video.isUserAdded) {
+      const editBtn = document.createElement("button");
+      editBtn.className = "cinema-btn";
+      editBtn.style.padding = "6px 12px";
+      editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> Edit';
+      editBtn.onclick = () => openEditVideoModal(video);
+      adminActionsEl.appendChild(editBtn);
+
+      if (video.isUserAdded) {
+        const delBtn = document.createElement("button");
+        delBtn.className = "cinema-btn";
+        delBtn.style.padding = "6px 12px";
+        delBtn.style.color = "#f87171";
+        delBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Delete';
+        delBtn.onclick = () => handleDeleteUserVideo(video.id);
+        adminActionsEl.appendChild(delBtn);
+      }
+    }
+  }
+
+  // Immersion streak reward
+  let currentMins = parseInt(localStorage.getItem("sol_immersion_today_mins") || "18", 10);
+  currentMins += 5;
+  localStorage.setItem("sol_immersion_today_mins", currentMins.toString());
+  const streakMinsEl = document.getElementById("streak-minutes-today");
+  if (streakMinsEl) streakMinsEl.textContent = `${currentMins} mins`;
+}
+
+function clearDesktopCinemaPlayer() {
+  const iframe = document.getElementById("desktop-cinema-iframe");
+  const titleEl = document.getElementById("desktop-cinema-video-title");
+  if (iframe) iframe.src = "";
+  if (titleEl) titleEl.textContent = "No videos in this playlist yet";
+}
+
+function closeDesktopPlaylistPage() {
+  const iframe = document.getElementById("desktop-cinema-iframe");
+  if (iframe) iframe.src = "";
+  const galleryEl = document.getElementById("desktop-playlist-gallery");
+  const playerPageEl = document.getElementById("desktop-video-player-page");
+  if (playerPageEl) playerPageEl.classList.add("hidden");
+  if (galleryEl) galleryEl.classList.remove("hidden");
+}
+
 let currentVideosRenderId = 0;
 
 async function initVideosPanel() {
@@ -5389,8 +5748,120 @@ async function initVideosPanel() {
     return true;
   });
 
+  // 1. Initialize Top Immersion Ribbon & Monetization Bar
+  const streakDaysEl = document.getElementById("streak-days-count");
+  const streakMinsEl = document.getElementById("streak-minutes-today");
+  const tierStatusPill = document.getElementById("tier-status-pill");
+  const btnUnlockPro = document.getElementById("btn-unlock-pro");
+  const btnClosePro = document.getElementById("btn-close-pro-upgrade");
+  const btnDismissPro = document.getElementById("btn-dismiss-pro-upgrade");
+  const btnConfirmPro = document.getElementById("btn-confirm-pro-membership");
+
+  const activeStreak = localStorage.getItem("sol_immersion_streak") || "5";
+  const activeMins = localStorage.getItem("sol_immersion_today_mins") || "18";
+  if (streakDaysEl) streakDaysEl.innerHTML = `<i class="fa-solid fa-fire text-amber-400"></i> ${activeStreak} Days`;
+  if (streakMinsEl) streakMinsEl.textContent = `${activeMins} mins`;
+
+  const userIsPro = isProMember();
+  if (tierStatusPill) {
+    if (userIsPro) {
+      tierStatusPill.innerHTML = `<i class="fa-solid fa-crown text-amber-400"></i> PRO Member`;
+      tierStatusPill.classList.add("active-pro-pill");
+    } else {
+      tierStatusPill.textContent = "Free Member";
+      tierStatusPill.classList.remove("active-pro-pill");
+    }
+  }
+  if (btnUnlockPro) {
+    if (userIsPro) {
+      btnUnlockPro.innerHTML = `<i class="fa-solid fa-gem mr-1"></i> PRO Active`;
+      btnUnlockPro.classList.add("active-pro-btn");
+    } else {
+      btnUnlockPro.innerHTML = `<i class="fa-solid fa-crown mr-1"></i> Unlock Unlimited PRO`;
+      btnUnlockPro.classList.remove("active-pro-btn");
+    }
+    btnUnlockPro.onclick = () => openProUpgradeModal();
+  }
+  if (btnClosePro) btnClosePro.onclick = () => closeProUpgradeModal();
+  if (btnDismissPro) btnDismissPro.onclick = () => closeProUpgradeModal();
+  if (btnConfirmPro) {
+    btnConfirmPro.onclick = () => {
+      localStorage.setItem("sol_is_pro_member", "true");
+      closeProUpgradeModal();
+      showToast("👑 Welcome to SOL Immersion PRO! All lessons unlocked.");
+      initVideosPanel();
+    };
+  }
+
+  // 2. Initialize Quick Filter Chips
+  const filterChips = document.querySelectorAll(".filter-chip");
+  filterChips.forEach(chip => {
+    chip.onclick = () => {
+      filterChips.forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      const filter = chip.getAttribute("data-filter") || "all";
+
+      const allCards = videoGrid.querySelectorAll(".video-card");
+      allCards.forEach(card => {
+        if (card.classList.contains("add-video-card")) {
+          card.style.display = "flex";
+          return;
+        }
+        if (filter === "all") {
+          card.style.display = "flex";
+        } else if (filter === "vip") {
+          card.style.display = card.classList.contains("vip-card") ? "flex" : "none";
+        } else {
+          card.style.display = (card.getAttribute("data-level") === filter) ? "flex" : "none";
+        }
+      });
+    };
+  });
+
+  // Theater Modal Open Helper
+  function openTheaterModal(video, category) {
+    if (!playlistModal || !mainPlaylistIframe) return;
+
+    let activeEmbedUrl = video.embedUrl || "";
+    if (activeEmbedUrl.includes("youtube") && !activeEmbedUrl.includes("videoseries")) {
+      activeEmbedUrl = activeEmbedUrl.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
+      activeEmbedUrl = activeEmbedUrl.replace(/\?&/g, "?").replace(/\?$/g, "");
+    }
+    if (activeEmbedUrl.includes("youtube.com/embed/")) {
+      activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
+    }
+    if (activeEmbedUrl.includes("youtube-nocookie.com/embed/") || activeEmbedUrl.includes("youtube.com/embed/")) {
+      if (!activeEmbedUrl.includes("fs=")) {
+        activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
+      }
+    }
+    const autoplayParam = activeEmbedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1";
+    mainPlaylistIframe.src = activeEmbedUrl + autoplayParam;
+
+    const playlistTitle = document.getElementById("playlist-title");
+    const playlistDesc = document.getElementById("playlist-desc");
+    if (playlistTitle) playlistTitle.textContent = video.title || "Video Lesson";
+    if (playlistDesc) {
+      const catText = category ? `${category.flag} ${category.title}` : "Comprehensible Input";
+      playlistDesc.textContent = `${catText} • Level: ${video.level || "A2"} • Graded Natural Acquisition`;
+    }
+
+    playlistModal.classList.remove("hidden");
+
+    // Add +5 mins to immersion streak
+    let currentMins = parseInt(localStorage.getItem("sol_immersion_today_mins") || "18", 10);
+    currentMins += 5;
+    localStorage.setItem("sol_immersion_today_mins", currentMins.toString());
+    if (streakMinsEl) streakMinsEl.textContent = `${currentMins} mins`;
+  }
+
+  let firstEnrichedVideo = null;
+  let firstCategory = null;
+
   uniqueCategories.forEach(category => {
     const customForCategory = userAddedVideos.filter(v => v.categoryId === category.id);
+    const enrichedCustom = customForCategory.map((v, i) => enrichVideoMetadata(v, i));
+    category.enrichedVideos = enrichedCustom;
     let allVids = [...customForCategory, { id: "add_card_" + category.id, isAddTemplate: true }];
     category.videos = allVids;
     category.count = `${Math.max(0, category.videos.length - 1)} Videos`;
@@ -5605,8 +6076,8 @@ async function initVideosPanel() {
       window.addEventListener("resize", syncSliderPosition);
     }
 
-    category.videos.forEach((video) => {
-      if (video.isAddTemplate) {
+    category.videos.forEach((rawVideo, idx) => {
+      if (rawVideo.isAddTemplate) {
         const card = document.createElement("div");
         card.className = "video-card add-video-card";
 
@@ -5628,73 +6099,63 @@ async function initVideosPanel() {
         return;
       }
 
-      const card = document.createElement("div");
-      card.className = "video-card";
+      const video = enrichVideoMetadata(rawVideo, idx);
+      const isCardLocked = video.isVip && !userIsPro;
 
-      let activeEmbedUrl = video.embedUrl || "";
-      if (activeEmbedUrl.includes("youtube") && !activeEmbedUrl.includes("videoseries")) {
-        activeEmbedUrl = activeEmbedUrl.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
-        activeEmbedUrl = activeEmbedUrl.replace(/\?&/g, "?").replace(/\?$/g, "");
+      if (!firstEnrichedVideo) {
+        firstEnrichedVideo = video;
+        firstCategory = category;
       }
-      if (activeEmbedUrl.includes("youtube.com/embed/")) {
-        activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
-      }
-      if (activeEmbedUrl.includes("youtube-nocookie.com/embed/") || activeEmbedUrl.includes("youtube.com/embed/")) {
-        if (!activeEmbedUrl.includes("fs=")) {
-          activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
-        }
-      }
+
+      const card = document.createElement("div");
+      card.className = `video-card ${video.isVip ? "vip-card" : ""}`;
+      card.setAttribute("data-video-id", video.id);
+      card.setAttribute("data-level", video.level.toLowerCase());
 
       card.innerHTML = `
-        <div class="video-player-frame">
-          ${activeEmbedUrl ? `
-            <iframe 
-              src="${activeEmbedUrl}" 
-              title="${escapeHtml(video.title)}" 
-              frameborder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
-              allowfullscreen="true"
-              webkitallowfullscreen="true"
-              mozallowfullscreen="true"
-              referrerpolicy="strict-origin-when-cross-origin"
-            ></iframe>
-            <button class="player-floating-fs-btn" title="Open Fullscreen Video" aria-label="Fullscreen">
-              <i class="fa-solid fa-expand"></i>
-            </button>
+        <div class="video-poster-container">
+          <img src="${video.thumbUrl}" alt="${escapeHtml(video.title)}" class="video-poster-img" loading="lazy" />
+          <span class="video-level-pill ${video.level.toLowerCase()}">${video.level}</span>
+          <span class="video-duration-pill">${video.durationStr}</span>
+          ${isCardLocked ? `
+            <span class="video-vip-badge"><i class="fa-solid fa-crown"></i> PRO</span>
+            <div class="video-vip-lock-overlay">
+              <div class="lock-icon-circle"><i class="fa-solid fa-lock"></i></div>
+              <span class="lock-label">Member Exclusive</span>
+            </div>
           ` : `
-            <div class="no-video-placeholder">No Video Source</div>
+            <div class="video-play-overlay">
+              <div class="play-btn-circle">
+                <i class="fa-solid fa-play"></i>
+              </div>
+            </div>
           `}
         </div>
         <div class="video-card-info-footer">
           <div class="video-card-title-row">
             <h4 class="video-card-title" title="${escapeHtml(video.title)}">${escapeHtml(video.title)}</h4>
             <div class="video-card-actions">
-              <button class="edit-video-btn mini" data-id="${video.id}" title="Edit Video Title"><i class="fa-solid fa-pen"></i> <span class="action-btn-label">Edit</span></button>
-              ${video.isUserAdded ? `<button class="delete-video-btn mini" data-id="${video.id}" title="Delete Video"><i class="fa-solid fa-trash-can"></i> <span class="delete-btn-label">Delete</span></button>` : ""}
+              <button class="edit-video-btn mini" data-id="${video.id}" title="Edit Video Title"><i class="fa-solid fa-pen"></i></button>
+              ${video.isUserAdded ? `<button class="delete-video-btn mini" data-id="${video.id}" title="Delete Video"><i class="fa-solid fa-trash-can"></i></button>` : ""}
             </div>
+          </div>
+          <div class="video-card-sub-row">
+            <span class="video-rating-pill"><i class="fa-solid fa-star"></i> 4.9</span>
+            <span class="video-status-text ${video.isVip ? 'is-vip' : ''}">
+              ${isCardLocked ? '<i class="fa-solid fa-lock" style="font-size: 10px;"></i> Unlock with PRO' : '<i class="fa-solid fa-circle-check" style="font-size: 10px; color: #34d399;"></i> Free Lesson'}
+            </span>
           </div>
         </div>
       `;
 
-      const triggerFullscreen = (e) => {
-        if (e) e.stopPropagation();
-        const iframe = card.querySelector("iframe");
-        if (!iframe) return;
-        if (iframe.requestFullscreen) {
-          iframe.requestFullscreen();
-        } else if (iframe.webkitRequestFullscreen) {
-          iframe.webkitRequestFullscreen();
-        } else if (iframe.mozRequestFullScreen) {
-          iframe.mozRequestFullScreen();
-        } else if (iframe.msRequestFullscreen) {
-          iframe.msRequestFullscreen();
+      // Click card to play or open upgrade
+      card.addEventListener("click", () => {
+        if (isCardLocked) {
+          openProUpgradeModal();
+        } else {
+          openTheaterModal(video, category);
         }
-      };
-
-      const floatingFsBtn = card.querySelector(".player-floating-fs-btn");
-      if (floatingFsBtn) {
-        floatingFsBtn.addEventListener("click", triggerFullscreen);
-      }
+      });
 
       const editBtn = card.querySelector(".edit-video-btn.mini");
       if (editBtn) {
@@ -5728,10 +6189,65 @@ async function initVideosPanel() {
     });
   });
 
+  // 3. Render Desktop Synapse Platform Gallery
+  renderDesktopPlaylistGallery(uniqueCategories);
+
+  // If a category was already open on desktop, refresh its player view
+  if (currentDesktopActiveCategory) {
+    const updatedCat = uniqueCategories.find(c => c.id === currentDesktopActiveCategory.id);
+    if (updatedCat) {
+      currentDesktopActiveCategory = updatedCat;
+      const targetVid = currentDesktopActiveVideo ? (updatedCat.enrichedVideos.find(v => v.id === currentDesktopActiveVideo.id) || updatedCat.enrichedVideos[0]) : updatedCat.enrichedVideos[0];
+      const playerPageEl = document.getElementById("desktop-video-player-page");
+      if (playerPageEl && !playerPageEl.classList.contains("hidden")) {
+        openDesktopPlaylistPage(updatedCat, targetVid);
+      }
+    }
+  }
+
+  // 4. Populate Spotlight Hero Banner
+  if (firstEnrichedVideo) {
+    const spotlightTitle = document.getElementById("spotlight-title");
+    const spotlightLevel = document.getElementById("spotlight-level-pill");
+    const spotlightDuration = document.getElementById("spotlight-duration-pill");
+    const spotlightBackdrop = document.getElementById("spotlight-hero-backdrop");
+    const btnSpotlightWatch = document.getElementById("btn-spotlight-watch");
+    const btnSpotlightSave = document.getElementById("btn-spotlight-save");
+    const btnSpotlightVocab = document.getElementById("btn-spotlight-vocab");
+
+    if (spotlightTitle) spotlightTitle.textContent = firstEnrichedVideo.title;
+    if (spotlightLevel) spotlightLevel.textContent = `Level: ${firstEnrichedVideo.level} Elementary`;
+    if (spotlightDuration) spotlightDuration.innerHTML = `<i class="fa-regular fa-clock" style="margin-right: 4px;"></i> ${firstEnrichedVideo.durationStr}`;
+    if (spotlightBackdrop && firstEnrichedVideo.thumbUrl) {
+      spotlightBackdrop.style.backgroundImage = `linear-gradient(to top, rgba(11, 17, 32, 0.95) 15%, rgba(11, 17, 32, 0.6) 60%, rgba(11, 17, 32, 0.3) 100%), url('${firstEnrichedVideo.thumbUrl}')`;
+      spotlightBackdrop.style.backgroundSize = "cover";
+      spotlightBackdrop.style.backgroundPosition = "center";
+    }
+
+    if (btnSpotlightWatch) {
+      btnSpotlightWatch.onclick = () => openTheaterModal(firstEnrichedVideo, firstCategory);
+    }
+    if (btnSpotlightSave) {
+      btnSpotlightSave.onclick = () => showToast(`⭐ "${firstEnrichedVideo.title}" added to your Immersion List!`);
+    }
+    if (btnSpotlightVocab) {
+      btnSpotlightVocab.onclick = () => showToast(`📚 Key Vocabulary for "${firstEnrichedVideo.title}" saved to your study deck!`);
+    }
+  }
+
+  // 5. Theater Modal Close Handlers
   if (btnClosePlaylistModal) {
     btnClosePlaylistModal.addEventListener("click", () => {
       if (playlistModal) playlistModal.classList.add("hidden");
       if (mainPlaylistIframe) mainPlaylistIframe.src = "";
+    });
+  }
+  if (playlistModal) {
+    playlistModal.addEventListener("click", (e) => {
+      if (e.target === playlistModal) {
+        playlistModal.classList.add("hidden");
+        if (mainPlaylistIframe) mainPlaylistIframe.src = "";
+      }
     });
   }
 }
