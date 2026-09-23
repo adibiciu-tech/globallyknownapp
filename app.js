@@ -5438,62 +5438,108 @@ function renderDesktopPlaylistGallery(categories) {
   categories.forEach(cat => {
     const vids = cat.enrichedVideos || [];
     const count = vids.length;
-    const gradient = CATEGORY_GRADIENTS[cat.id] || "linear-gradient(135deg, #1e293b, #334155)";
+    const firstVid = vids[0];
+    const thumbUrl = (firstVid && firstVid.thumbUrl) ? firstVid.thumbUrl : "https://img.youtube.com/vi/RJbUtcaoNCY/hqdefault.jpg";
+    const levelStr = firstVid ? (firstVid.level || "A1") : "A1";
 
-    // Get up to 4 thumbnails for 2x2 collage mosaic
-    const mosaicThumbnails = [];
-    for (let i = 0; i < 4; i++) {
-      if (vids[i] && vids[i].thumbUrl) {
-        mosaicThumbnails.push(vids[i].thumbUrl);
-      } else if (vids.length > 0 && vids[0].thumbUrl) {
-        mosaicThumbnails.push(vids[0].thumbUrl);
+    // Build the 3 mini previews strip
+    let miniPreviewsHtml = "";
+    for (let i = 0; i < 3; i++) {
+      const mv = vids[i];
+      if (mv && mv.thumbUrl) {
+        const num = (i + 1) < 10 ? `0${i + 1}` : `${i + 1}`;
+        const durBadge = mv.durationStr ? `<span class="yt-mini-badge">${mv.durationStr}</span>` : `<span class="yt-mini-badge">#${num}</span>`;
+        miniPreviewsHtml += `
+          <div class="yt-mini-thumb-item" data-mini-idx="${i}" title="${escapeHtml(mv.title || 'Lesson ' + (i + 1))}">
+            <img src="${mv.thumbUrl}" alt="${escapeHtml(mv.title || '')}" loading="lazy" />
+            ${durBadge}
+          </div>
+        `;
       } else {
-        mosaicThumbnails.push("");
+        miniPreviewsHtml += `
+          <div class="yt-mini-thumb-item yt-mini-empty-slot" title="Add Video">
+            <i class="fa-solid fa-plus"></i>
+            <span>Lesson ${i + 1}</span>
+          </div>
+        `;
       }
     }
 
     const card = document.createElement("div");
-    card.className = "playlist-window-card";
+    card.className = "yt-clean-playlist-card";
     card.setAttribute("data-category-id", cat.id);
 
-    const mosaicHtml = mosaicThumbnails.map(thumb => {
-      if (thumb) {
-        return `<div class="mosaic-tile"><img src="${thumb}" alt="Video preview" loading="lazy" /></div>`;
-      }
-      return `<div class="mosaic-tile"><div class="mosaic-tile-placeholder"><i class="fa-solid fa-play"></i></div></div>`;
-    }).join("");
-
     card.innerHTML = `
-      <div class="playlist-card-top-split">
-        <div class="card-banner-col" style="background: ${gradient};">
-          <div class="card-banner-badge">
-            <i class="fa-solid fa-play"></i> PLAYLIST
-          </div>
-          <div>
-            <div class="card-banner-flag">${cat.flag}</div>
-            <h3 class="card-banner-title-text">${escapeHtml((cat.title || "").toUpperCase())}</h3>
-          </div>
+      <!-- Top 16:9 Hero Thumbnail -->
+      <div class="yt-hero-preview-box">
+        <img src="${thumbUrl}" alt="${escapeHtml(cat.title)}" class="yt-hero-img" loading="lazy" />
+        <div class="yt-hero-cat-tag">
+          <span>${cat.flag}</span> <span>${escapeHtml(cat.title)}</span>
         </div>
-        <div class="card-mosaic-col">
-          ${mosaicHtml}
+        <div class="yt-hero-count-badge">
+          <i class="fa-solid fa-list-ul"></i> ${count} videos
+        </div>
+        <div class="yt-hero-hover-overlay">
+          <div class="yt-play-all-circle">
+            <i class="fa-solid fa-play"></i>
+          </div>
+          <span class="yt-play-all-text">PLAY ALL</span>
         </div>
       </div>
-      <div class="playlist-card-bottom-info">
-        <div class="card-info-meta">
-          <h4 class="card-info-title">${cat.flag} ${escapeHtml(cat.title)}</h4>
-          <span class="card-info-sub">
-            <span class="card-info-count">${count} Videos</span> • By Globally Known
-          </span>
+
+      <!-- Middle 3-Video Peek Strip -->
+      <div class="yt-mini-previews-strip">
+        ${miniPreviewsHtml}
+      </div>
+
+      <!-- Bottom Metadata & Title -->
+      <div class="yt-card-bottom-info">
+        <div class="yt-card-header-row">
+          <h3 class="yt-card-clean-title">${cat.flag} ${escapeHtml(cat.title)}</h3>
+          <button type="button" class="yt-card-options-btn" title="Add video to ${escapeHtml(cat.title)}">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+          </button>
         </div>
-        <div class="card-open-arrow">
-          <i class="fa-solid fa-chevron-right"></i>
+        <div class="yt-card-sub-meta">
+          <span>${count} Videos</span> • <span class="meta-highlight">Level ${levelStr}</span> • <span>Globally Known</span>
+        </div>
+        <div class="yt-card-action-bar">
+          <span class="yt-card-action-link">
+            <i class="fa-solid fa-circle-play"></i> Open Playlist
+          </span>
+          <span class="yt-card-arrow-pill">
+            <i class="fa-solid fa-arrow-right"></i>
+          </span>
         </div>
       </div>
     `;
 
+    // Click on entire card opens playlist with first video
     card.addEventListener("click", () => {
       openDesktopPlaylistPage(cat);
     });
+
+    // Clicking mini preview items opens that specific video directly
+    card.querySelectorAll(".yt-mini-thumb-item[data-mini-idx]").forEach(miniItem => {
+      miniItem.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const idx = parseInt(miniItem.getAttribute("data-mini-idx"), 10);
+        if (vids[idx]) {
+          openDesktopPlaylistPage(cat, vids[idx]);
+        } else {
+          openDesktopPlaylistPage(cat);
+        }
+      });
+    });
+
+    // Clicking options button opens add video modal
+    const optionsBtn = card.querySelector(".yt-card-options-btn");
+    if (optionsBtn) {
+      optionsBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openAddVideoModal(cat.id);
+      });
+    }
 
     desktopGrid.appendChild(card);
   });
