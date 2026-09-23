@@ -302,37 +302,43 @@
 
 .desktop-categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
-  gap: 0.95rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.15rem;
   width: 100%;
 }
 
-/* Modern YouTube-Inspired Clean Playlist Card (Compact 3-Row Sizing) */
+@media (max-width: 1050px) {
+  .desktop-categories-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Modern YouTube-Inspired Clean Playlist Card (3 Columns Layout) */
 .yt-clean-playlist-card {
   background: #0f172a;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 8px;
+  border-radius: 15px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   cursor: pointer;
   position: relative;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
   user-select: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.38);
 }
 
 .yt-clean-playlist-card:hover {
   transform: translateY(-3px);
   border-color: rgba(59, 130, 246, 0.45);
-  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.65), 0 0 18px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 14px 32px -6px rgba(0, 0, 0, 0.68), 0 0 20px rgba(59, 130, 246, 0.15);
 }
 
 /* 1. Top 16:9 Hero Thumbnail */
 .yt-hero-preview-box {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 10px;
+  border-radius: 11px;
   overflow: hidden;
   position: relative;
   background: #1e293b;
@@ -352,15 +358,15 @@
 
 .yt-hero-cat-tag {
   position: absolute;
-  top: 7px;
-  left: 7px;
+  top: 8px;
+  left: 8px;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #f8fafc;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 999px;
   z-index: 2;
   display: flex;
@@ -374,15 +380,15 @@
 
 .yt-hero-count-badge {
   position: absolute;
-  bottom: 7px;
-  right: 7px;
+  bottom: 8px;
+  right: 8px;
   background: rgba(0, 0, 0, 0.88);
   backdrop-filter: blur(4px);
   color: #ffffff;
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   font-weight: 700;
-  padding: 3px 7px;
-  border-radius: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -399,7 +405,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   opacity: 0;
   transition: opacity 0.22s ease;
   z-index: 3;
@@ -410,16 +416,16 @@
 }
 
 .yt-play-all-circle {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #3b82f6;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.65);
+  font-size: 1.05rem;
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.65);
   padding-left: 2px;
   transition: transform 0.2s ease;
 }
@@ -430,7 +436,7 @@
 
 .yt-play-all-text {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: #ffffff;
@@ -442,14 +448,14 @@
 .yt-mini-previews-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-top: 7px;
-  margin-bottom: 8px;
+  gap: 7px;
+  margin-top: 8px;
+  margin-bottom: 10px;
 }
 
 .yt-mini-thumb-item {
   aspect-ratio: 16 / 9;
-  border-radius: 6px;
+  border-radius: 7px;
   overflow: hidden;
   position: relative;
   background: #1e293b;
@@ -476,9 +482,9 @@
   right: 3px;
   background: rgba(0, 0, 0, 0.88);
   color: #e2e8f0;
-  font-size: 0.58rem;
+  font-size: 0.60rem;
   font-weight: 700;
-  padding: 1px 3px;
+  padding: 1px 4px;
   border-radius: 3px;
   line-height: 1;
 }
@@ -489,13 +495,13 @@
   justify-content: center;
   flex-direction: column;
   color: #475569;
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   gap: 2px;
   background: rgba(255, 255, 255, 0.02);
 }
 
 .yt-mini-empty-slot i {
-  font-size: 0.65rem;
+  font-size: 0.70rem;
   opacity: 0.5;
 }
 
@@ -503,7 +509,7 @@
 .yt-card-bottom-info {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   padding: 0 2px 2px;
 }
 
@@ -516,7 +522,7 @@
 
 .yt-card-clean-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.92rem;
+  font-size: 0.98rem;
   font-weight: 700;
   color: #f8fafc;
   line-height: 1.25;
@@ -534,9 +540,9 @@
   border: none;
   color: #64748b;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 2px 5px;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   transition: color 0.15s ease, background 0.15s ease;
   flex-shrink: 0;
 }
@@ -550,7 +556,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: #94a3b8;
 }
 
@@ -569,12 +575,12 @@
 }
 
 .yt-card-action-link {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #94a3b8;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   transition: color 0.18s ease;
 }
 
@@ -583,8 +589,8 @@
 }
 
 .yt-card-arrow-pill {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -592,7 +598,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   transition: all 0.2s ease;
 }
 
