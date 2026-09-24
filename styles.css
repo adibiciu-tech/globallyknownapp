@@ -1951,38 +1951,6 @@ body {
   50% { transform: translateY(-2px) scale(1.05); }
 }
 
-/* Subtle typing dots wave in chat bubble */
-.sol-thinking-bubble-dots {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0.35rem 0.25rem;
-}
-
-.sol-thinking-bubble-dots .s-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent-yellow, #f6ca21);
-  opacity: 0.4;
-  animation: solBubbleWave 1.4s infinite ease-in-out both;
-}
-
-.sol-thinking-bubble-dots .s-dot:nth-child(1) { animation-delay: -0.32s; }
-.sol-thinking-bubble-dots .s-dot:nth-child(2) { animation-delay: -0.16s; }
-.sol-thinking-bubble-dots .s-dot:nth-child(3) { animation-delay: 0s; }
-
-@keyframes solBubbleWave {
-  0%, 80%, 100% {
-    transform: scale(0.65);
-    opacity: 0.35;
-  }
-  40% {
-    transform: scale(1.15);
-    opacity: 1;
-    filter: drop-shadow(0 0 6px var(--glow-color-1, rgba(246, 202, 33, 0.8)));
-  }
-}
 
 /* Sol Mascot & Entrance Smooth Fade-In Animation (Standard Navigation) */
 @keyframes solFadeIn {
@@ -2093,7 +2061,6 @@ body {
 :root[data-theme="dark"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="dark"] .sol-companion-svg circle.sol-pupil-highlight { fill: #131314 !important; }
 :root[data-theme="dark"] .sol-think-dot { fill: #f6ca21 !important; }
-:root[data-theme="dark"] .sol-thinking-bubble-dots .s-dot { background-color: #f6ca21 !important; }
 
 :root[data-theme="cyan"] .sol-eye-icon-svg path,
 :root[data-theme="cyan"] .sol-eye-icon-svg line,
@@ -2106,7 +2073,6 @@ body {
 :root[data-theme="cyan"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="cyan"] .sol-companion-svg circle.sol-pupil-highlight { fill: #081622 !important; }
 :root[data-theme="cyan"] .sol-think-dot { fill: #00e5ff !important; filter: drop-shadow(0 0 3px rgba(0, 229, 255, 0.85)) !important; }
-:root[data-theme="cyan"] .sol-thinking-bubble-dots .s-dot { background-color: #00e5ff !important; }
 
 :root[data-theme="emerald"] .sol-eye-icon-svg path,
 :root[data-theme="emerald"] .sol-eye-icon-svg line,
@@ -2119,7 +2085,6 @@ body {
 :root[data-theme="emerald"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="emerald"] .sol-companion-svg circle.sol-pupil-highlight { fill: #062016 !important; }
 :root[data-theme="emerald"] .sol-think-dot { fill: #10b981 !important; filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.85)) !important; }
-:root[data-theme="emerald"] .sol-thinking-bubble-dots .s-dot { background-color: #10b981 !important; }
 
 :root[data-theme="purple"] .sol-eye-icon-svg path,
 :root[data-theme="purple"] .sol-eye-icon-svg line,
@@ -2132,7 +2097,6 @@ body {
 :root[data-theme="purple"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="purple"] .sol-companion-svg circle.sol-pupil-highlight { fill: #160a24 !important; }
 :root[data-theme="purple"] .sol-think-dot { fill: #c084fc !important; filter: drop-shadow(0 0 3px rgba(192, 132, 252, 0.85)) !important; }
-:root[data-theme="purple"] .sol-thinking-bubble-dots .s-dot { background-color: #c084fc !important; }
 
 :root[data-theme="crimson"] .sol-eye-icon-svg path,
 :root[data-theme="crimson"] .sol-eye-icon-svg line,
@@ -2145,7 +2109,6 @@ body {
 :root[data-theme="crimson"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="crimson"] .sol-companion-svg circle.sol-pupil-highlight { fill: #200810 !important; }
 :root[data-theme="crimson"] .sol-think-dot { fill: #f43f5e !important; filter: drop-shadow(0 0 3px rgba(244, 63, 94, 0.85)) !important; }
-:root[data-theme="crimson"] .sol-thinking-bubble-dots .s-dot { background-color: #f43f5e !important; }
 
 :root[data-theme="rainbow"] .sol-eye-icon-wrapper,
 :root[data-theme="rainbow"] #panel-sol-chat.active:not(.has-messages) .sol-eye-icon-wrapper,

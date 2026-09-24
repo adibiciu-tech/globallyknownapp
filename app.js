@@ -627,7 +627,7 @@ function bindSolCompanionEvents(div) {
 
     if (holdTimer) clearTimeout(holdTimer);
 
-    // 1-second hold threshold to unlock free movement
+    // 0.4-second hold threshold to unlock free movement
     holdTimer = setTimeout(() => {
       isHeld1s = true;
       isDragging = true;
@@ -656,12 +656,12 @@ function bindSolCompanionEvents(div) {
       try { div.setPointerCapture(e.pointerId); } catch (err) {}
 
       showCompanionSpeech("Move me wherever you want!", 2200);
-    }, 1000);
+    }, 400);
   });
 
   const onPointerMove = (e) => {
     if (!isHeld1s) {
-      // If moved > 10px before the 1 second threshold, user is probably scrolling page
+      // If moved > 10px before the 0.4 second threshold, user is probably scrolling page
       const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
       if (dist > 10) {
         if (holdTimer) {
@@ -1042,28 +1042,33 @@ function initStartHerePanel() {
     // Append to home conversation history
     homeConversationHistory.push({ role: "user", content: query, parts: [{ text: query }] });
 
-    // 2. Render Gemini AI Response Container
-    const aiDiv = document.createElement("div");
-    aiDiv.className = "gemini-inline-message";
-    aiDiv.innerHTML = `
-      <div class="gemini-ai-row">
-        <div class="gemini-ai-content-col">
-          <div class="gemini-ai-response">
-            <div class="gemini-ai-body">
-              <span class="sol-thinking-bubble-dots"><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span></span>
+    // 2. Activate mini Sol orbital thinking dots animation
+    setSolThinking(true);
+
+    let aiDiv = null;
+    let aiBody = null;
+    const ensureAiDiv = () => {
+      if (!aiDiv) {
+        aiDiv = document.createElement("div");
+        aiDiv.className = "gemini-inline-message";
+        aiDiv.innerHTML = `
+          <div class="gemini-ai-row">
+            <div class="gemini-ai-content-col">
+              <div class="gemini-ai-response">
+                <div class="gemini-ai-body"></div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    `;
-    conversationEl.appendChild(aiDiv);
-    if (typeof attachSolToLastMessage === "function") {
-      attachSolToLastMessage();
-    }
-    setSolThinking(true);
-    aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        `;
+        conversationEl.appendChild(aiDiv);
+        aiBody = aiDiv.querySelector(".gemini-ai-body");
+        if (typeof attachSolToLastMessage === "function") {
+          attachSolToLastMessage();
+        }
+      }
+      return { aiDiv, aiBody };
+    };
 
-    const aiBody = aiDiv.querySelector(".gemini-ai-body");
     let responseText = "";
 
     const activeName = getActiveUserName();
@@ -1092,6 +1097,7 @@ Key Conversational Principles:
         activeModel || "gemini-3.6-flash",
         (chunk) => {
           setSolThinking(false);
+          const { aiDiv, aiBody } = ensureAiDiv();
           if (responseText === "") aiBody.innerHTML = "";
           responseText += chunk;
           aiBody.innerHTML = marked.parse(responseText) + `<span class="cursor-blink"></span>`;
@@ -1099,6 +1105,7 @@ Key Conversational Principles:
         },
         (errorMsg) => {
           setSolThinking(false);
+          const { aiDiv, aiBody } = ensureAiDiv();
           aiBody.innerHTML = `
             <div style="color: #ef4444; font-weight: 500; padding: 0.25rem 0;">
               <i class="fa-solid fa-circle-exclamation"></i> <strong>Gemini API Error:</strong> ${escapeHtml(errorMsg)}
@@ -1108,10 +1115,12 @@ Key Conversational Principles:
               </div>
             </div>
           `;
+          aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
         },
         (finalText) => {
           setSolThinking(false);
           if (finalText) {
+            const { aiDiv, aiBody } = ensureAiDiv();
             responseText = finalText;
             aiBody.innerHTML = marked.parse(responseText);
             aiBody.setAttribute("data-raw-text", responseText);
@@ -1122,7 +1131,7 @@ Key Conversational Principles:
         }
       );
 
-      if (responseText && !aiBody.querySelector(".gemini-ai-actions")) {
+      if (responseText && aiBody && !aiBody.querySelector(".gemini-ai-actions")) {
         aiBody.innerHTML = marked.parse(responseText);
         aiBody.setAttribute("data-raw-text", responseText);
         if (!homeConversationHistory.some(m => m.role === "model" && m.content === responseText)) {
@@ -1138,6 +1147,7 @@ Key Conversational Principles:
       }
     } catch (err) {
       setSolThinking(false);
+      const { aiDiv, aiBody } = ensureAiDiv();
       aiBody.innerHTML = `
         <div style="color: #ef4444; font-weight: 500;">
           <i class="fa-solid fa-circle-exclamation"></i> <strong>Connection Error:</strong> ${escapeHtml(err.message || String(err))}
