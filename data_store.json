@@ -1378,347 +1378,10 @@
       "addedAt": 1790201760136
     }
   ],
-  "conversations": [
-    {
-      "id": "conv_1789757196340",
-      "title": "Hello Sol How Are",
-      "icon": "fa-comments",
-      "type": "chat",
-      "history": [
-        {
-          "role": "user",
-          "content": "Hello Sol, how are you?",
-          "parts": [
-            {
-              "text": "Hello Sol, how are you?"
-            }
-          ]
-        },
-        {
-          "role": "model",
-          "content": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?",
-          "parts": [
-            {
-              "text": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?"
-            }
-          ]
-        }
-      ],
-      "createdAt": 1789757196341
-    },
-    {
-      "id": "conv_1789757134313",
-      "title": "Hello Sol How Are",
-      "icon": "fa-comments",
-      "type": "chat",
-      "history": [
-        {
-          "role": "user",
-          "content": "Hello Sol, how are you?",
-          "parts": [
-            {
-              "text": "Hello Sol, how are you?"
-            }
-          ]
-        },
-        {
-          "role": "model",
-          "content": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?",
-          "parts": [
-            {
-              "text": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?"
-            }
-          ]
-        }
-      ],
-      "createdAt": 1789757134313
-    },
-    {
-      "id": "conv_1789039283916",
-      "title": "Test 1",
-      "icon": "fa-comments",
-      "type": "chat",
-      "history": [
-        {
-          "role": "user",
-          "content": "test 1",
-          "parts": [
-            {
-              "text": "test 1"
-            }
-          ]
-        },
-        {
-          "role": "model",
-          "content": "Loud and clear! Test 1 successful. 😉 \n\nHow am I looking so far? Everything coming through okay on your end? Ready to dive into something real, or are we still in the calibration phase?",
-          "parts": [
-            {
-              "text": "Loud and clear! Test 1 successful. 😉 \n\nHow am I looking so far? Everything coming through okay on your end? Ready to dive into something real, or are we still in the calibration phase?"
-            }
-          ]
-        }
-      ],
-      "createdAt": 1789039283917
-    },
-    {
-      "id": "conv_1789038439511",
-      "title": "🗣️ Testing Out Conversation",
-      "icon": "fa-comments",
-      "type": "chat",
-      "history": [
-        {
-          "role": "user",
-          "content": "hello sol! How's it going?",
-          "parts": [
-            {
-              "text": "hello sol! How's it going?"
-            }
-          ]
-        },
-        {
-          "role": "model",
-          "content": "Hey Adrian! It's going great, thanks for asking. I'm feeling sharp and ready to roll. How about you? How's your day treating you so far?",
-          "parts": [
-            {
-              "text": "Hey Adrian! It's going great, thanks for asking. I'm feeling sharp and ready to roll. How about you? How's your day treating you so far?"
-            }
-          ]
-        },
-        {
-          "role": "user",
-          "content": "Really good! I'm whorking on this platform while at work!",
-          "parts": [
-            {
-              "text": "Really good! I'm whorking on this platform while at work!"
-            }
-          ]
-        },
-        {
-          "role": "model",
-          "content": "Haha, living life on the edge, I see! Don't let your boss catch you! 😉 \n\nI'm glad you're having a good day, though. Is it one of those \"slow\" days where you can actually sneak in a little chat, or are you just a master of multitasking?",
-          "parts": [
-            {
-              "text": "Haha, living life on the edge, I see! Don't let your boss catch you! 😉 \n\nI'm glad you're having a good day, though. Is it one of those \"slow\" days where you can actually sneak in a little chat, or are you just a master of multitasking?"
-            }
-          ]
-        },
-        {
-          "role": "user",
-          "content": "using this platform to make sure everything works well and if there something to fix or improve to be aware of it!",
-          "parts": [
-            {
-              "text": "using this platform to make sure everything works well and if there something to fix or improve to be aware of it!"
-            }
-          ]
-        },
-        {
-          "role": "model",
-          "content": "Ah, I see! So you're basically on a secret mission to stress-test the system. I love that energy! 🕵️‍♂️\n\nConsider me your partner-in-crime for this. If anything feels clunky, if my tone gets a bit too \"robotic,\" or if you spot any weird glitches, just call me out on it. I'm all about that continuous improvement life.\n\nIs there anything specific you're keeping an eye on right now—like how I handle complex questions or my conversational flow—or are you just throwing things at me to see how I react?",
-          "parts": [
-            {
-              "text": "Ah, I see! So you're basically on a secret mission to stress-test the system. I love that energy! 🕵️‍♂️\n\nConsider me your partner-in-crime for this. If anything feels clunky, if my tone gets a bit too \"robotic,\" or if you spot any weird glitches, just call me out on it. I'm all about that continuous improvement life.\n\nIs there anything specific you're keeping an eye on right now—like how I handle complex questions or my conversational flow—or are you just throwing things at me to see how I react?"
-            }
-          ]
-        }
-      ],
-      "createdAt": 1789038439511,
-      "isCustomNamed": true,
-      "isPinned": true
-    }
-  ],
+  "conversations": [],
   "progress": {},
-  "users": [
-    {
-      "id": "usr_a2942620730e",
-      "name": "Adrian Milla",
-      "email": "adrian@globallyknown.app",
-      "passwordHash": "b8c65992dcfcb0e25093b834c4472a9a:a35fa381b64b0685e431241cbfa144578ddebb081761813db102f1443cbbe384",
-      "picture": "https://ui-avatars.com/api/?name=Adrian%20Milla&background=4f46e5&color=fff&bold=true",
-      "role": "free",
-      "createdAt": 1789288148262
-    },
-    {
-      "id": "usr_g_7ab895a45a",
-      "name": "Adrian Google",
-      "email": "adrian.google@gmail.com",
-      "picture": "https://ui-avatars.com/api/?name=Adrian%20Google&background=4285F4&color=fff&bold=true",
-      "role": "free",
-      "authProvider": "google",
-      "createdAt": 1789288194046
-    },
-    {
-      "id": "usr_g_dbf11f6dc3",
-      "name": "Adrian Milla",
-      "email": "adrian.milla@gmail.com",
-      "picture": "https://ui-avatars.com/api/?name=Adrian%20Milla&background=4285F4&color=fff&bold=true",
-      "role": "free",
-      "authProvider": "google",
-      "createdAt": 1789759705447
-    }
-  ],
-  "saving_lists": [
-    {
-      "name": "🟤 Brown",
-      "words": [
-        {
-          "word": "proud",
-          "colorCategory": "BROWN COW",
-          "stressedVowel": "ou",
-          "definition": "Feeling honoured"
-        },
-        {
-          "word": "surround",
-          "colorCategory": "BROWN COW",
-          "stressedVowel": "ou",
-          "definition": "Anything, such as a fence or border"
-        },
-        {
-          "word": "encounter",
-          "colorCategory": "BROWN COW",
-          "stressedVowel": "ou",
-          "definition": "A meeting, especially one"
-        },
-        {
-          "word": "trousers",
-          "colorCategory": "BROWN COW",
-          "stressedVowel": "ou",
-          "definition": "An article of clothing"
-        },
-        {
-          "word": "mountain",
-          "colorCategory": "BROWN COW",
-          "stressedVowel": "ou",
-          "definition": "An elevation of land of considerable dimensions"
-        },
-        {
-          "word": "stupid",
-          "colorCategory": "BLUE MOON",
-          "stressedVowel": "u",
-          "definition": "A stupid person"
-        }
-      ],
-      "id": "list_1_1789506035"
-    },
-    {
-      "name": "⚪ Silver Pin",
-      "words": [
-        {
-          "word": "delivery",
-          "colorCategory": "SILVER PIN",
-          "stressedVowel": "i",
-          "definition": "Conveying something"
-        }
-      ],
-      "id": "list_2_1789506035"
-    },
-    {
-      "name": "🟣 Purple",
-      "words": [
-        {
-          "word": "urban",
-          "colorCategory": "PURPLE SHIRT",
-          "stressedVowel": "ur",
-          "definition": "Related to the"
-        },
-        {
-          "word": "observe",
-          "colorCategory": "PURPLE SHIRT",
-          "stressedVowel": "er",
-          "definition": "To notice or view, especially carefully or with"
-        }
-      ],
-      "id": "list_3_1789506035"
-    },
-    {
-      "name": "🟡 Yellow Cup",
-      "words": [],
-      "id": "list_4_1789506035"
-    }
-  ],
+  "users": [],
   "user_progress": {
-    "guest": {
-      "email": "guest",
-      "saving_lists": [
-        {
-          "name": "🟤 Brown",
-          "words": [
-            {
-              "word": "proud",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "Feeling honoured"
-            },
-            {
-              "word": "surround",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "Anything, such as a fence or border"
-            },
-            {
-              "word": "encounter",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "A meeting, especially one"
-            },
-            {
-              "word": "trousers",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "An article of clothing"
-            },
-            {
-              "word": "mountain",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "An elevation of land of considerable dimensions"
-            },
-            {
-              "word": "stupid",
-              "colorCategory": "BLUE MOON",
-              "stressedVowel": "u",
-              "definition": "A stupid person"
-            }
-          ],
-          "id": "list_1"
-        },
-        {
-          "name": "⚪ Silver Pin",
-          "words": [
-            {
-              "word": "delivery",
-              "colorCategory": "SILVER PIN",
-              "stressedVowel": "i",
-              "definition": "Conveying something"
-            }
-          ],
-          "id": "list_2"
-        },
-        {
-          "name": "🟣 Purple",
-          "words": [
-            {
-              "word": "urban",
-              "colorCategory": "PURPLE SHIRT",
-              "stressedVowel": "ur",
-              "definition": "Related to the"
-            },
-            {
-              "word": "observe",
-              "colorCategory": "PURPLE SHIRT",
-              "stressedVowel": "er",
-              "definition": "To notice or view, especially carefully or with"
-            }
-          ],
-          "id": "list_3"
-        },
-        {
-          "name": "🟡 Yellow Cup",
-          "words": [],
-          "id": "list_4"
-        }
-      ],
-      "history": []
-    },
     "adrian.milla@gmail.com": {
       "email": "adrian.milla@gmail.com",
       "saving_lists": [
@@ -1802,91 +1465,8 @@
       ],
       "history": []
     },
-    "adrian@test.com": {
-      "email": "adrian@test.com",
-      "saving_lists": [
-        {
-          "name": "🟤 Brown",
-          "words": [
-            {
-              "word": "proud",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "Feeling honoured"
-            },
-            {
-              "word": "surround",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "Anything, such as a fence or border"
-            },
-            {
-              "word": "encounter",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "A meeting, especially one"
-            },
-            {
-              "word": "trousers",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "An article of clothing"
-            },
-            {
-              "word": "mountain",
-              "colorCategory": "BROWN COW",
-              "stressedVowel": "ou",
-              "definition": "An elevation of land of considerable dimensions"
-            },
-            {
-              "word": "stupid",
-              "colorCategory": "BLUE MOON",
-              "stressedVowel": "u",
-              "definition": "A stupid person"
-            }
-          ],
-          "id": "list_1"
-        },
-        {
-          "name": "⚪ Silver Pin",
-          "words": [
-            {
-              "word": "delivery",
-              "colorCategory": "SILVER PIN",
-              "stressedVowel": "i",
-              "definition": "Conveying something"
-            }
-          ],
-          "id": "list_2"
-        },
-        {
-          "name": "🟣 Purple",
-          "words": [
-            {
-              "word": "urban",
-              "colorCategory": "PURPLE SHIRT",
-              "stressedVowel": "ur",
-              "definition": "Related to the"
-            },
-            {
-              "word": "observe",
-              "colorCategory": "PURPLE SHIRT",
-              "stressedVowel": "er",
-              "definition": "To notice or view, especially carefully or with"
-            }
-          ],
-          "id": "list_3"
-        },
-        {
-          "name": "🟡 Yellow Cup",
-          "words": [],
-          "id": "list_4"
-        }
-      ],
-      "history": []
-    },
-    "alex@test.com": {
-      "email": "alex@test.com",
+    "guest": {
+      "email": "guest",
       "saving_lists": [
         {
           "name": "🟤 Brown",
@@ -1970,47 +1550,134 @@
     }
   },
   "user_conversations": {
-    "guest": [
+    "adrian.milla@gmail.com": [
       {
-        "id": "conv_1789760312652",
-        "title": "Friendly Chat",
+        "id": "conv_1790272603927",
+        "title": "Morning Check-in",
         "icon": "fa-comments",
         "type": "chat",
         "history": [
           {
             "role": "user",
-            "content": "hi sol",
+            "content": "hi",
             "parts": [
               {
-                "text": "hi sol"
+                "text": "hi"
               }
             ]
           },
           {
             "role": "model",
-            "content": "Hey Guest! Good to see you. How's everything going today? What's on your mind?",
+            "content": "Hey Adrian! Great to see you. How’s your day treating you so far? What's on your mind today?",
             "parts": [
               {
-                "text": "Hey Guest! Good to see you. How's everything going today? What's on your mind?"
+                "text": "Hey Adrian! Great to see you. How’s your day treating you so far? What's on your mind today?"
               }
             ]
           }
         ],
-        "createdAt": 1789760312652
+        "createdAt": 1790272603927
       }
     ],
-    "adrian@test.com": [
+    "guest": [
       {
-        "id": "conv_adrian_1",
-        "title": "Adrian Private Chat",
-        "history": []
-      }
-    ],
-    "alex@test.com": [
+        "id": "conv_1790273466848",
+        "title": "Hey Sol I Love",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Hey Sol! I love having you as my companion.",
+            "parts": [
+              {
+                "text": "Hey Sol! I love having you as my companion."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "I completely get where you're coming from. What happened next, or how are you feeling about it now?",
+            "parts": [
+              {
+                "text": "I completely get where you're coming from. What happened next, or how are you feeling about it now?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "Tell me a cool quick fact about languages!",
+            "parts": [
+              {
+                "text": "Tell me a cool quick fact about languages!"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "That's a fascinating angle, Guest. Tell me a bit more about that—what's your take on it?",
+            "parts": [
+              {
+                "text": "That's a fascinating angle, Guest. Tell me a bit more about that—what's your take on it?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790273466848
+      },
       {
-        "id": "conv_alex_1",
-        "title": "Alex Study Plan",
-        "history": []
+        "id": "conv_1790273444727",
+        "title": "Hey Sol I Love",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Hey Sol! I love having you as my companion.",
+            "parts": [
+              {
+                "text": "Hey Sol! I love having you as my companion."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "I completely get where you're coming from. What happened next, or how are you feeling about it now?",
+            "parts": [
+              {
+                "text": "I completely get where you're coming from. What happened next, or how are you feeling about it now?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790273444728
+      },
+      {
+        "id": "conv_1790273406222",
+        "title": "Hey Sol I Love",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Hey Sol! I love having you as my companion.",
+            "parts": [
+              {
+                "text": "Hey Sol! I love having you as my companion."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "That's a fascinating angle, Guest. Tell me a bit more about that—what's your take on it?",
+            "parts": [
+              {
+                "text": "That's a fascinating angle, Guest. Tell me a bit more about that—what's your take on it?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790273406223
       }
     ]
   },

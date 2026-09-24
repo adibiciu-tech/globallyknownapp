@@ -490,6 +490,9 @@ function updateHomeChatModeState() {
   if (panelStart) panelStart.classList.toggle("has-messages", hasMsgs);
   if (panelSol) panelSol.classList.toggle("has-messages", hasMsgs);
   if (homeContent) homeContent.classList.toggle("has-messages", hasMsgs);
+  if (typeof attachSolToLastMessage === "function") {
+    attachSolToLastMessage();
+  }
 }
 
 let hasPlayedFirstLoginEntrance = false;
@@ -546,10 +549,45 @@ function triggerHomeFadeInAnimation() {
   triggerSolFadeIn();
 }
 
-function initSolCompanion() {
-  const companion = document.getElementById("sol-chat-companion");
-  const speech = document.getElementById("sol-companion-speech");
-  if (!companion) return;
+function createSolCompanionElement() {
+  const div = document.createElement("div");
+  div.className = "sol-last-msg-companion";
+  div.id = "sol-last-msg-companion";
+  div.title = "Sol";
+  div.innerHTML = `
+    <div class="sol-companion-speech-bubble" id="sol-companion-speech">I'm right here with you! ✨</div>
+    <svg class="sol-companion-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
+      <!-- 1. Top Exclamation Mark Stem -->
+      <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      
+      <!-- 2. 5 Radiating Eyelash Lines -->
+      <g class="sol-rays">
+        <line x1="20.9" y1="101.9" x2="16.3" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
+        <line x1="35.0" y1="97.4" x2="32.9" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
+        <line x1="50.0" y1="96.0" x2="50.0" y2="85.0" stroke-width="4.5" stroke-linecap="round" />
+        <line x1="65.0" y1="97.4" x2="67.1" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
+        <line x1="79.1" y1="101.9" x2="83.7" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
+      </g>
+      
+      <!-- 3. Outer Eye Almond Group (Eye open - STRICTLY NO BLINK) -->
+      <g class="sol-eyelid-group sol-companion-eyelid">
+        <!-- Almond Eye Outline -->
+        <path class="sol-eye-outline" d="M 12 120 C 26 100 74 100 88 120 C 74 140 26 140 12 120 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        
+        <!-- 4. Pupil & Iris Group (Smoothly looks left and right only) -->
+        <g class="sol-pupil-group sol-companion-pupil">
+          <!-- Iris Outer Ring Circle -->
+          <circle class="sol-iris" cx="50" cy="120" r="11.5" stroke-width="4.5" fill="none" />
+          
+          <!-- Inner Pupil Solid Dot -->
+          <circle class="sol-pupil-dot" cx="50" cy="120" r="5.8" />
+          
+          <!-- Pupil Reflection Highlight Dot -->
+          <circle class="sol-pupil-highlight" cx="47.8" cy="117.8" r="1.8" />
+        </g>
+      </g>
+    </svg>
+  `;
 
   const companionPhrases = [
     "I'm right here with you! ✨",
@@ -563,16 +601,90 @@ function initSolCompanion() {
   let phraseIdx = 0;
   let speechTimeout = null;
 
-  companion.addEventListener("click", () => {
+  div.addEventListener("click", () => {
+    const speech = div.querySelector(".sol-companion-speech-bubble");
     if (!speech) return;
     phraseIdx = (phraseIdx + 1) % companionPhrases.length;
     speech.textContent = companionPhrases[phraseIdx];
-    companion.classList.add("show-speech");
+    div.classList.add("show-speech");
     if (speechTimeout) clearTimeout(speechTimeout);
     speechTimeout = setTimeout(() => {
-      companion.classList.remove("show-speech");
+      div.classList.remove("show-speech");
     }, 3200);
   });
+
+  return div;
+}
+
+function attachSolToLastMessage() {
+  const conversationEl = document.getElementById("gemini-home-conversation");
+  if (!conversationEl) return;
+
+  const messages = conversationEl.querySelectorAll(".gemini-inline-message");
+  let companion = document.getElementById("sol-last-msg-companion");
+
+  if (messages.length === 0) {
+    if (companion && companion.parentNode) {
+      companion.parentNode.removeChild(companion);
+    }
+    return;
+  }
+
+  if (!companion) {
+    companion = createSolCompanionElement();
+  }
+
+  // Ensure singleton - remove any duplicate companion instances
+  const allCompanions = document.querySelectorAll(".sol-last-msg-companion");
+  allCompanions.forEach(c => {
+    if (c !== companion && c.parentNode) {
+      c.parentNode.removeChild(c);
+    }
+  });
+
+  const lastMsg = messages[messages.length - 1];
+  let aiRow = lastMsg.querySelector(".gemini-ai-row");
+  const aiResponse = lastMsg.querySelector(".gemini-ai-response");
+
+  if (!aiRow && aiResponse) {
+    aiRow = document.createElement("div");
+    aiRow.className = "gemini-ai-row";
+    const contentCol = document.createElement("div");
+    contentCol.className = "gemini-ai-content-col";
+    while (lastMsg.firstChild) {
+      contentCol.appendChild(lastMsg.firstChild);
+    }
+    aiRow.appendChild(contentCol);
+    lastMsg.appendChild(aiRow);
+  }
+
+  if (aiRow) {
+    if (companion.parentNode !== aiRow || aiRow.firstChild !== companion) {
+      aiRow.insertBefore(companion, aiRow.firstChild);
+    }
+  } else {
+    let userRow = lastMsg.querySelector(".gemini-user-row");
+    if (!userRow) {
+      userRow = document.createElement("div");
+      userRow.className = "gemini-user-row";
+      const uQuery = lastMsg.querySelector(".gemini-user-query");
+      if (uQuery) {
+        lastMsg.insertBefore(userRow, uQuery);
+        userRow.appendChild(companion);
+        userRow.appendChild(uQuery);
+      } else {
+        lastMsg.prepend(companion);
+      }
+    } else {
+      if (companion.parentNode !== userRow) {
+        userRow.prepend(companion);
+      }
+    }
+  }
+}
+
+function initSolCompanion() {
+  attachSolToLastMessage();
 }
 
 function attachAiActions(aiDiv, text) {
@@ -584,7 +696,12 @@ function attachAiActions(aiDiv, text) {
     <button class="gemini-action-btn copy-btn" title="Copy response"><i class="fa-solid fa-copy"></i> Copy</button>
     <button class="gemini-action-btn teach-btn" title="Teach Sol how you wanted this answered"><i class="fa-solid fa-graduation-cap"></i> Teach Sol</button>
   `;
-  aiDiv.appendChild(actionsDiv);
+  const contentCol = aiDiv.querySelector(".gemini-ai-content-col");
+  if (contentCol) {
+    contentCol.appendChild(actionsDiv);
+  } else {
+    aiDiv.appendChild(actionsDiv);
+  }
 
   const ttsBtn = actionsDiv.querySelector(".tts-btn");
   if (ttsBtn) {
@@ -708,13 +825,20 @@ function initStartHerePanel() {
     const aiDiv = document.createElement("div");
     aiDiv.className = "gemini-inline-message";
     aiDiv.innerHTML = `
-      <div class="gemini-ai-response">
-        <div class="gemini-ai-body">
-          <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Thinking...
+      <div class="gemini-ai-row">
+        <div class="gemini-ai-content-col">
+          <div class="gemini-ai-response">
+            <div class="gemini-ai-body">
+              <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Thinking...
+            </div>
+          </div>
         </div>
       </div>
     `;
     conversationEl.appendChild(aiDiv);
+    if (typeof attachSolToLastMessage === "function") {
+      attachSolToLastMessage();
+    }
     aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
     const aiBody = aiDiv.querySelector(".gemini-ai-body");
@@ -1201,9 +1325,13 @@ function loadSolConversation(convId) {
         const aiDiv = document.createElement("div");
         aiDiv.className = "gemini-inline-message";
         aiDiv.innerHTML = `
-          <div class="gemini-ai-response">
-            <div class="gemini-ai-body" data-raw-text="${escapeHtml(text)}">
-              ${typeof marked !== 'undefined' ? marked.parse(text) : escapeHtml(text)}
+          <div class="gemini-ai-row">
+            <div class="gemini-ai-content-col">
+              <div class="gemini-ai-response">
+                <div class="gemini-ai-body" data-raw-text="${escapeHtml(text)}">
+                  ${typeof marked !== 'undefined' ? marked.parse(text) : escapeHtml(text)}
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -1213,6 +1341,9 @@ function loadSolConversation(convId) {
         }
       }
     });
+    if (typeof attachSolToLastMessage === "function") {
+      attachSolToLastMessage();
+    }
   }
 
   updateHomeChatModeState();
@@ -3743,14 +3874,21 @@ function initOutputPracticingPanel() {
     const aiDiv = document.createElement("div");
     aiDiv.className = "gemini-inline-message";
     aiDiv.innerHTML = `
-      <div class="gemini-ai-response">
-        <div class="gemini-ai-body">
-          <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Listening and preparing spoken answer...
+      <div class="gemini-ai-row">
+        <div class="gemini-ai-content-col">
+          <div class="gemini-ai-response">
+            <div class="gemini-ai-body">
+              <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Listening and preparing spoken answer...
+            </div>
+          </div>
         </div>
       </div>
     `;
     if (conversationEl) {
       conversationEl.appendChild(aiDiv);
+      if (typeof attachSolToLastMessage === "function") {
+        attachSolToLastMessage();
+      }
       aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
@@ -3773,6 +3911,9 @@ CRITICAL SPOKEN DIRECTIVE: You are in a real-time live spoken conversation with 
       aiBody.innerHTML = marked.parse(responseText);
       aiBody.setAttribute("data-raw-text", responseText);
       attachAiActions(aiDiv, responseText);
+      if (typeof attachSolToLastMessage === "function") {
+        attachSolToLastMessage();
+      }
       speakLiveAudio(responseText, langObj.code);
     };
 
