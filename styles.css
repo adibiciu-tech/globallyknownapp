@@ -1377,7 +1377,7 @@ body {
 }
 
 .gemini-input-wrapper .sol-last-msg-companion {
-  margin-bottom: 2px;
+  margin-bottom: -8px;
   z-index: 10;
   flex-shrink: 0;
 }
@@ -1794,7 +1794,7 @@ body {
   .sol-last-msg-companion {
     width: 32px;
     height: 50px;
-    margin-bottom: 2px;
+    margin-bottom: -6px;
   }
   .gemini-ai-bubble-row {
     gap: 8px;
