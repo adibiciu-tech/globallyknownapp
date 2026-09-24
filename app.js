@@ -549,45 +549,9 @@ function triggerHomeFadeInAnimation() {
   triggerSolFadeIn();
 }
 
-function createSolCompanionElement() {
-  const div = document.createElement("div");
-  div.className = "sol-last-msg-companion";
-  div.id = "sol-last-msg-companion";
-  div.title = "Sol Companion";
-  div.innerHTML = `
-    <div class="sol-companion-speech-bubble" id="sol-companion-speech">Move me wherever you want!</div>
-    <svg class="sol-companion-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
-      <!-- 1. Top Exclamation Mark Stem -->
-      <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-      
-      <!-- 2. 5 Radiating Eyelash Lines -->
-      <g class="sol-rays">
-        <line x1="20.9" y1="101.9" x2="16.3" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
-        <line x1="35.0" y1="97.4" x2="32.9" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
-        <line x1="50.0" y1="96.0" x2="50.0" y2="85.0" stroke-width="4.5" stroke-linecap="round" />
-        <line x1="65.0" y1="97.4" x2="67.1" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
-        <line x1="79.1" y1="101.9" x2="83.7" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
-      </g>
-      
-      <!-- 3. Outer Eye Almond Group (Eye open - STRICTLY NO BLINK) -->
-      <g class="sol-eyelid-group sol-companion-eyelid">
-        <!-- Almond Eye Outline -->
-        <path class="sol-eye-outline" d="M 12 120 C 26 100 74 100 88 120 C 74 140 26 140 12 120 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-        
-        <!-- 4. Pupil & Iris Group (Smoothly looks left and right only) -->
-        <g class="sol-pupil-group sol-companion-pupil">
-          <!-- Iris Outer Ring Circle -->
-          <circle class="sol-iris" cx="50" cy="120" r="11.5" stroke-width="4.5" fill="none" />
-          
-          <!-- Inner Pupil Solid Dot -->
-          <circle class="sol-pupil-dot" cx="50" cy="120" r="5.8" />
-          
-          <!-- Pupil Reflection Highlight Dot -->
-          <circle class="sol-pupil-highlight" cx="47.8" cy="117.8" r="1.8" />
-        </g>
-      </g>
-    </svg>
-  `;
+function bindSolCompanionEvents(div) {
+  if (!div || div.__solBound) return;
+  div.__solBound = true;
 
   const companionPhrases = [
     "Move me wherever you want!",
@@ -674,11 +638,11 @@ function createSolCompanionElement() {
         try { navigator.vibrate([60, 40, 60]); } catch (err) {}
       }
 
-      // Detach ENTIRELY from the message box so zero clone remains!
-      const oldBubbleRow = div.closest(".gemini-ai-bubble-row");
-      const oldContentCol = div.closest(".gemini-ai-content-col");
-      if (oldBubbleRow) oldBubbleRow.classList.remove("has-docked-sol");
-      if (oldContentCol) oldContentCol.classList.remove("has-docked-sol");
+      // Detach ENTIRELY from the input wrapper so zero clone remains!
+      const inputWrapper = document.getElementById("gemini-input-wrapper") || document.querySelector(".gemini-input-wrapper");
+      if (inputWrapper && inputWrapper.contains(div)) {
+        inputWrapper.removeChild(div);
+      }
 
       const panelChat = document.getElementById("panel-sol-chat") || document.body;
       if (div.parentNode !== panelChat) {
@@ -729,22 +693,21 @@ function createSolCompanionElement() {
       isDragging = false;
       div.classList.remove("sol-is-held");
 
-      // Check if dropped near the bottom of the latest message box to snap back
-      const conversationEl = document.getElementById("gemini-home-conversation");
-      const lastMsg = conversationEl ? conversationEl.querySelector(".gemini-inline-message:last-child") : null;
+      // Check if dropped near his main position (the left side of the input bar) to snap back
+      const inputWrapper = document.getElementById("gemini-input-wrapper") || document.querySelector(".gemini-input-wrapper");
       let dockedBack = false;
 
-      if (lastMsg) {
-        const msgRect = lastMsg.getBoundingClientRect();
+      if (inputWrapper) {
+        const wrapRect = inputWrapper.getBoundingClientRect();
         const divRect = div.getBoundingClientRect();
-        const dist = Math.hypot(divRect.left - msgRect.left, divRect.bottom - msgRect.bottom);
-        if (dist < 80) {
+        const dist = Math.hypot(divRect.left - wrapRect.left, divRect.bottom - wrapRect.bottom);
+        if (dist < 110) {
           div.removeAttribute("data-custom-placed");
           div.classList.remove("sol-free-floating");
           div.style.left = "";
           div.style.top = "";
-          attachSolToLastMessage();
-          showCompanionSpeech("Back by your message! 🏠✨", 2200);
+          attachSolCompanion();
+          showCompanionSpeech("Back home! 🏠✨", 2200);
           dockedBack = true;
         }
       }
@@ -772,13 +735,62 @@ function createSolCompanionElement() {
     isDragging = false;
     div.classList.remove("sol-is-held");
   });
+}
 
+function createSolCompanionElement() {
+  let div = document.getElementById("sol-last-msg-companion");
+  if (div) {
+    bindSolCompanionEvents(div);
+    return div;
+  }
+
+  div = document.createElement("div");
+  div.className = "sol-last-msg-companion";
+  div.id = "sol-last-msg-companion";
+  div.title = "Sol Companion";
+  div.innerHTML = `
+    <div class="sol-companion-speech-bubble" id="sol-companion-speech">Move me wherever you want!</div>
+    <svg class="sol-companion-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
+      <!-- 1. Top Exclamation Mark Stem -->
+      <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      
+      <!-- 2. 5 Radiating Eyelash Lines -->
+      <g class="sol-rays">
+        <line x1="20.9" y1="101.9" x2="16.3" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
+        <line x1="35.0" y1="97.4" x2="32.9" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
+        <line x1="50.0" y1="96.0" x2="50.0" y2="85.0" stroke-width="4.5" stroke-linecap="round" />
+        <line x1="65.0" y1="97.4" x2="67.1" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
+        <line x1="79.1" y1="101.9" x2="83.7" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
+      </g>
+      
+      <!-- 3. Outer Eye Almond Group (Eye open - STRICTLY NO BLINK) -->
+      <g class="sol-eyelid-group sol-companion-eyelid">
+        <!-- Almond Eye Outline -->
+        <path class="sol-eye-outline" d="M 12 120 C 26 100 74 100 88 120 C 74 140 26 140 12 120 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        
+        <!-- 4. Pupil & Iris Group (Smoothly looks left and right only) -->
+        <g class="sol-pupil-group sol-companion-pupil">
+          <!-- Iris Outer Ring Circle -->
+          <circle class="sol-iris" cx="50" cy="120" r="11.5" stroke-width="4.5" fill="none" />
+          
+          <!-- Inner Pupil Solid Dot -->
+          <circle class="sol-pupil-dot" cx="50" cy="120" r="5.8" />
+          
+          <!-- Pupil Reflection Highlight Dot -->
+          <circle class="sol-pupil-highlight" cx="47.8" cy="117.8" r="1.8" />
+        </g>
+      </g>
+    </svg>
+  `;
+
+  bindSolCompanionEvents(div);
   return div;
 }
 
-function attachSolToLastMessage() {
-  const conversationEl = document.getElementById("gemini-home-conversation");
-  if (!conversationEl) return;
+function attachSolCompanion() {
+  const inputWrapper = document.getElementById("gemini-input-wrapper") || document.querySelector(".gemini-input-wrapper");
+  const inputBar = document.querySelector(".gemini-home-input-bar");
+  if (!inputWrapper || !inputBar) return;
 
   let companion = document.getElementById("sol-last-msg-companion");
 
@@ -787,17 +799,10 @@ function attachSolToLastMessage() {
     return;
   }
 
-  const messages = conversationEl.querySelectorAll(".gemini-inline-message");
-
-  if (messages.length === 0) {
-    if (companion && companion.parentNode && !companion.classList.contains("sol-free-floating")) {
-      companion.parentNode.removeChild(companion);
-    }
-    return;
-  }
-
   if (!companion) {
     companion = createSolCompanionElement();
+  } else if (!companion.__solBound) {
+    bindSolCompanionEvents(companion);
   }
 
   // Ensure singleton - remove any duplicate companion instances (strict zero-clones guarantee)
@@ -808,72 +813,25 @@ function attachSolToLastMessage() {
     }
   });
 
-  const lastMsg = messages[messages.length - 1];
-  let aiRow = lastMsg.querySelector(".gemini-ai-row");
-  const aiResponse = lastMsg.querySelector(".gemini-ai-response");
-
-  if (!aiRow && aiResponse) {
-    aiRow = document.createElement("div");
-    aiRow.className = "gemini-ai-row";
-    const contentCol = document.createElement("div");
-    contentCol.className = "gemini-ai-content-col";
-    while (lastMsg.firstChild) {
-      contentCol.appendChild(lastMsg.firstChild);
-    }
-    aiRow.appendChild(contentCol);
-    lastMsg.appendChild(aiRow);
-  }
-
-  // Clear has-docked-sol from all other messages
-  document.querySelectorAll(".gemini-ai-bubble-row.has-docked-sol, .gemini-ai-content-col.has-docked-sol").forEach(el => {
-    el.classList.remove("has-docked-sol");
-  });
-
-  if (aiRow && aiResponse) {
-    let contentCol = lastMsg.querySelector(".gemini-ai-content-col");
-    if (!contentCol) {
-      contentCol = aiRow;
-    }
-
-    // Wrap the message bubble in gemini-ai-bubble-row with align-items: flex-end
-    let bubbleRow = lastMsg.querySelector(".gemini-ai-bubble-row");
-    if (!bubbleRow) {
-      bubbleRow = document.createElement("div");
-      bubbleRow.className = "gemini-ai-bubble-row";
-      aiResponse.parentNode.insertBefore(bubbleRow, aiResponse);
-      bubbleRow.appendChild(aiResponse);
-    }
-
-    if (companion.parentNode !== bubbleRow || bubbleRow.firstChild !== companion) {
-      if (companion.parentNode) companion.parentNode.removeChild(companion);
-      bubbleRow.insertBefore(companion, bubbleRow.firstChild);
-    }
-    bubbleRow.classList.add("has-docked-sol");
-    contentCol.classList.add("has-docked-sol");
-  } else {
-    let userRow = lastMsg.querySelector(".gemini-user-row");
-    if (!userRow) {
-      userRow = document.createElement("div");
-      userRow.className = "gemini-user-row";
-      const uQuery = lastMsg.querySelector(".gemini-user-query");
-      if (uQuery) {
-        lastMsg.insertBefore(userRow, uQuery);
-        userRow.appendChild(companion);
-        userRow.appendChild(uQuery);
-      } else {
-        lastMsg.prepend(companion);
-      }
-    } else {
-      if (companion.parentNode !== userRow) {
-        if (companion.parentNode) companion.parentNode.removeChild(companion);
-        userRow.prepend(companion);
-      }
-    }
+  // Dock Sol on the left side of the input bar (main position)
+  if (companion.parentNode !== inputWrapper || companion.nextElementSibling !== inputBar) {
+    if (companion.parentNode) companion.parentNode.removeChild(companion);
+    inputWrapper.insertBefore(companion, inputBar);
   }
 }
 
+function attachSolToLastMessage() {
+  attachSolCompanion();
+}
+window.attachSolCompanion = attachSolCompanion;
+window.attachSolToLastMessage = attachSolCompanion;
+
 function initSolCompanion() {
-  attachSolToLastMessage();
+  const companion = document.getElementById("sol-last-msg-companion");
+  if (companion && !companion.__solBound) {
+    bindSolCompanionEvents(companion);
+  }
+  attachSolCompanion();
 }
 
 function attachAiActions(aiDiv, text) {

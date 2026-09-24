@@ -1574,12 +1574,183 @@
                 "text": "Hey Adrian! Great to see you. How’s your day treating you so far? What's on your mind today?"
               }
             ]
+          },
+          {
+            "role": "user",
+            "content": "nice",
+            "parts": [
+              {
+                "text": "nice"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Glad to hear it! Up to anything fun today, or just keeping it low-key?",
+            "parts": [
+              {
+                "text": "Glad to hear it! Up to anything fun today, or just keeping it low-key?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "test",
+            "parts": [
+              {
+                "text": "test"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Testing, testing, 1, 2, 3! Loud and clear, Adrian. \n\nDid I pass? What are we getting into today?",
+            "parts": [
+              {
+                "text": "Testing, testing, 1, 2, 3! Loud and clear, Adrian. \n\nDid I pass? What are we getting into today?"
+              }
+            ]
           }
         ],
         "createdAt": 1790272603927
       }
     ],
     "guest": [
+      {
+        "id": "conv_1790277733144",
+        "title": "Tell Me A Fun",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Tell me a fun fact about the solar system!",
+            "parts": [
+              {
+                "text": "Tell me a fun fact about the solar system!"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "I completely get where you're coming from. What happened next, or how are you feeling about it now?",
+            "parts": [
+              {
+                "text": "I completely get where you're coming from. What happened next, or how are you feeling about it now?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790277733144
+      },
+      {
+        "id": "conv_1790276969414",
+        "title": "Hey Sol I Love",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Hey Sol! I love having you as my companion.",
+            "parts": [
+              {
+                "text": "Hey Sol! I love having you as my companion."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "That's really interesting, Guest. What led you to that, or what got you thinking about it?",
+            "parts": [
+              {
+                "text": "That's really interesting, Guest. What led you to that, or what got you thinking about it?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790276969414
+      },
+      {
+        "id": "conv_1790276831347",
+        "title": "Hey Sol I Love",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Hey Sol! I love having you as my companion.",
+            "parts": [
+              {
+                "text": "Hey Sol! I love having you as my companion."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "That's really interesting, Guest. What led you to that, or what got you thinking about it?",
+            "parts": [
+              {
+                "text": "That's really interesting, Guest. What led you to that, or what got you thinking about it?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790276831347
+      },
+      {
+        "id": "conv_1790276798098",
+        "title": "Hey Sol I Love",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Hey Sol! I love having you as my companion.",
+            "parts": [
+              {
+                "text": "Hey Sol! I love having you as my companion."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "I hear you! That makes a lot of sense. How do you usually look at something like that?",
+            "parts": [
+              {
+                "text": "I hear you! That makes a lot of sense. How do you usually look at something like that?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790276798098
+      },
+      {
+        "id": "conv_1790276727419",
+        "title": "Hey Sol I Love",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Hey Sol! I love having you as my companion.",
+            "parts": [
+              {
+                "text": "Hey Sol! I love having you as my companion."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "That's a fascinating angle, Guest. Tell me a bit more about that—what's your take on it?",
+            "parts": [
+              {
+                "text": "That's a fascinating angle, Guest. Tell me a bit more about that—what's your take on it?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790276727419
+      },
       {
         "id": "conv_1790273466848",
         "title": "Hey Sol I Love",

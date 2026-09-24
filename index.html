@@ -274,8 +274,44 @@
             <h1 class="gemini-home-greeting" id="gemini-greeting-text">Ask away, Guest!</h1>
 
             <!-- Centered Input Bar Wrapper -->
-            <div class="gemini-input-wrapper">
+            <div class="gemini-input-wrapper" id="gemini-input-wrapper">
               <div class="gemini-home-glow-bg"></div>
+
+              <!-- Sol Companion: Main position docked on the left side of the input bar -->
+              <div class="sol-last-msg-companion" id="sol-last-msg-companion" title="Sol Companion">
+                <div class="sol-companion-speech-bubble" id="sol-companion-speech">Move me wherever you want!</div>
+                <svg class="sol-companion-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
+                  <!-- 1. Top Exclamation Mark Stem -->
+                  <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                  
+                  <!-- 2. 5 Radiating Eyelash Lines -->
+                  <g class="sol-rays">
+                    <line x1="20.9" y1="101.9" x2="16.3" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
+                    <line x1="35.0" y1="97.4" x2="32.9" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
+                    <line x1="50.0" y1="96.0" x2="50.0" y2="85.0" stroke-width="4.5" stroke-linecap="round" />
+                    <line x1="65.0" y1="97.4" x2="67.1" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
+                    <line x1="79.1" y1="101.9" x2="83.7" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
+                  </g>
+                  
+                  <!-- 3. Outer Eye Almond Group (Eye open - STRICTLY NO BLINK) -->
+                  <g class="sol-eyelid-group sol-companion-eyelid">
+                    <!-- Almond Eye Outline -->
+                    <path class="sol-eye-outline" d="M 12 120 C 26 100 74 100 88 120 C 74 140 26 140 12 120 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    
+                    <!-- 4. Pupil & Iris Group (Smoothly looks left and right only) -->
+                    <g class="sol-pupil-group sol-companion-pupil">
+                      <!-- Iris Outer Ring Circle -->
+                      <circle class="sol-iris" cx="50" cy="120" r="11.5" stroke-width="4.5" fill="none" />
+                      
+                      <!-- Inner Pupil Solid Dot -->
+                      <circle class="sol-pupil-dot" cx="50" cy="120" r="5.8" />
+                      
+                      <!-- Pupil Reflection Highlight Dot -->
+                      <circle class="sol-pupil-highlight" cx="47.8" cy="117.8" r="1.8" />
+                    </g>
+                  </g>
+                </svg>
+              </div>
 
               <div class="gemini-home-input-bar">
                 <button class="gemini-bar-icon-btn" id="btn-home-attach" title="Add Image or File">

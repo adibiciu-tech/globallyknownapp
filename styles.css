@@ -1367,11 +1367,19 @@ body {
 .gemini-input-wrapper {
   position: relative;
   width: 100%;
-  max-width: 720px;
+  max-width: 780px;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
+  gap: 14px;
   order: 2;
+  box-sizing: border-box;
+}
+
+.gemini-input-wrapper .sol-last-msg-companion {
+  margin-bottom: 2px;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 @keyframes ambientGlowPulse {
