@@ -1796,6 +1796,12 @@ body {
     height: 44px;
     margin-bottom: -5px;
   }
+  .sol-thinking-indicator {
+    width: 14px;
+    height: 14px;
+    top: -4px;
+    right: -6px;
+  }
   .gemini-ai-bubble-row {
     gap: 8px;
   }
@@ -1896,12 +1902,12 @@ body {
    ========================================================================== */
 .sol-thinking-indicator {
   position: absolute;
-  top: -8px;
-  right: -13px;
-  width: 24px;
-  height: 24px;
+  top: -5px;
+  right: -8px;
+  width: 17px;
+  height: 17px;
   opacity: 0;
-  transform: scale(0.5) translateY(4px);
+  transform: scale(0.5) translateY(3px);
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 20;
@@ -1922,7 +1928,7 @@ body {
 
 .sol-think-dot {
   fill: var(--accent-yellow, #f6ca21);
-  filter: drop-shadow(0 0 5px var(--glow-color-1, rgba(246, 202, 33, 0.85)));
+  filter: drop-shadow(0 0 3px var(--glow-color-1, rgba(246, 202, 33, 0.85)));
   transition: fill 0.3s ease;
 }
 
@@ -1942,7 +1948,7 @@ body {
 
 @keyframes solThinkingPulse {
   0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-3px) scale(1.08); }
+  50% { transform: translateY(-2px) scale(1.05); }
 }
 
 /* Subtle typing dots wave in chat bubble */
@@ -2099,7 +2105,7 @@ body {
 :root[data-theme="cyan"] .sol-companion-svg circle.sol-pupil-dot { fill: #00e5ff !important; }
 :root[data-theme="cyan"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="cyan"] .sol-companion-svg circle.sol-pupil-highlight { fill: #081622 !important; }
-:root[data-theme="cyan"] .sol-think-dot { fill: #00e5ff !important; filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.85)) !important; }
+:root[data-theme="cyan"] .sol-think-dot { fill: #00e5ff !important; filter: drop-shadow(0 0 3px rgba(0, 229, 255, 0.85)) !important; }
 :root[data-theme="cyan"] .sol-thinking-bubble-dots .s-dot { background-color: #00e5ff !important; }
 
 :root[data-theme="emerald"] .sol-eye-icon-svg path,
@@ -2112,7 +2118,7 @@ body {
 :root[data-theme="emerald"] .sol-companion-svg circle.sol-pupil-dot { fill: #10b981 !important; }
 :root[data-theme="emerald"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="emerald"] .sol-companion-svg circle.sol-pupil-highlight { fill: #062016 !important; }
-:root[data-theme="emerald"] .sol-think-dot { fill: #10b981 !important; filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.85)) !important; }
+:root[data-theme="emerald"] .sol-think-dot { fill: #10b981 !important; filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.85)) !important; }
 :root[data-theme="emerald"] .sol-thinking-bubble-dots .s-dot { background-color: #10b981 !important; }
 
 :root[data-theme="purple"] .sol-eye-icon-svg path,
@@ -2125,7 +2131,7 @@ body {
 :root[data-theme="purple"] .sol-companion-svg circle.sol-pupil-dot { fill: #c084fc !important; }
 :root[data-theme="purple"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="purple"] .sol-companion-svg circle.sol-pupil-highlight { fill: #160a24 !important; }
-:root[data-theme="purple"] .sol-think-dot { fill: #c084fc !important; filter: drop-shadow(0 0 5px rgba(192, 132, 252, 0.85)) !important; }
+:root[data-theme="purple"] .sol-think-dot { fill: #c084fc !important; filter: drop-shadow(0 0 3px rgba(192, 132, 252, 0.85)) !important; }
 :root[data-theme="purple"] .sol-thinking-bubble-dots .s-dot { background-color: #c084fc !important; }
 
 :root[data-theme="crimson"] .sol-eye-icon-svg path,
@@ -2138,7 +2144,7 @@ body {
 :root[data-theme="crimson"] .sol-companion-svg circle.sol-pupil-dot { fill: #f43f5e !important; }
 :root[data-theme="crimson"] .sol-eye-icon-svg circle.sol-pupil-highlight,
 :root[data-theme="crimson"] .sol-companion-svg circle.sol-pupil-highlight { fill: #200810 !important; }
-:root[data-theme="crimson"] .sol-think-dot { fill: #f43f5e !important; filter: drop-shadow(0 0 5px rgba(244, 63, 94, 0.85)) !important; }
+:root[data-theme="crimson"] .sol-think-dot { fill: #f43f5e !important; filter: drop-shadow(0 0 3px rgba(244, 63, 94, 0.85)) !important; }
 :root[data-theme="crimson"] .sol-thinking-bubble-dots .s-dot { background-color: #f43f5e !important; }
 
 :root[data-theme="rainbow"] .sol-eye-icon-wrapper,
