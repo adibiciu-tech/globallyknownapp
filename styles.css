@@ -1933,13 +1933,13 @@ body {
 }
 
 .std-1 { opacity: 1.0; }
-.std-2 { opacity: 0.88; }
-.std-3 { opacity: 0.72; }
-.std-4 { opacity: 0.56; }
+.std-8 { opacity: 0.88; }
+.std-7 { opacity: 0.72; }
+.std-6 { opacity: 0.56; }
 .std-5 { opacity: 0.40; }
-.std-6 { opacity: 0.28; }
-.std-7 { opacity: 0.18; }
-.std-8 { opacity: 0.10; }
+.std-4 { opacity: 0.28; }
+.std-3 { opacity: 0.18; }
+.std-2 { opacity: 0.10; }
 
 @keyframes solThinkingSpin {
   from { transform: rotate(0deg); }
