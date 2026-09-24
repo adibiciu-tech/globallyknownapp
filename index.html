@@ -1440,14 +1440,6 @@
         <!-- 7. Panel: The Output Practicing -->
         <div class="workspace-panel" id="panel-output-practicing">
           <div class="gemini-home-content output-practicing-content">
-            <!-- Mode Pills (Spoken Output Practice Modes) -->
-            <div class="describing-role-pills output-role-pills" id="output-role-pills">
-              <button class="gemini-chip-btn active" data-role="conversation"><i class="fa-solid fa-comments"></i> Free Conversation</button>
-              <button class="gemini-chip-btn" data-role="pronunciation"><i class="fa-solid fa-bullseye"></i> Pronunciation Coach</button>
-              <button class="gemini-chip-btn" data-role="roleplay"><i class="fa-solid fa-mug-saucer"></i> Daily Roleplay</button>
-              <button class="gemini-chip-btn" data-role="quick"><i class="fa-solid fa-bolt"></i> Quick Q&A</button>
-            </div>
-
             <!-- Theme-Colored Animated Sol Graphic Icon (Exact Native Vector SVG) -->
             <div class="sol-eye-icon-wrapper" id="output-sol-eye-icon" title="SOL - Live Spoken Output">
               <svg class="sol-eye-icon-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
@@ -1478,30 +1470,47 @@
               </svg>
             </div>
 
-            <!-- Centered Greeting -->
-            <h1 class="gemini-home-greeting" id="output-greeting-text">Speak with Sol!</h1>
-            <p class="output-live-tagline">Real-time live spoken conversation — just talk naturally with Sol</p>
+            <!-- 3 Call Options (Appear when big microphone is pressed) -->
+            <div class="output-call-options-wrapper" id="output-call-options">
+              <!-- Radiating branch connectors matching sketch -->
+              <svg class="output-options-branches-svg" viewBox="0 0 280 44" preserveAspectRatio="none">
+                <path d="M 140 44 C 140 24, 45 32, 45 2" stroke="rgba(246, 202, 33, 0.45)" stroke-width="2.5" stroke-dasharray="4 4" fill="none" />
+                <line x1="140" y1="44" x2="140" y2="2" stroke="rgba(246, 202, 33, 0.55)" stroke-width="2.5" stroke-dasharray="4 4" />
+                <path d="M 140 44 C 140 24, 235 32, 235 2" stroke="rgba(246, 202, 33, 0.45)" stroke-width="2.5" stroke-dasharray="4 4" fill="none" />
+              </svg>
 
-            <!-- Live Voice Controls Bar -->
-            <div class="output-live-controls-bar">
-              <div class="gemini-home-model-selector" id="output-lang-selector" title="Click to Change Language">
-                <span class="model-blue-dot">●</span>
-                <span class="model-name-text" id="output-lang-name">English</span>
-                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+              <!-- Left Option: Video Call -->
+              <div class="output-call-option-item option-video">
+                <span class="output-option-label">video call</span>
+                <button class="output-option-btn btn-video-call" id="btn-output-video-call" title="Live Video Call with Sol">
+                  <i class="fa-solid fa-video"></i>
+                </button>
               </div>
 
-              <button class="output-live-control-btn" id="output-btn-reset" title="Clear Live Session">
-                <i class="fa-solid fa-arrows-rotate"></i> <span>Reset Conversation</span>
-              </button>
+              <!-- Middle Option: Normal Call (Same Microphone Button) -->
+              <div class="output-call-option-item option-normal">
+                <span class="output-option-label">normal call</span>
+                <button class="output-option-btn btn-normal-call" id="btn-output-normal-call" title="Normal Voice Call with Sol">
+                  <i class="fa-solid fa-microphone"></i>
+                </button>
+              </div>
+
+              <!-- Right Option: Transcript Along -->
+              <div class="output-call-option-item option-transcript">
+                <span class="output-option-label">transcript along</span>
+                <button class="output-option-btn btn-transcript-call" id="btn-output-transcript-call" title="Live Speaking with Sol with Transcript">
+                  <i class="fa-solid fa-newspaper"></i>
+                </button>
+              </div>
             </div>
 
-            <!-- Central Live Microphone Hub (Replaces the message sent box!) -->
+            <!-- Central Live Microphone Hub -->
             <div class="output-mic-hub-container">
               <div class="mic-pulse-ring ring-1"></div>
               <div class="mic-pulse-ring ring-2"></div>
               <div class="mic-pulse-ring ring-3"></div>
 
-              <button class="output-live-mic-btn" id="btn-output-live-mic" title="Click to Speak Live with Sol">
+              <button class="output-live-mic-btn" id="btn-output-live-mic" title="Click to show call options">
                 <div class="mic-icon-wrapper">
                   <i class="fa-solid fa-microphone"></i>
                 </div>
@@ -1514,8 +1523,73 @@
               <span class="status-label" id="output-status-text">Tap the microphone to speak live with Sol</span>
             </div>
 
+            <!-- Centered Greeting -->
+            <h1 class="gemini-home-greeting" id="output-greeting-text">Speak with Sol!</h1>
+
             <!-- Dynamic Inline Spoken Conversation Feed -->
             <div class="gemini-home-conversation" id="output-home-conversation"></div>
+          </div>
+
+          <!-- Live Video Call Modal Overlay -->
+          <div class="sol-video-call-modal" id="sol-video-call-modal">
+            <div class="video-call-container">
+              <div class="video-call-header">
+                <div class="video-call-status-badge">
+                  <span class="live-recording-dot"></span>
+                  <span>LIVE VIDEO CALL WITH SOL</span>
+                  <span class="video-call-timer" id="video-call-timer">00:00</span>
+                </div>
+                <button class="video-call-close-btn" id="btn-video-call-close" title="Close"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+
+              <!-- Main View: Sol's Avatar & Live Voice Response Visualizer -->
+              <div class="video-call-sol-stage">
+                <div class="sol-video-avatar" id="sol-video-avatar">
+                  <svg class="sol-eye-icon-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
+                    <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    <g class="sol-rays">
+                      <line x1="20.9" y1="101.9" x2="16.3" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
+                      <line x1="35.0" y1="97.4" x2="32.9" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
+                      <line x1="50.0" y1="96.0" x2="50.0" y2="85.0" stroke-width="4.5" stroke-linecap="round" />
+                      <line x1="65.0" y1="97.4" x2="67.1" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
+                      <line x1="79.1" y1="101.9" x2="83.7" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
+                    </g>
+                    <g class="sol-eyelid-group">
+                      <path class="sol-eye-outline" d="M 12 120 C 26 100 74 100 88 120 C 74 140 26 140 12 120 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                      <g class="sol-pupil-group">
+                        <circle class="sol-iris" cx="50" cy="120" r="11.5" stroke-width="4.5" fill="none" />
+                        <circle class="sol-pupil-dot" cx="50" cy="120" r="5.8" />
+                        <circle class="sol-pupil-highlight" cx="47.8" cy="117.8" r="1.8" />
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="video-call-sol-subtitles" id="video-call-sol-subtitles">Sol is listening... Speak freely!</div>
+              </div>
+
+              <!-- Picture-in-Picture: User Live Camera Feed -->
+              <div class="video-call-pip-container" id="video-call-pip">
+                <video id="video-call-user-feed" autoplay playsinline muted></video>
+                <div class="pip-user-label"><i class="fa-solid fa-user"></i> You</div>
+                <div class="pip-camera-off-placeholder" id="pip-camera-off">
+                  <i class="fa-solid fa-video-slash"></i>
+                  <span>Camera Off</span>
+                </div>
+              </div>
+
+              <!-- Bottom Controls -->
+              <div class="video-call-controls-bar">
+                <button class="call-action-btn btn-mute-toggle" id="btn-call-mute" title="Mute/Unmute Mic">
+                  <i class="fa-solid fa-microphone"></i>
+                </button>
+                <button class="call-action-btn btn-cam-toggle" id="btn-call-cam" title="Turn Camera On/Off">
+                  <i class="fa-solid fa-video"></i>
+                </button>
+                <button class="call-action-btn btn-end-call" id="btn-call-end" title="End Call">
+                  <i class="fa-solid fa-phone-slash"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

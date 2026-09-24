@@ -3177,71 +3177,436 @@ body {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.output-role-pills {
-  margin-top: 0;
-  margin-bottom: 2rem;
-  justify-content: center;
+#panel-output-practicing .sol-eye-icon-wrapper {
+  order: 0;
+  margin-bottom: 0.8rem;
+}
+
+#panel-output-practicing .output-call-options-wrapper {
+  order: 1;
+}
+
+#panel-output-practicing .output-mic-hub-container {
+  order: 2;
+  margin: 0.25rem auto 1.25rem auto;
+}
+
+#panel-output-practicing .output-live-status {
+  order: 3;
+  margin-bottom: 1.5rem;
+}
+
+#panel-output-practicing .gemini-home-greeting {
+  order: 4;
+  margin-bottom: 1.5rem;
+}
+
+#panel-output-practicing .gemini-home-conversation {
+  order: 5;
+}
+
+/* 3 Call Options Wrapper (Pop up fanning out above the big microphone) */
+.output-call-options-wrapper {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2.2rem;
+  margin: 0 auto 0 auto;
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.92);
+  transition: all 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+  height: 0;
+  overflow: hidden;
+  z-index: 25;
+}
+
+.output-call-options-wrapper.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  height: auto;
+  overflow: visible;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.output-options-branches-svg {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  height: 44px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.75;
+}
+
+.output-call-option-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   position: relative;
   z-index: 5;
-  order: -1;
+  transition: transform 0.25s ease;
 }
 
-.output-role-pills .gemini-chip-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.82rem;
+.output-call-option-item.option-video {
+  transform: translateY(4px);
 }
 
-.output-role-pills .gemini-chip-btn.active {
-  background: var(--glow-color-2, rgba(245, 158, 11, 0.25));
-  border-color: var(--accent-yellow, #f6ca21);
-  color: var(--accent-yellow, #f6ca21);
-  box-shadow: 0 0 12px var(--glow-color-1, rgba(250, 204, 21, 0.25));
+.output-call-option-item.option-normal {
+  transform: translateY(-8px);
 }
 
-.output-live-tagline {
-  color: var(--text-secondary, #94a3b8);
-  font-size: 0.95rem;
-  margin-top: -0.8rem;
-  margin-bottom: 1.75rem;
+.output-call-option-item.option-transcript {
+  transform: translateY(4px);
+}
+
+.output-call-option-item:hover {
+  transform: translateY(-6px) scale(1.05);
+}
+
+.output-call-option-item.option-normal:hover {
+  transform: translateY(-14px) scale(1.05);
+}
+
+.output-option-label {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  margin-bottom: 8px;
   text-align: center;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+  user-select: none;
 }
 
-.output-live-controls-bar {
+.output-call-option-item:hover .output-option-label {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+/* Base style for option buttons */
+.output-option-btn {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  font-size: 1.45rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
+}
+
+/* Middle button: EXACT same style as the big microphone button */
+.output-option-btn.btn-normal-call {
+  width: 66px;
+  height: 66px;
+  background: linear-gradient(135deg, var(--accent-yellow, #f6ca21), var(--accent-orange, #f59e0b));
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  color: #000000;
+  box-shadow: 0 6px 24px rgba(246, 202, 33, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+
+.output-option-btn.btn-normal-call:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 32px rgba(246, 202, 33, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.8);
+}
+
+/* Left button: Video Call (Camera icon) */
+.output-option-btn.btn-video-call {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border: 2px solid rgba(125, 211, 252, 0.5);
+  color: #ffffff;
+  box-shadow: 0 6px 22px rgba(2, 132, 199, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+
+.output-option-btn.btn-video-call:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 28px rgba(2, 132, 199, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+/* Right button: Transcript Along (Newspaper icon) */
+.output-option-btn.btn-transcript-call {
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+  border: 2px solid rgba(94, 234, 212, 0.5);
+  color: #ffffff;
+  box-shadow: 0 6px 22px rgba(13, 148, 136, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+
+.output-option-btn.btn-transcript-call:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 28px rgba(13, 148, 136, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+.output-option-btn:active {
+  transform: scale(0.93) !important;
+}
+
+/* -------------------------------------------------------------
+ * Live Video Call Modal Overlay
+ * ------------------------------------------------------------- */
+.sol-video-call-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(4, 7, 15, 0.96);
+  backdrop-filter: blur(20px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sol-video-call-modal.active {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.video-call-container {
+  width: 92vw;
+  max-width: 900px;
+  height: 85vh;
+  max-height: 700px;
+  background: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(246, 202, 33, 0.15);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.video-call-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.6);
   z-index: 10;
 }
 
-.output-live-control-btn {
-  background: var(--bg-secondary, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-  color: var(--text-secondary, #94a3b8);
-  padding: 0.45rem 1rem;
-  border-radius: 20px;
-  font-size: 0.82rem;
-  font-weight: 600;
+.video-call-status-badge {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: 0.04em;
+}
+
+.live-recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  animation: liveMicPulse 1.2s infinite;
+}
+
+.video-call-timer {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #38bdf8;
+}
+
+.video-call-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.25rem;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
-.output-live-control-btn:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.12));
-  color: var(--text-primary, #ffffff);
-  border-color: var(--accent-yellow, #f6ca21);
+.video-call-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.video-call-sol-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 2rem;
+  background: radial-gradient(circle at center, rgba(246, 202, 33, 0.08) 0%, transparent 70%);
+}
+
+.sol-video-avatar {
+  width: 140px;
+  height: 155px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 0 25px rgba(246, 202, 33, 0.5));
+  animation: solCompanionFloat 3.5s ease-in-out infinite;
+}
+
+.video-call-sol-subtitles {
+  max-width: 650px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(246, 202, 33, 0.3);
+  padding: 0.75rem 1.4rem;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  color: #f8fafc;
+  text-align: center;
+  line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.video-call-pip-container {
+  position: absolute;
+  bottom: 85px;
+  right: 24px;
+  width: 180px;
+  height: 120px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  background: #020617;
+  z-index: 20;
+}
+
+.video-call-pip-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.pip-user-label {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.pip-camera-off-placeholder {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: #0f172a;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.video-call-pip-container.cam-off .pip-camera-off-placeholder {
+  display: flex;
+}
+
+.video-call-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 10;
+}
+
+.call-action-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.call-action-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.08);
+}
+
+.call-action-btn.active-off {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.call-action-btn.btn-end-call {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #dc2626;
+  width: 58px;
+  height: 58px;
+  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.4);
+}
+
+.call-action-btn.btn-end-call:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(239, 68, 68, 0.6);
+}
+
+@media (max-width: 600px) {
+  .output-call-options-wrapper {
+    gap: 1.2rem;
+  }
+  .output-option-btn {
+    width: 52px;
+    height: 52px;
+    font-size: 1.2rem;
+  }
+  .output-option-btn.btn-normal-call {
+    width: 56px;
+    height: 56px;
+  }
+  .video-call-pip-container {
+    width: 120px;
+    height: 80px;
+    bottom: 80px;
+    right: 14px;
+  }
 }
 
 /* Central Live Microphone Hub (Replaces message sent box) */

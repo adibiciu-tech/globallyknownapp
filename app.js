@@ -3557,170 +3557,74 @@ function updateOutputGreetingText() {
 function initOutputPracticingPanel() {
   updateOutputGreetingText();
 
-  const rolePills = document.querySelectorAll("#output-role-pills .gemini-chip-btn");
-  const langSelector = document.getElementById("output-lang-selector");
-  const langName = document.getElementById("output-lang-name");
-  const btnReset = document.getElementById("output-btn-reset");
   const micBtn = document.getElementById("btn-output-live-mic");
+  const callOptions = document.getElementById("output-call-options");
+  const btnVideoCall = document.getElementById("btn-output-video-call");
+  const btnNormalCall = document.getElementById("btn-output-normal-call");
+  const btnTranscriptCall = document.getElementById("btn-output-transcript-call");
   const statusEl = document.getElementById("output-live-status");
   const statusText = document.getElementById("output-status-text");
   const conversationEl = document.getElementById("output-home-conversation");
 
-  // Target Languages
-  const LANGUAGES = [
-    { label: "English", code: "en-US" },
-    { label: "Spanish", code: "es-ES" },
-    { label: "French", code: "fr-FR" },
-    { label: "German", code: "de-DE" },
-    { label: "Italian", code: "it-IT" },
-    { label: "Portuguese", code: "pt-BR" }
-  ];
-  let currentLangIdx = 0;
+  // Video Call Elements
+  const videoModal = document.getElementById("sol-video-call-modal");
+  const videoFeed = document.getElementById("video-call-user-feed");
+  const videoSubtitles = document.getElementById("video-call-sol-subtitles");
+  const videoTimer = document.getElementById("video-call-timer");
+  const btnVideoClose = document.getElementById("btn-video-call-close");
+  const btnCallMute = document.getElementById("btn-call-mute");
+  const btnCallCam = document.getElementById("btn-call-cam");
+  const btnCallEnd = document.getElementById("btn-call-end");
+  const pipContainer = document.getElementById("video-call-pip");
 
-  // Role Chips
-  rolePills.forEach(chip => {
-    chip.onclick = () => {
-      rolePills.forEach(c => c.classList.remove("active"));
-      chip.classList.add("active");
-      activeOutputRole = chip.getAttribute("data-role") || "conversation";
-      const cfg = OUTPUT_ROLE_CONFIGS[activeOutputRole];
-      if (typeof showToast === "function") {
-        showToast(`Mode: ${cfg ? cfg.name : 'Free Conversation'}`);
-      }
-    };
-  });
+  // Active call state
+  let activeCallMode = null; // 'normal' | 'transcript' | 'video'
+  let videoStream = null;
+  let videoSeconds = 0;
+  let videoTimerInterval = null;
+  let isMuted = false;
+  let isCamOff = false;
 
-  // Language Selector
-  if (langSelector) {
-    langSelector.onclick = () => {
-      currentLangIdx = (currentLangIdx + 1) % LANGUAGES.length;
-      const lang = LANGUAGES[currentLangIdx];
-      if (langName) langName.textContent = lang.label;
-      if (typeof showToast === "function") {
-        showToast(`Target Language: ${lang.label}`);
-      }
-    };
-  }
+  const currentLang = { label: "English", code: "en-US" };
 
-  // Reset Conversation
-  if (btnReset) {
-    btnReset.onclick = () => {
-      if (silenceTimer) clearTimeout(silenceTimer);
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      if (outputSpeechRecognition && isOutputListening) {
-        try { outputSpeechRecognition.stop(); } catch (e) {}
-      }
-      isOutputListening = false;
-      isSolSpeaking = false;
-      accumulatedLiveTranscript = "";
-      if (conversationEl) conversationEl.innerHTML = "";
-      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
-      if (typeof showToast === "function") showToast("Live conversation reset");
-    };
-  }
-
-  // Helper to set visual state of live microphone & status bar
+  // Set visual state of live microphone & status bar
   function setOutputLiveState(state, text) {
-    if (!micBtn || !statusEl || !statusText) return;
-    statusText.textContent = text;
-    micBtn.classList.remove("listening", "speaking");
-    statusEl.classList.remove("listening", "speaking", "processing");
+    if (statusText) statusText.textContent = text;
+    if (micBtn) micBtn.classList.remove("listening", "speaking");
+    if (statusEl) statusEl.classList.remove("listening", "speaking", "processing");
 
     if (state === "listening") {
-      micBtn.classList.add("listening");
-      statusEl.classList.add("listening");
+      if (micBtn) micBtn.classList.add("listening");
+      if (statusEl) statusEl.classList.add("listening");
     } else if (state === "speaking") {
-      micBtn.classList.add("speaking");
-      statusEl.classList.add("speaking");
+      if (micBtn) micBtn.classList.add("speaking");
+      if (statusEl) statusEl.classList.add("speaking");
     } else if (state === "processing") {
-      statusEl.classList.add("processing");
+      if (statusEl) statusEl.classList.add("processing");
     }
   }
 
-  // Speak Sol Live Audio via Web Speech Synthesis (Unblock Chrome audio restrictions)
-  function speakLiveAudio(text, langCode) {
-    if (!("speechSynthesis" in window)) {
-      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
-      return;
-    }
-    
-    // Resume audio context
-    window.speechSynthesis.cancel();
-    try { window.speechSynthesis.resume(); } catch (e) {}
-
-    // Strip markdown formatting for natural spoken speech
-    const cleanText = text
-      .replace(/[*_#`~>]/g, "")
-      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-      .replace(/\(.*?\)/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (!cleanText) {
-      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
-      return;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = langCode;
-    utterance.rate = 1.05;
-    utterance.pitch = 1.0;
-
-    const voices = getBrowserVoices();
-    if (voices && voices.length > 0) {
-      const primaryLang = langCode.split("-")[0].toLowerCase();
-      const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(primaryLang));
-      if (match) utterance.voice = match;
-    }
-
-    // Keep global reference so garbage collector does not cut off speech in Chrome
-    windowActiveUtterance = utterance;
-
-    utterance.onstart = () => {
-      isSolSpeaking = true;
-      setOutputLiveState("speaking", "🔊 Sol is speaking...");
-    };
-
-    utterance.onend = () => {
-      isSolSpeaking = false;
-      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
-    };
-
-    utterance.onerror = (err) => {
-      console.warn("TTS playback warning:", err);
-      isSolSpeaking = false;
-      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
-    };
-
-    window.speechSynthesis.speak(utterance);
-  }
-
-  // Central Live Microphone Button Click Handler
+  // Toggle call options on big mic click
   if (micBtn) {
     micBtn.onclick = () => {
-      // Unlock speech synthesis immediately on user gesture
-      if (window.speechSynthesis) {
-        try { window.speechSynthesis.resume(); } catch (e) {}
-      }
-
-      // 1. If Sol is speaking, tapping stops audio and goes to idle
+      // 1. If currently speaking or listening in any call, tapping the mic stops the call
       if (isSolSpeaking || (window.speechSynthesis && window.speechSynthesis.speaking)) {
         window.speechSynthesis.cancel();
         isSolSpeaking = false;
+        isOutputListening = false;
+        if (outputSpeechRecognition) {
+          try { outputSpeechRecognition.stop(); } catch (e) {}
+        }
         setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
         return;
       }
 
-      // 2. If already listening, tapping completes & submits speech immediately!
       if (isOutputListening) {
         if (silenceTimer) clearTimeout(silenceTimer);
         const finalCandidate = accumulatedLiveTranscript.trim();
         if (finalCandidate) {
-          finishAndSubmitSpeech(finalCandidate, LANGUAGES[currentLangIdx], liveUserBubble);
+          finishAndSubmitSpeech(finalCandidate, currentLang, liveUserBubble);
         } else {
-          // No speech detected yet, cancel listening
           if (outputSpeechRecognition) {
             try { outputSpeechRecognition.stop(); } catch (e) {}
           }
@@ -3731,32 +3635,165 @@ function initOutputPracticingPanel() {
         return;
       }
 
-      // 3. Start Live Speech Recognition
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert("Speech Recognition is not supported by your browser. Please use Google Chrome, Microsoft Edge, or Safari with microphone access.");
-        return;
+      // 2. Otherwise toggle the 3 options
+      if (callOptions) {
+        const isOpen = callOptions.classList.toggle("open");
+        if (isOpen) {
+          setOutputLiveState("idle", "Choose your call mode: Video, Normal, or Transcript");
+        } else {
+          setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+        }
       }
+    };
+  }
 
-      try {
-        outputSpeechRecognition = new SpeechRecognition();
-      } catch (err) {
-        console.error("SpeechRecognition construct error:", err);
-        alert("Could not initialize Speech Recognition. Please ensure microphone access is permitted.");
-        return;
+  // Start Normal Call (Audio-only call)
+  if (btnNormalCall) {
+    btnNormalCall.onclick = () => {
+      if (callOptions) callOptions.classList.remove("open");
+      activeCallMode = "normal";
+      if (conversationEl) conversationEl.style.display = "none";
+      setOutputLiveState("listening", "📞 Normal Call with Sol — Speak now!");
+      startListeningTurn();
+    };
+  }
+
+  // Start Transcript Along Call (Live speech with live transcript)
+  if (btnTranscriptCall) {
+    btnTranscriptCall.onclick = () => {
+      if (callOptions) callOptions.classList.remove("open");
+      activeCallMode = "transcript";
+      if (conversationEl) conversationEl.style.display = "flex";
+      setOutputLiveState("listening", "📝 Live Call with Transcript — Speak now!");
+      startListeningTurn();
+    };
+  }
+
+  // Start Video Call (Live video call with Sol)
+  if (btnVideoCall) {
+    btnVideoCall.onclick = () => {
+      if (callOptions) callOptions.classList.remove("open");
+      startVideoCall();
+    };
+  }
+
+  // Video Call Setup & Lifecycle
+  async function startVideoCall() {
+    activeCallMode = "video";
+    if (videoModal) videoModal.classList.add("active");
+    if (videoSubtitles) videoSubtitles.textContent = "Connecting video call with Sol...";
+    
+    // Start timer
+    videoSeconds = 0;
+    if (videoTimer) videoTimer.textContent = "00:00";
+    if (videoTimerInterval) clearInterval(videoTimerInterval);
+    videoTimerInterval = setInterval(() => {
+      videoSeconds++;
+      const mins = String(Math.floor(videoSeconds / 60)).padStart(2, "0");
+      const secs = String(videoSeconds % 60).padStart(2, "0");
+      if (videoTimer) videoTimer.textContent = `${mins}:${secs}`;
+    }, 1000);
+
+    // Request camera & mic
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (videoFeed) {
+          videoFeed.srcObject = videoStream;
+          videoFeed.play();
+        }
+        if (pipContainer) pipContainer.classList.remove("cam-off");
       }
+    } catch (err) {
+      console.warn("Camera access denied or unavailable:", err);
+      if (pipContainer) pipContainer.classList.add("cam-off");
+    }
 
-      const currentLang = LANGUAGES[currentLangIdx];
-      outputSpeechRecognition.lang = currentLang.code;
-      outputSpeechRecognition.continuous = true;
-      outputSpeechRecognition.interimResults = true;
-      outputSpeechRecognition.maxAlternatives = 1;
+    if (videoSubtitles) videoSubtitles.textContent = "Sol is listening... Speak freely!";
+    startListeningTurn();
+  }
 
-      accumulatedLiveTranscript = "";
-      isOutputListening = true;
-      setOutputLiveState("listening", `🎙️ Listening in ${currentLang.label}... Speak now!`);
+  function endVideoCall() {
+    if (videoModal) videoModal.classList.remove("active");
+    if (videoTimerInterval) clearInterval(videoTimerInterval);
+    if (videoStream) {
+      videoStream.getTracks().forEach(track => track.stop());
+      videoStream = null;
+    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (outputSpeechRecognition && isOutputListening) {
+      try { outputSpeechRecognition.stop(); } catch (e) {}
+    }
+    isOutputListening = false;
+    isSolSpeaking = false;
+    activeCallMode = null;
+    setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+  }
 
-      // Create live user transcription bubble immediately
+  if (btnVideoClose) btnVideoClose.onclick = endVideoCall;
+  if (btnCallEnd) btnCallEnd.onclick = endVideoCall;
+
+  // Toggle Mute in Video Call
+  if (btnCallMute) {
+    btnCallMute.onclick = () => {
+      isMuted = !isMuted;
+      if (videoStream) {
+        videoStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+      }
+      btnCallMute.classList.toggle("active-off", isMuted);
+      btnCallMute.innerHTML = isMuted ? '<i class="fa-solid fa-microphone-slash"></i>' : '<i class="fa-solid fa-microphone"></i>';
+      if (videoSubtitles) {
+        videoSubtitles.textContent = isMuted ? "Your microphone is muted." : "Sol is listening... Speak freely!";
+      }
+    };
+  }
+
+  // Toggle Camera in Video Call
+  if (btnCallCam) {
+    btnCallCam.onclick = () => {
+      isCamOff = !isCamOff;
+      if (videoStream) {
+        videoStream.getVideoTracks().forEach(t => t.enabled = !isCamOff);
+      }
+      btnCallCam.classList.toggle("active-off", isCamOff);
+      btnCallCam.innerHTML = isCamOff ? '<i class="fa-solid fa-video-slash"></i>' : '<i class="fa-solid fa-video"></i>';
+      if (pipContainer) pipContainer.classList.toggle("cam-off", isCamOff);
+    };
+  }
+
+  // Start Speech Recognition Turn
+  function startListeningTurn() {
+    if (isMuted && activeCallMode === "video") return;
+
+    if (window.speechSynthesis) {
+      try { window.speechSynthesis.resume(); } catch (e) {}
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech Recognition is not supported by your browser. Please use Chrome, Edge, or Safari with microphone access.");
+      return;
+    }
+
+    try {
+      outputSpeechRecognition = new SpeechRecognition();
+    } catch (err) {
+      console.error("SpeechRecognition construct error:", err);
+      return;
+    }
+
+    outputSpeechRecognition.lang = currentLang.code;
+    outputSpeechRecognition.continuous = true;
+    outputSpeechRecognition.interimResults = true;
+    outputSpeechRecognition.maxAlternatives = 1;
+
+    accumulatedLiveTranscript = "";
+    isOutputListening = true;
+
+    if (activeCallMode === "normal") {
+      setOutputLiveState("listening", "📞 Normal Call — Sol is listening... Speak now!");
+    } else if (activeCallMode === "transcript") {
+      setOutputLiveState("listening", "📝 Live Transcript — Listening to your voice...");
       liveUserBubble = document.createElement("div");
       liveUserBubble.className = "gemini-inline-message live-user-speaking";
       liveUserBubble.innerHTML = `
@@ -3769,57 +3806,62 @@ function initOutputPracticingPanel() {
         conversationEl.appendChild(liveUserBubble);
         liveUserBubble.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
+    } else if (activeCallMode === "video") {
+      if (videoSubtitles) videoSubtitles.textContent = "Listening to you... Speak now!";
+    }
 
-      const liveWordsEl = liveUserBubble.querySelector(".live-user-words");
+    const liveWordsEl = liveUserBubble ? liveUserBubble.querySelector(".live-user-words") : null;
 
-      outputSpeechRecognition.onresult = (event) => {
-        let interimText = "";
-        let finalText = "";
+    outputSpeechRecognition.onresult = (event) => {
+      let interimText = "";
+      let finalText = "";
 
-        for (let i = 0; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalText += event.results[i][0].transcript + " ";
-          } else {
-            interimText += event.results[i][0].transcript + " ";
-          }
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalText += event.results[i][0].transcript + " ";
+        } else {
+          interimText += event.results[i][0].transcript + " ";
         }
+      }
 
-        const combinedText = (finalText + interimText).trim();
-        if (combinedText) {
-          accumulatedLiveTranscript = combinedText;
-          if (liveWordsEl) {
-            liveWordsEl.textContent = combinedText;
-            liveWordsEl.style.opacity = "1";
-            liveWordsEl.style.fontStyle = "normal";
-          }
+      const combinedText = (finalText + interimText).trim();
+      if (combinedText) {
+        accumulatedLiveTranscript = combinedText;
+        if (liveWordsEl) {
+          liveWordsEl.textContent = combinedText;
+          liveWordsEl.style.opacity = "1";
+          liveWordsEl.style.fontStyle = "normal";
+        }
+        if (activeCallMode === "normal") {
           setOutputLiveState("listening", `🎙️ "${combinedText.length > 32 ? '...' + combinedText.slice(-32) : combinedText}"`);
-          if (liveUserBubble) liveUserBubble.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
-          // Auto-submit after 1.3s of silence once words have been spoken!
-          if (silenceTimer) clearTimeout(silenceTimer);
-          silenceTimer = setTimeout(() => {
-            if (isOutputListening && accumulatedLiveTranscript.trim()) {
-              finishAndSubmitSpeech(accumulatedLiveTranscript.trim(), currentLang, liveUserBubble);
-            }
-          }, 1300);
+        } else if (activeCallMode === "video") {
+          if (videoSubtitles) videoSubtitles.textContent = `You: "${combinedText}"`;
         }
-      };
+        if (liveUserBubble) liveUserBubble.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-      outputSpeechRecognition.onerror = (event) => {
-        console.warn("Speech recognition error:", event.error);
-        if (event.error === "no-speech") {
-          // Keep listening for speech; don't abort abruptly
-          return;
-        }
-        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-          alert("Microphone permission is blocked in your browser. Please click the lock / camera icon in the address bar to allow microphone access.");
-          if (liveUserBubble && !accumulatedLiveTranscript.trim()) liveUserBubble.remove();
-          isOutputListening = false;
-          setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
-          return;
-        }
+        // Auto-submit after 1.3s of silence
+        if (silenceTimer) clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+          if (isOutputListening && accumulatedLiveTranscript.trim()) {
+            finishAndSubmitSpeech(accumulatedLiveTranscript.trim(), currentLang, liveUserBubble);
+          }
+        }, 1300);
+      }
+    };
 
-        // If something was already spoken before error, submit it!
+    outputSpeechRecognition.onerror = (event) => {
+      if (event.error === "no-speech") return;
+      if (accumulatedLiveTranscript.trim()) {
+        finishAndSubmitSpeech(accumulatedLiveTranscript.trim(), currentLang, liveUserBubble);
+      } else {
+        if (liveUserBubble) liveUserBubble.remove();
+        isOutputListening = false;
+        setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+      }
+    };
+
+    outputSpeechRecognition.onend = () => {
+      if (isOutputListening) {
         if (accumulatedLiveTranscript.trim()) {
           finishAndSubmitSpeech(accumulatedLiveTranscript.trim(), currentLang, liveUserBubble);
         } else {
@@ -3827,29 +3869,17 @@ function initOutputPracticingPanel() {
           isOutputListening = false;
           setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
         }
-      };
-
-      outputSpeechRecognition.onend = () => {
-        if (isOutputListening) {
-          if (accumulatedLiveTranscript.trim()) {
-            finishAndSubmitSpeech(accumulatedLiveTranscript.trim(), currentLang, liveUserBubble);
-          } else {
-            if (liveUserBubble) liveUserBubble.remove();
-            isOutputListening = false;
-            setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
-          }
-        }
-      };
-
-      try {
-        outputSpeechRecognition.start();
-      } catch (err) {
-        console.warn("Recognition already active or start error:", err);
       }
     };
+
+    try {
+      outputSpeechRecognition.start();
+    } catch (err) {
+      console.warn("Recognition start error:", err);
+    }
   }
 
-  // Handle Finish & Submit Spoken Turn -> Generate Live Response -> Speak Aloud
+  // Handle Finish & Submit Spoken Turn -> Generate Response -> Speak Aloud
   async function finishAndSubmitSpeech(userSpeech, langObj, userDiv) {
     if (silenceTimer) clearTimeout(silenceTimer);
     isOutputListening = false;
@@ -3857,63 +3887,74 @@ function initOutputPracticingPanel() {
       try { outputSpeechRecognition.stop(); } catch (e) {}
     }
 
-    // Convert live speaking bubble to permanent query bubble
-    if (userDiv) {
-      userDiv.classList.remove("live-user-speaking");
-      userDiv.innerHTML = `
-        <div class="gemini-user-query" style="display:flex;align-items:center;gap:0.6rem;">
-          <i class="fa-solid fa-microphone" style="font-size:0.85rem;color:var(--accent-yellow,#f6ca21);opacity:0.9;"></i>
-          <span>${escapeHtml(userSpeech)}</span>
-        </div>
-      `;
+    if (activeCallMode === "transcript") {
+      if (userDiv) {
+        userDiv.classList.remove("live-user-speaking");
+        userDiv.innerHTML = `
+          <div class="gemini-user-query" style="display:flex;align-items:center;gap:0.6rem;">
+            <i class="fa-solid fa-microphone" style="font-size:0.85rem;color:var(--accent-yellow,#f6ca21);opacity:0.9;"></i>
+            <span>${escapeHtml(userSpeech)}</span>
+          </div>
+        `;
+      }
     }
 
     setOutputLiveState("processing", "⏳ Sol is thinking...");
+    if (activeCallMode === "video" && videoSubtitles) {
+      videoSubtitles.textContent = "⏳ Sol is thinking...";
+    }
 
-    // 2. Render Sol AI Response Bubble with loader
-    const aiDiv = document.createElement("div");
-    aiDiv.className = "gemini-inline-message";
-    aiDiv.innerHTML = `
-      <div class="gemini-ai-row">
-        <div class="gemini-ai-content-col">
-          <div class="gemini-ai-response">
-            <div class="gemini-ai-body">
-              <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Listening and preparing spoken answer...
+    let aiDiv = null;
+    let aiBody = null;
+
+    if (activeCallMode === "transcript" && conversationEl) {
+      aiDiv = document.createElement("div");
+      aiDiv.className = "gemini-inline-message";
+      aiDiv.innerHTML = `
+        <div class="gemini-ai-row">
+          <div class="gemini-ai-content-col">
+            <div class="gemini-ai-response">
+              <div class="gemini-ai-body">
+                <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Listening and preparing answer...
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
-    if (conversationEl) {
+      `;
       conversationEl.appendChild(aiDiv);
       if (typeof attachSolToLastMessage === "function") {
         attachSolToLastMessage();
       }
       aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      aiBody = aiDiv.querySelector(".gemini-ai-body");
     }
 
-    const aiBody = aiDiv.querySelector(".gemini-ai-body");
+    const systemInstruction = `You are Sol, a warm, charismatic, and intelligent AI companion powered by Google Gemini on Globally Known.
+You are in a real-time live spoken conversation with the learner. Respond aloud in 1-3 spoken sentences. Speak cleanly, warmly, and naturally. Never output markdown asterisks, bullet points, formatting codes, or internal thoughts.`;
+
+    const prompt = `The user said: "${userSpeech}". Respond directly in natural spoken dialogue.`;
+
+    let finalized = false;
     let responseText = "";
 
-    const roleCfg = OUTPUT_ROLE_CONFIGS[activeOutputRole] || OUTPUT_ROLE_CONFIGS.conversation;
-    const systemInstruction = `${roleCfg.directive}
-Target Language: ${langObj.label} (${langObj.code})
-CRITICAL SPOKEN DIRECTIVE: You are in a real-time live spoken conversation with the learner. Respond aloud in 1-3 spoken sentences. Speak cleanly, warmly, and naturally. Never output markdown asterisks, bullet points, formatting codes, or internal thoughts.`;
-
-    const prompt = `The user said to you in ${langObj.label}: "${userSpeech}". Respond directly in natural spoken dialogue.`;
-
-    // Finalize answer helper
-    let finalized = false;
     const finalizeAnswer = (fullText) => {
       if (finalized) return;
       finalized = true;
       responseText = fullText.trim();
-      aiBody.innerHTML = marked.parse(responseText);
-      aiBody.setAttribute("data-raw-text", responseText);
-      attachAiActions(aiDiv, responseText);
-      if (typeof attachSolToLastMessage === "function") {
-        attachSolToLastMessage();
+
+      if (activeCallMode === "transcript" && aiBody && aiDiv) {
+        aiBody.innerHTML = marked.parse(responseText);
+        aiBody.setAttribute("data-raw-text", responseText);
+        attachAiActions(aiDiv, responseText);
+        if (typeof attachSolToLastMessage === "function") {
+          attachSolToLastMessage();
+        }
+      } else if (activeCallMode === "video" && videoSubtitles) {
+        videoSubtitles.textContent = `Sol: "${responseText}"`;
+      } else if (activeCallMode === "normal") {
+        setOutputLiveState("speaking", `Sol: "${responseText}"`);
       }
+
       speakLiveAudio(responseText, langObj.code);
     };
 
@@ -3925,10 +3966,17 @@ CRITICAL SPOKEN DIRECTIVE: You are in a real-time live spoken conversation with 
           systemInstruction,
           "gemini-3.6-flash",
           (chunk) => {
-            if (responseText === "") aiBody.innerHTML = "";
+            if (responseText === "") {
+              if (aiBody) aiBody.innerHTML = "";
+            }
             responseText += chunk;
-            aiBody.innerHTML = marked.parse(responseText);
-            aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            if (aiBody) {
+              aiBody.innerHTML = marked.parse(responseText);
+              if (aiDiv) aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+            if (activeCallMode === "video" && videoSubtitles) {
+              videoSubtitles.textContent = `Sol: "${responseText}"`;
+            }
           },
           (err) => {
             console.warn("Gemini stream error:", err);
@@ -3941,7 +3989,6 @@ CRITICAL SPOKEN DIRECTIVE: You are in a real-time live spoken conversation with 
           }
         );
 
-        // In case streaming completed without explicit onComplete callback
         setTimeout(() => {
           if (!finalized && responseText) {
             finalizeAnswer(responseText);
@@ -3959,56 +4006,99 @@ CRITICAL SPOKEN DIRECTIVE: You are in a real-time live spoken conversation with 
     }
   }
 
-  // Fallback Native Spoken Generator (Ensures 100% instant, reliable real-time spoken reply)
+  // Speak Live Audio via Web Speech Synthesis
+  function speakLiveAudio(text, langCode) {
+    if (!("speechSynthesis" in window)) {
+      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+      return;
+    }
+    
+    window.speechSynthesis.cancel();
+    try { window.speechSynthesis.resume(); } catch (e) {}
+
+    const cleanText = text
+      .replace(/[*_#`~>]/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/\(.*?\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleanText) {
+      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = langCode || "en-US";
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
+
+    const voices = getBrowserVoices();
+    if (voices && voices.length > 0) {
+      const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en"));
+      if (match) utterance.voice = match;
+    }
+
+    windowActiveUtterance = utterance;
+
+    utterance.onstart = () => {
+      isSolSpeaking = true;
+      setOutputLiveState("speaking", "🔊 Sol is speaking...");
+    };
+
+    utterance.onend = () => {
+      isSolSpeaking = false;
+      if (activeCallMode === "video") {
+        if (videoSubtitles) videoSubtitles.textContent = "Sol is listening... Your turn!";
+        setTimeout(() => {
+          if (activeCallMode === "video" && videoModal && videoModal.classList.contains("active")) {
+            startListeningTurn();
+          }
+        }, 500);
+      } else if (activeCallMode === "normal") {
+        setOutputLiveState("listening", "📞 Sol is listening... Speak now!");
+        setTimeout(() => {
+          if (activeCallMode === "normal") {
+            startListeningTurn();
+          }
+        }, 500);
+      } else if (activeCallMode === "transcript") {
+        setOutputLiveState("listening", "📝 Sol is listening... Speak now!");
+        setTimeout(() => {
+          if (activeCallMode === "transcript") {
+            startListeningTurn();
+          }
+        }, 500);
+      } else {
+        setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+      }
+    };
+
+    utterance.onerror = () => {
+      isSolSpeaking = false;
+      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Fallback Native Spoken Generator
   function fallbackSpokenResponse(userSpeech, langObj, aiBody, aiDiv, callback) {
     setTimeout(() => {
-      let reply = "";
       const lower = userSpeech.toLowerCase();
-
-      if (langObj.label === "Spanish") {
-        if (lower.includes("hola") || lower.includes("buenos") || lower.includes("buenas")) {
-          reply = "¡Hola! Qué gusto saludarte. Tu pronunciación se escucha muy clara y natural. ¿Cómo te encuentras hoy?";
-        } else if (lower.includes("cómo estás") || lower.includes("que tal") || lower.includes("qué tal")) {
-          reply = "¡Me siento genial, gracias por preguntar! Con muchas ganas de practicar español contigo. ¿De qué te gustaría platicar?";
-        } else {
-          reply = "¡Excelente observación! Tienes un ritmo muy fluido al hablar. Cuéntame un poco más sobre eso.";
-        }
-      } else if (langObj.label === "French") {
-        if (lower.includes("bonjour") || lower.includes("salut") || lower.includes("coucou")) {
-          reply = "Bonjour ! C'est un réel plaisir de discuter avec toi. Ton accent est très agréable ! Comment vas-tu ?";
-        } else {
-          reply = "C'est très bien dit ! Ton intonation est tout à fait naturelle. Continuons, qu'aimerais-tu explorer maintenant ?";
-        }
-      } else if (langObj.label === "German") {
-        if (lower.includes("hallo") || lower.includes("guten")) {
-          reply = "Hallo! Schön, dich zu hören. Deine Aussprache klingt wirklich gut. Wie geht es dir heute?";
-        } else {
-          reply = "Das hast du sehr schön gesagt! Dein Sprachrhythmus ist flüssig. Lass uns gerne weiter darüber sprechen.";
-        }
-      } else if (langObj.label === "Italian") {
-        if (lower.includes("ciao") || lower.includes("buongiorno")) {
-          reply = "Ciao! È un piacere ascoltarti. Hai una pronuncia molto chiara e melodica. Come stai oggi?";
-        } else {
-          reply = "Molto interessante! Parli con grande naturalezza. Raccontami di più!";
-        }
+      let reply = "";
+      if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey")) {
+        reply = "Hey there! It's so great to talk with you live. How is your day going so far?";
+      } else if (lower.includes("how are you")) {
+        reply = "I'm doing fantastic, thank you! Feeling energetic and excited to chat with you. What's on your mind today?";
       } else {
-        // English
-        if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey")) {
-          reply = "Hey there! It's so great to talk with you live. How is your day going so far?";
-        } else if (lower.includes("how are you")) {
-          reply = "I'm doing fantastic, thank you! Feeling energetic and excited to chat with you. What's on your mind today?";
-        } else if (lower.includes("who are you") || lower.includes("what is your name")) {
-          reply = "I'm Sol, your live speaking partner on Globally Known! I'm here to practice spoken fluency and conversation with you in real time.";
-        } else {
-          const reflections = [
-            "That sounded so natural! I love hearing you express that. What got you thinking about this topic?",
-            "You have great spoken rhythm and clarity! Tell me a little more about your thoughts on that.",
-            "That makes complete sense. You communicated that effortlessly! Where should our conversation go next?"
-          ];
-          reply = reflections[Math.floor(Math.random() * reflections.length)];
-        }
+        const reflections = [
+          "That sounded so natural! I love hearing you express that. Tell me more!",
+          "You have great spoken rhythm and clarity! Where should we take this thought next?",
+          "That makes complete sense. You communicated that effortlessly! Keep going!"
+        ];
+        reply = reflections[Math.floor(Math.random() * reflections.length)];
       }
-
       callback(reply);
     }, 300);
   }
