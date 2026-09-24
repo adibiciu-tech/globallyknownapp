@@ -586,26 +586,42 @@ html, body {
   order: 4 !important;
   width: 100% !important;
   max-width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 0 10px !important;
+  box-sizing: border-box !important;
   margin-top: 0 !important;
-  margin-bottom: max(0.35rem, var(--sab, env(safe-area-inset-bottom, 6px))) !important;
+  margin-bottom: max(0.6rem, var(--sab, env(safe-area-inset-bottom, 10px))) !important;
   position: relative !important;
   z-index: 50 !important;
   flex-shrink: 0 !important;
 }
 
 #panel-sol-chat .gemini-home-input-bar {
-  width: 100% !important;
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
   max-width: 100% !important;
-  height: clamp(48px, 6.6dvh, 54px) !important;
-  padding: 0 clamp(0.4rem, 1.8vw, 0.65rem) !important;
-  gap: 0.45rem !important;
+  height: clamp(46px, 6.2dvh, 50px) !important;
+  padding: 0 0.5rem !important;
+  gap: 0.35rem !important;
   box-sizing: border-box !important;
-  border-radius: 28px !important;
+  border-radius: 26px !important;
 }
 
 #panel-sol-chat .gemini-home-input-bar input {
   min-width: 0 !important;
-  font-size: clamp(0.88rem, 3.5vw, 1rem) !important;
+  font-size: clamp(0.85rem, 3.2vw, 0.95rem) !important;
+}
+
+#panel-sol-chat .sol-last-msg-companion {
+  width: 28px !important;
+  height: 44px !important;
+  flex-shrink: 0 !important;
+  margin-bottom: -5px !important;
 }
 
 #panel-sol-chat .gemini-home-model-selector {

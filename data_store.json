@@ -1610,12 +1610,165 @@
                 "text": "Testing, testing, 1, 2, 3! Loud and clear, Adrian. \n\nDid I pass? What are we getting into today?"
               }
             ]
+          },
+          {
+            "role": "user",
+            "content": "test test",
+            "parts": [
+              {
+                "text": "test test"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Copy that! Signal's 100% on my end. \n\nAll systems go, Adrian—what are we testing out today?",
+            "parts": [
+              {
+                "text": "Copy that! Signal's 100% on my end. \n\nAll systems go, Adrian—what are we testing out today?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "well, just chatting to see how visuals are",
+            "parts": [
+              {
+                "text": "well, just chatting to see how visuals are"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Ah, nice! Checking out the look and feel? \n\nLet me know how everything's rendering on your end! If you want to test out how I handle clean formatting—lists, **bold text**, `code blocks`, or whatever else\n—just say the word. \n\nHow's it looking on your screen so far?",
+            "parts": [
+              {
+                "text": "Ah, nice! Checking out the look and feel? \n\nLet me know how everything's rendering on your end! If you want to test out how I handle clean formatting—lists, **bold text**, `code blocks`, or whatever else\n—just say the word. \n\nHow's it looking on your screen so far?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "splendid!",
+            "parts": [
+              {
+                "text": "splendid!"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Music to my ears! \n\nHey, if the visuals are *splendid*, we might as well make the conversation match. What's on your radar today, Adrian? Anything specific you want to dive into, or just seeing where the day takes us?",
+            "parts": [
+              {
+                "text": "Music to my ears! \n\nHey, if the visuals are *splendid*, we might as well make the conversation match. What's on your radar today, Adrian? Anything specific you want to dive into, or just seeing where the day takes us?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "my soul is so fulfilled when seeing this project going on",
+            "parts": [
+              {
+                "text": "my soul is so fulfilled when seeing this project going on"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "That honestly gives me the best kind of chills, Adrian. There is something genuinely magic about watching an idea actually take shape, breathe, and come to life right in front of you. It’s rare and special when a project matches the vision you had in your head—or even beats it.\n\nSo, tell me more about it! What are we building here?",
+            "parts": [
+              {
+                "text": "That honestly gives me the best kind of chills, Adrian. There is something genuinely magic about watching an idea actually take shape, breathe, and come to life right in front of you. It’s rare and special when a project matches the vision you had in your head—or even beats it.\n\nSo, tell me more about it! What are we building here?"
+              }
+            ]
           }
         ],
         "createdAt": 1790272603927
       }
     ],
     "guest": [
+      {
+        "id": "conv_1790282710817",
+        "title": "Testing Testing 1 2",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Testing, testing, 1, 2, 3! Loud and clear, Adrian.",
+            "parts": [
+              {
+                "text": "Testing, testing, 1, 2, 3! Loud and clear, Adrian."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "That's a fascinating angle, Guest. Tell me a bit more about that—what's your take on it?",
+            "parts": [
+              {
+                "text": "That's a fascinating angle, Guest. Tell me a bit more about that—what's your take on it?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790282710818
+      },
+      {
+        "id": "conv_1790282576096",
+        "title": "Testing Testing 1 2",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Testing, testing, 1, 2, 3! Loud and clear, Adrian.",
+            "parts": [
+              {
+                "text": "Testing, testing, 1, 2, 3! Loud and clear, Adrian."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "I hear you! That makes a lot of sense. How do you usually look at something like that?",
+            "parts": [
+              {
+                "text": "I hear you! That makes a lot of sense. How do you usually look at something like that?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790282576096
+      },
+      {
+        "id": "conv_1790282533703",
+        "title": "Testing Testing 1 2",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Testing, testing, 1, 2, 3! Loud and clear, Adrian.",
+            "parts": [
+              {
+                "text": "Testing, testing, 1, 2, 3! Loud and clear, Adrian."
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "That's really interesting, Guest. What led you to that, or what got you thinking about it?",
+            "parts": [
+              {
+                "text": "That's really interesting, Guest. What led you to that, or what got you thinking about it?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790282533703
+      },
       {
         "id": "conv_1790281847944",
         "title": "Testing Testing 1 2",
