@@ -377,6 +377,7 @@ function init() {
   initDictionaryPanel();
   initDescribingLabPanel();
   initOutputPracticingPanel();
+  initSolCompanion();
 
   // Initialize PWA, Google Auth & Admin Access
   initPwaInstall();
@@ -543,6 +544,35 @@ window.triggerSolFadeIn = triggerSolFadeIn;
 
 function triggerHomeFadeInAnimation() {
   triggerSolFadeIn();
+}
+
+function initSolCompanion() {
+  const companion = document.getElementById("sol-chat-companion");
+  const speech = document.getElementById("sol-companion-speech");
+  if (!companion) return;
+
+  const companionPhrases = [
+    "I'm right here with you! ✨",
+    "Watching the flow... 👁️",
+    "Ask me anything! 💡",
+    "I'm all ears... well, all eye! 😄",
+    "Keeping you company! 🚀",
+    "Let's build something great! 🌟",
+    "Got your back, always! 👊"
+  ];
+  let phraseIdx = 0;
+  let speechTimeout = null;
+
+  companion.addEventListener("click", () => {
+    if (!speech) return;
+    phraseIdx = (phraseIdx + 1) % companionPhrases.length;
+    speech.textContent = companionPhrases[phraseIdx];
+    companion.classList.add("show-speech");
+    if (speechTimeout) clearTimeout(speechTimeout);
+    speechTimeout = setTimeout(() => {
+      companion.classList.remove("show-speech");
+    }, 3200);
+  });
 }
 
 function attachAiActions(aiDiv, text) {
