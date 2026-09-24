@@ -553,9 +553,9 @@ function createSolCompanionElement() {
   const div = document.createElement("div");
   div.className = "sol-last-msg-companion";
   div.id = "sol-last-msg-companion";
-  div.title = "Sol";
+  div.title = "Sol Companion";
   div.innerHTML = `
-    <div class="sol-companion-speech-bubble" id="sol-companion-speech">I'm right here with you! ✨</div>
+    <div class="sol-companion-speech-bubble" id="sol-companion-speech">Move me wherever you want!</div>
     <svg class="sol-companion-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
       <!-- 1. Top Exclamation Mark Stem -->
       <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
@@ -590,27 +590,187 @@ function createSolCompanionElement() {
   `;
 
   const companionPhrases = [
+    "Move me wherever you want!",
+    "Hold me for 1 second to move me! 🚀",
     "I'm right here with you! ✨",
     "Watching the flow... 👁️",
     "Ask me anything! 💡",
     "I'm all ears... well, all eye! 😄",
-    "Keeping you company! 🚀",
-    "Let's build something great! 🌟",
+    "Keeping you company! 🌟",
     "Got your back, always! 👊"
   ];
-  let phraseIdx = 0;
+  let phraseIdx = -1;
   let speechTimeout = null;
 
-  div.addEventListener("click", () => {
+  function showCompanionSpeech(text, duration = 3200) {
     const speech = div.querySelector(".sol-companion-speech-bubble");
     if (!speech) return;
-    phraseIdx = (phraseIdx + 1) % companionPhrases.length;
-    speech.textContent = companionPhrases[phraseIdx];
+    speech.textContent = text;
     div.classList.add("show-speech");
     if (speechTimeout) clearTimeout(speechTimeout);
     speechTimeout = setTimeout(() => {
       div.classList.remove("show-speech");
-    }, 3200);
+    }, duration);
+  }
+
+  // Drag & Hold State
+  let holdTimer = null;
+  let isHeld1s = false;
+  let isDragging = false;
+  let startX = 0, startY = 0;
+  let pointerOffsetX = 0, pointerOffsetY = 0;
+  let activePointerId = null;
+
+  function clampToConversationWindow(clientX, clientY) {
+    const panelChat = document.getElementById("panel-sol-chat");
+    const pRect = panelChat ? panelChat.getBoundingClientRect() : {
+      left: 0,
+      top: 0,
+      right: window.innerWidth,
+      bottom: window.innerHeight
+    };
+
+    const solW = div.offsetWidth || 38;
+    const solH = div.offsetHeight || 59;
+
+    const minX = pRect.left + 10;
+    const maxX = pRect.right - solW - 10;
+    const minY = pRect.top + 10;
+    const maxY = pRect.bottom - solH - 10;
+
+    const rawX = clientX - pointerOffsetX;
+    const rawY = clientY - pointerOffsetY;
+
+    const clampedX = Math.max(minX, Math.min(maxX, rawX));
+    const clampedY = Math.max(minY, Math.min(maxY, rawY));
+
+    div.style.left = `${clampedX}px`;
+    div.style.top = `${clampedY}px`;
+  }
+
+  div.addEventListener("pointerdown", (e) => {
+    if (e.button && e.button !== 0) return;
+
+    startX = e.clientX;
+    startY = e.clientY;
+    isHeld1s = false;
+    isDragging = false;
+    activePointerId = e.pointerId;
+
+    const rect = div.getBoundingClientRect();
+    pointerOffsetX = e.clientX - rect.left;
+    pointerOffsetY = e.clientY - rect.top;
+
+    if (holdTimer) clearTimeout(holdTimer);
+
+    // 1-second hold threshold to unlock free movement
+    holdTimer = setTimeout(() => {
+      isHeld1s = true;
+      isDragging = true;
+      div.setAttribute("data-custom-placed", "true");
+
+      // Optional haptic vibration feedback on touch devices
+      if (navigator.vibrate) {
+        try { navigator.vibrate([60, 40, 60]); } catch (err) {}
+      }
+
+      // Detach ENTIRELY from the message box so zero clone remains!
+      const oldBubbleRow = div.closest(".gemini-ai-bubble-row");
+      const oldContentCol = div.closest(".gemini-ai-content-col");
+      if (oldBubbleRow) oldBubbleRow.classList.remove("has-docked-sol");
+      if (oldContentCol) oldContentCol.classList.remove("has-docked-sol");
+
+      const panelChat = document.getElementById("panel-sol-chat") || document.body;
+      if (div.parentNode !== panelChat) {
+        if (div.parentNode) div.parentNode.removeChild(div);
+        panelChat.appendChild(div);
+      }
+
+      div.classList.add("sol-free-floating", "sol-is-held");
+      clampToConversationWindow(e.clientX, e.clientY);
+
+      try { div.setPointerCapture(e.pointerId); } catch (err) {}
+
+      showCompanionSpeech("Move me wherever you want!", 2200);
+    }, 1000);
+  });
+
+  const onPointerMove = (e) => {
+    if (!isHeld1s) {
+      // If moved > 10px before the 1 second threshold, user is probably scrolling page
+      const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+      if (dist > 10) {
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+      }
+      return;
+    }
+
+    if (isDragging) {
+      e.preventDefault();
+      clampToConversationWindow(e.clientX, e.clientY);
+    }
+  };
+
+  const onPointerUp = (e) => {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+
+    if (activePointerId !== null) {
+      try { div.releasePointerCapture(activePointerId); } catch (err) {}
+      activePointerId = null;
+    }
+
+    if (isHeld1s && isDragging) {
+      isDragging = false;
+      div.classList.remove("sol-is-held");
+
+      // Check if dropped near the bottom of the latest message box to snap back
+      const conversationEl = document.getElementById("gemini-home-conversation");
+      const lastMsg = conversationEl ? conversationEl.querySelector(".gemini-inline-message:last-child") : null;
+      let dockedBack = false;
+
+      if (lastMsg) {
+        const msgRect = lastMsg.getBoundingClientRect();
+        const divRect = div.getBoundingClientRect();
+        const dist = Math.hypot(divRect.left - msgRect.left, divRect.bottom - msgRect.bottom);
+        if (dist < 80) {
+          div.removeAttribute("data-custom-placed");
+          div.classList.remove("sol-free-floating");
+          div.style.left = "";
+          div.style.top = "";
+          attachSolToLastMessage();
+          showCompanionSpeech("Back by your message! 🏠✨", 2200);
+          dockedBack = true;
+        }
+      }
+
+      if (!dockedBack) {
+        showCompanionSpeech("I like it here! 💛", 2200);
+      }
+      return;
+    }
+
+    // Normal short tap / click without holding
+    if (!isHeld1s) {
+      phraseIdx = (phraseIdx + 1) % companionPhrases.length;
+      showCompanionSpeech(companionPhrases[phraseIdx]);
+    }
+  };
+
+  div.addEventListener("pointermove", onPointerMove);
+  div.addEventListener("pointerup", onPointerUp);
+  div.addEventListener("pointercancel", () => {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+    isDragging = false;
+    div.classList.remove("sol-is-held");
   });
 
   return div;
@@ -620,11 +780,17 @@ function attachSolToLastMessage() {
   const conversationEl = document.getElementById("gemini-home-conversation");
   if (!conversationEl) return;
 
-  const messages = conversationEl.querySelectorAll(".gemini-inline-message");
   let companion = document.getElementById("sol-last-msg-companion");
 
+  // If user moved Sol to a custom spot anywhere on screen, do NOT move Sol or create any clone!
+  if (companion && (companion.getAttribute("data-custom-placed") === "true" || companion.classList.contains("sol-free-floating"))) {
+    return;
+  }
+
+  const messages = conversationEl.querySelectorAll(".gemini-inline-message");
+
   if (messages.length === 0) {
-    if (companion && companion.parentNode) {
+    if (companion && companion.parentNode && !companion.classList.contains("sol-free-floating")) {
       companion.parentNode.removeChild(companion);
     }
     return;
@@ -634,7 +800,7 @@ function attachSolToLastMessage() {
     companion = createSolCompanionElement();
   }
 
-  // Ensure singleton - remove any duplicate companion instances
+  // Ensure singleton - remove any duplicate companion instances (strict zero-clones guarantee)
   const allCompanions = document.querySelectorAll(".sol-last-msg-companion");
   allCompanions.forEach(c => {
     if (c !== companion && c.parentNode) {
@@ -658,10 +824,32 @@ function attachSolToLastMessage() {
     lastMsg.appendChild(aiRow);
   }
 
-  if (aiRow) {
-    if (companion.parentNode !== aiRow || aiRow.firstChild !== companion) {
-      aiRow.insertBefore(companion, aiRow.firstChild);
+  // Clear has-docked-sol from all other messages
+  document.querySelectorAll(".gemini-ai-bubble-row.has-docked-sol, .gemini-ai-content-col.has-docked-sol").forEach(el => {
+    el.classList.remove("has-docked-sol");
+  });
+
+  if (aiRow && aiResponse) {
+    let contentCol = lastMsg.querySelector(".gemini-ai-content-col");
+    if (!contentCol) {
+      contentCol = aiRow;
     }
+
+    // Wrap the message bubble in gemini-ai-bubble-row with align-items: flex-end
+    let bubbleRow = lastMsg.querySelector(".gemini-ai-bubble-row");
+    if (!bubbleRow) {
+      bubbleRow = document.createElement("div");
+      bubbleRow.className = "gemini-ai-bubble-row";
+      aiResponse.parentNode.insertBefore(bubbleRow, aiResponse);
+      bubbleRow.appendChild(aiResponse);
+    }
+
+    if (companion.parentNode !== bubbleRow || bubbleRow.firstChild !== companion) {
+      if (companion.parentNode) companion.parentNode.removeChild(companion);
+      bubbleRow.insertBefore(companion, bubbleRow.firstChild);
+    }
+    bubbleRow.classList.add("has-docked-sol");
+    contentCol.classList.add("has-docked-sol");
   } else {
     let userRow = lastMsg.querySelector(".gemini-user-row");
     if (!userRow) {
@@ -677,6 +865,7 @@ function attachSolToLastMessage() {
       }
     } else {
       if (companion.parentNode !== userRow) {
+        if (companion.parentNode) companion.parentNode.removeChild(companion);
         userRow.prepend(companion);
       }
     }

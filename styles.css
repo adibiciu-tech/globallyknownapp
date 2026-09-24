@@ -1647,7 +1647,7 @@ body {
 }
 
 /* =========================================================================
-   SOL IN-CONVERSATION COMPANION (Near Last Message Sent Only, Smaller, No Blink)
+   SOL IN-CONVERSATION COMPANION (Near Last Message Sent Only, Larger, No Blink, Draggable)
    ========================================================================= */
 .gemini-ai-row {
   display: flex;
@@ -1660,8 +1660,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  max-width: calc(100% - 44px);
+  max-width: 100%;
   width: fit-content;
+}
+
+/* Sol is aligned with the bottom of the message box */
+.gemini-ai-bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
 }
 
 .gemini-user-row {
@@ -1674,24 +1682,56 @@ body {
 
 .sol-last-msg-companion {
   flex-shrink: 0;
-  width: 28px;
-  height: 44px;
-  margin-top: 2px;
+  width: 38px;
+  height: 59px;
+  margin-bottom: 2px;
   cursor: pointer;
   user-select: none;
-  filter: drop-shadow(0 0 10px var(--glow-color-1, rgba(246, 202, 33, 0.45)));
+  -webkit-user-select: none;
+  filter: drop-shadow(0 0 12px var(--glow-color-1, rgba(246, 202, 33, 0.45)));
   transition: transform 0.25s ease, filter 0.25s ease;
   animation: solCompanionFloat 4s ease-in-out infinite;
   position: relative;
+  touch-action: pan-y;
 }
 
 .sol-last-msg-companion:hover {
-  transform: scale(1.15) translateY(-2px);
-  filter: drop-shadow(0 0 16px var(--glow-color-1, rgba(246, 202, 33, 0.75)));
+  transform: scale(1.12) translateY(-2px);
+  filter: drop-shadow(0 0 18px var(--glow-color-1, rgba(246, 202, 33, 0.8)));
 }
 
 .sol-last-msg-companion:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
+}
+
+/* Sol Free Floating (Lifted & moved anywhere on screen inside conversation window) */
+.sol-last-msg-companion.sol-free-floating {
+  position: fixed !important;
+  z-index: 10000 !important;
+  cursor: grab !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  margin: 0 !important;
+  animation: none !important;
+}
+
+.sol-last-msg-companion.sol-is-held {
+  cursor: grabbing !important;
+  transform: scale(1.22) !important;
+  filter: drop-shadow(0 0 24px var(--glow-color-1, rgba(246, 202, 33, 0.95))) !important;
+  transition: none !important;
+}
+
+/* Hide floating companion if Sol chat panel is not active */
+#panel-sol-chat:not(.active) .sol-last-msg-companion,
+.workspace-panel:not(.active) .sol-last-msg-companion.sol-free-floating {
+  display: none !important;
+}
+
+.gemini-ai-bubble-row:has(.sol-last-msg-companion) + .gemini-ai-actions,
+.gemini-ai-content-col.has-docked-sol .gemini-ai-actions {
+  margin-left: calc(38px + 12px);
 }
 
 @keyframes solCompanionFloat {
@@ -1729,15 +1769,16 @@ body {
 
 @media (max-width: 600px) {
   .sol-last-msg-companion {
-    width: 24px;
-    height: 38px;
-    margin-top: 1px;
+    width: 32px;
+    height: 50px;
+    margin-bottom: 2px;
   }
-  .gemini-ai-row {
+  .gemini-ai-bubble-row {
     gap: 8px;
   }
-  .gemini-ai-content-col {
-    max-width: calc(100% - 34px);
+  .gemini-ai-content-col.has-docked-sol .gemini-ai-actions,
+  .gemini-ai-bubble-row:has(.sol-last-msg-companion) + .gemini-ai-actions {
+    margin-left: calc(32px + 8px);
   }
 }
 
@@ -1776,38 +1817,55 @@ body {
 /* Companion speech bubble tooltip */
 .sol-companion-speech-bubble {
   position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  transform: translateY(6px);
-  background: rgba(15, 23, 42, 0.94);
-  border: 1px solid rgba(246, 202, 33, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(246, 202, 33, 0.2);
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid var(--accent-yellow, #f6ca21);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 14px rgba(246, 202, 33, 0.35);
   backdrop-filter: blur(10px);
   color: #f8fafc;
-  font-size: 0.74rem;
-  font-weight: 600;
-  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 12px;
   border-radius: 12px;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  z-index: 101;
+  z-index: 10001;
 }
 
 .sol-companion-speech-bubble::after {
   content: "";
   position: absolute;
   top: 100%;
-  left: 10px;
-  border-width: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
   border-style: solid;
-  border-color: rgba(15, 23, 42, 0.94) transparent transparent transparent;
+  border-color: rgba(15, 23, 42, 0.96) transparent transparent transparent;
 }
 
 .sol-last-msg-companion.show-speech .sol-companion-speech-bubble {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
+}
+
+/* When docked on the left, anchor bubble at left: 0 to guarantee it never clips against sidebar/margins */
+.sol-last-msg-companion:not(.sol-free-floating) .sol-companion-speech-bubble {
+  left: 0;
+  transform: translateY(6px);
+}
+
+.sol-last-msg-companion:not(.sol-free-floating) .sol-companion-speech-bubble::after {
+  left: 18px;
+  transform: none;
+}
+
+.sol-last-msg-companion:not(.sol-free-floating).show-speech .sol-companion-speech-bubble {
+  opacity: 1;
+  transform: translateY(0) !important;
 }
 
 /* Sol Mascot & Entrance Smooth Fade-In Animation (Standard Navigation) */
