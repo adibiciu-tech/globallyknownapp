@@ -5660,6 +5660,15 @@ function loadDesktopCinemaVideo(video, cat, index, itemEl) {
     if (!activeEmbedUrl.includes("fs=")) {
       activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
     }
+    if (!activeEmbedUrl.includes("enablejsapi=")) {
+      activeEmbedUrl += "&enablejsapi=1";
+    }
+    if (!activeEmbedUrl.includes("playsinline=")) {
+      activeEmbedUrl += "&playsinline=1";
+    }
+    if (!activeEmbedUrl.includes("origin=")) {
+      activeEmbedUrl += `&origin=${encodeURIComponent(window.location.origin)}`;
+    }
   }
   const autoplayParam = activeEmbedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1";
   if (iframe) iframe.src = activeEmbedUrl + autoplayParam;
@@ -5861,6 +5870,15 @@ function openMobilePlaylistPage(cat, videoToPlay = null) {
     btnBack.onclick = () => closeMobilePlaylistPage();
   }
 
+  const btnActionRotate = document.getElementById("btn-mobile-rotate-landscape");
+  if (btnActionRotate) {
+    btnActionRotate.onclick = () => toggleMobileLandscapeFullscreen();
+  }
+  const btnExitPseudo = document.getElementById("btn-exit-pseudo-landscape");
+  if (btnExitPseudo) {
+    btnExitPseudo.onclick = () => toggleMobileLandscapeFullscreen(false);
+  }
+
   const handleOpenAddModal = () => {
     openAddVideoModal(cat.id);
   };
@@ -5977,6 +5995,15 @@ function loadMobileCinemaVideo(video, cat, index, itemEl) {
       if (!activeEmbedUrl.includes("fs=")) {
         activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
       }
+      if (!activeEmbedUrl.includes("enablejsapi=")) {
+        activeEmbedUrl += "&enablejsapi=1";
+      }
+      if (!activeEmbedUrl.includes("playsinline=")) {
+        activeEmbedUrl += "&playsinline=1";
+      }
+      if (!activeEmbedUrl.includes("origin=")) {
+        activeEmbedUrl += `&origin=${encodeURIComponent(window.location.origin)}`;
+      }
     }
     const autoplayParam = activeEmbedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1";
     iframe.src = activeEmbedUrl + autoplayParam;
@@ -6008,6 +6035,9 @@ function clearMobileCinemaPlayer() {
 function closeMobilePlaylistPage() {
   const iframe = document.getElementById("mobile-cinema-iframe");
   if (iframe) iframe.src = "";
+  const wrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+  if (wrapper) wrapper.classList.remove("is-pseudo-landscape");
+  unlockScreenOrientation();
   const galleryEl = document.getElementById("mobile-playlist-gallery");
   const playerPageEl = document.getElementById("mobile-video-player-page");
   if (playerPageEl) playerPageEl.classList.add("hidden");
@@ -7760,6 +7790,155 @@ syncDynamicViewport();
       syncInputBarHasText(e.target);
     }
   });
+});
+
+// =========================================================================
+// Universal Fullscreen & Automatic Screen Orientation Manager
+// =========================================================================
+async function lockScreenToLandscape() {
+  try {
+    if (screen.orientation && typeof screen.orientation.lock === "function") {
+      await screen.orientation.lock("landscape").catch(async () => {
+        await screen.orientation.lock("landscape-primary").catch(() => {});
+      });
+    } else if (screen.lockOrientation) {
+      screen.lockOrientation("landscape");
+    } else if (screen.webkitLockOrientation) {
+      screen.webkitLockOrientation("landscape");
+    } else if (screen.mozLockOrientation) {
+      screen.mozLockOrientation("landscape");
+    } else if (screen.msLockOrientation) {
+      screen.msLockOrientation("landscape");
+    }
+  } catch (err) {
+    console.debug("[Orientation] Lock failed:", err);
+  }
+}
+
+function unlockScreenOrientation() {
+  try {
+    if (screen.orientation && typeof screen.orientation.unlock === "function") {
+      screen.orientation.unlock();
+    } else if (screen.unlockOrientation) {
+      screen.unlockOrientation();
+    } else if (screen.webkitUnlockOrientation) {
+      screen.webkitUnlockOrientation();
+    } else if (screen.mozUnlockOrientation) {
+      screen.mozUnlockOrientation();
+    } else if (screen.msUnlockOrientation) {
+      screen.msUnlockOrientation();
+    }
+  } catch (err) {
+    console.debug("[Orientation] Unlock failed:", err);
+  }
+}
+
+function isElementFullscreen() {
+  return !!(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement
+  );
+}
+
+function handleUniversalFullscreenChange() {
+  const isFs = isElementFullscreen();
+  const wrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+  if (isFs) {
+    lockScreenToLandscape();
+  } else {
+    unlockScreenOrientation();
+    if (wrapper && wrapper.classList.contains("is-pseudo-landscape")) {
+      wrapper.classList.remove("is-pseudo-landscape");
+    }
+  }
+}
+
+async function toggleMobileLandscapeFullscreen(forceState = null) {
+  const wrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+  const iframe = document.getElementById("mobile-cinema-iframe");
+  const target = wrapper || iframe;
+  if (!target) return;
+
+  const isFs = isElementFullscreen();
+  const isPseudo = wrapper && wrapper.classList.contains("is-pseudo-landscape");
+  const shouldOpen = forceState !== null ? forceState : (!isFs && !isPseudo);
+
+  if (shouldOpen) {
+    // 1. Try standard Fullscreen API
+    let fsSuccess = false;
+    try {
+      if (target.requestFullscreen) {
+        await target.requestFullscreen();
+        fsSuccess = true;
+      } else if (target.webkitRequestFullscreen) {
+        await target.webkitRequestFullscreen();
+        fsSuccess = true;
+      } else if (iframe && iframe.requestFullscreen) {
+        await iframe.requestFullscreen();
+        fsSuccess = true;
+      } else if (iframe && iframe.webkitRequestFullscreen) {
+        await iframe.webkitRequestFullscreen();
+        fsSuccess = true;
+      }
+    } catch (e) {
+      console.debug("Fullscreen request notice:", e);
+    }
+
+    // 2. Lock screen orientation
+    await lockScreenToLandscape();
+
+    // 3. Fallback for iOS or environments where orientation lock is restricted:
+    if (!isElementFullscreen()) {
+      if (wrapper) {
+        wrapper.classList.add("is-pseudo-landscape");
+        showToast("🔄 Rotated to Cinema Landscape (tap Rotate to exit)");
+      }
+    }
+  } else {
+    // Exit landscape & fullscreen
+    if (wrapper) wrapper.classList.remove("is-pseudo-landscape");
+    if (isElementFullscreen()) {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen().catch(() => {});
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen().catch(() => {});
+      }
+    }
+    unlockScreenOrientation();
+  }
+}
+
+// Global Fullscreen Event Listeners across all standard & vendor prefixes
+["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"].forEach((evtName) => {
+  document.addEventListener(evtName, handleUniversalFullscreenChange, false);
+});
+
+// YouTube Iframe API Fullscreen Event Bridge via postMessage
+window.addEventListener("message", (e) => {
+  try {
+    let payload = e.data;
+    if (typeof payload === "string") {
+      try { payload = JSON.parse(payload); } catch (_) {}
+    }
+    if (payload && typeof payload === "object") {
+      if (payload.info && typeof payload.info.fullscreen === "boolean") {
+        if (payload.info.fullscreen) {
+          lockScreenToLandscape();
+        } else {
+          unlockScreenOrientation();
+        }
+      }
+      if (payload.event === "onFullscreenChange") {
+        if (payload.info === true || payload.data === true) {
+          lockScreenToLandscape();
+        } else {
+          unlockScreenOrientation();
+        }
+      }
+    }
+  } catch (_) {}
 });
 
 // Start SOL Engine safely after entire module has been fully parsed & evaluated

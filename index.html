@@ -1133,15 +1133,21 @@
                 </div>
 
                 <!-- 16:9 Video Player Box -->
-                <div class="mobile-cinema-iframe-wrapper">
+                <div class="mobile-cinema-iframe-wrapper" id="mobile-cinema-iframe-wrapper">
                   <iframe 
                     id="mobile-cinema-iframe" 
                     src="" 
                     title="Mobile Video Player" 
                     frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen; screen-wake-lock; orientation-lock" 
+                    allowfullscreen
+                    webkitallowfullscreen
+                    mozallowfullscreen
                     referrerpolicy="strict-origin-when-cross-origin"
                   ></iframe>
+                  <button type="button" class="pseudo-landscape-exit-btn" id="btn-exit-pseudo-landscape" title="Exit Landscape">
+                    <i class="fa-solid fa-compress"></i>
+                  </button>
                 </div>
 
                 <!-- Active Video Info & Metadata -->
@@ -1157,6 +1163,9 @@
 
                   <!-- Quick Action Buttons -->
                   <div class="mobile-player-actions-row">
+                    <button type="button" class="btn-mobile-action" id="btn-mobile-rotate-landscape" title="Rotate to Landscape">
+                      <i class="fa-solid fa-arrows-rotate"></i> Rotate
+                    </button>
                     <button type="button" class="btn-mobile-action" id="btn-mobile-embed-video">
                       <i class="fa-solid fa-plus"></i> Embed Video
                     </button>

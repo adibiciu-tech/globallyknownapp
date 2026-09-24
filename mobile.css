@@ -1559,6 +1559,57 @@ html, body {
   color: #93c5fd;
 }
 
+#btn-mobile-rotate-landscape {
+  background: rgba(168, 85, 247, 0.18);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+}
+
+/* Pseudo-Landscape Fallback (e.g., iOS Safari or locked browser environments) */
+.mobile-cinema-iframe-wrapper.is-pseudo-landscape {
+  position: fixed !important;
+  top: 0 !important;
+  left: 100vw !important;
+  width: 100vh !important;
+  height: 100vw !important;
+  transform: rotate(90deg) !important;
+  transform-origin: top left !important;
+  z-index: 999999 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #000 !important;
+}
+
+.mobile-cinema-iframe-wrapper.is-pseudo-landscape iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}
+
+.pseudo-landscape-exit-btn {
+  display: none;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1000000;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.mobile-cinema-iframe-wrapper.is-pseudo-landscape .pseudo-landscape-exit-btn {
+  display: flex;
+}
+
 /* Playlist Section Header */
 .mobile-playlist-section-header {
   display: flex;
