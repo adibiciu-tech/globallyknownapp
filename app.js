@@ -750,6 +750,21 @@ function createSolCompanionElement() {
   div.title = "Sol Companion";
   div.innerHTML = `
     <div class="sol-companion-speech-bubble" id="sol-companion-speech">Move me wherever you want!</div>
+    
+    <!-- Thinking Dots Animation: Orbital thought halo above Sol -->
+    <div class="sol-thinking-indicator" id="sol-thinking-indicator" aria-hidden="true">
+      <svg class="sol-thinking-svg" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+        <circle class="sol-think-dot std-1" cx="18" cy="4" r="2.2" />
+        <circle class="sol-think-dot std-2" cx="28" cy="8" r="2.2" />
+        <circle class="sol-think-dot std-3" cx="32" cy="18" r="2.2" />
+        <circle class="sol-think-dot std-4" cx="28" cy="28" r="2.2" />
+        <circle class="sol-think-dot std-5" cx="18" cy="32" r="2.2" />
+        <circle class="sol-think-dot std-6" cx="8" cy="28" r="2.2" />
+        <circle class="sol-think-dot std-7" cx="4" cy="18" r="2.2" />
+        <circle class="sol-think-dot std-8" cx="8" cy="8" r="2.2" />
+      </svg>
+    </div>
+
     <svg class="sol-companion-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
       <!-- 1. Top Exclamation Mark Stem -->
       <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
@@ -849,6 +864,33 @@ function initSolCompanion() {
   }
   attachSolCompanion();
 }
+
+function setSolThinking(isThinking) {
+  const companion = document.getElementById("sol-last-msg-companion");
+  if (!companion) return;
+  let thinkEl = companion.querySelector(".sol-thinking-indicator");
+  if (!thinkEl) {
+    thinkEl = document.createElement("div");
+    thinkEl.className = "sol-thinking-indicator";
+    thinkEl.id = "sol-thinking-indicator";
+    thinkEl.setAttribute("aria-hidden", "true");
+    thinkEl.innerHTML = `
+      <svg class="sol-thinking-svg" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+        <circle class="sol-think-dot std-1" cx="18" cy="4" r="2.2" />
+        <circle class="sol-think-dot std-2" cx="28" cy="8" r="2.2" />
+        <circle class="sol-think-dot std-3" cx="32" cy="18" r="2.2" />
+        <circle class="sol-think-dot std-4" cx="28" cy="28" r="2.2" />
+        <circle class="sol-think-dot std-5" cx="18" cy="32" r="2.2" />
+        <circle class="sol-think-dot std-6" cx="8" cy="28" r="2.2" />
+        <circle class="sol-think-dot std-7" cx="4" cy="18" r="2.2" />
+        <circle class="sol-think-dot std-8" cx="8" cy="8" r="2.2" />
+      </svg>
+    `;
+    companion.appendChild(thinkEl);
+  }
+  companion.classList.toggle("is-thinking", !!isThinking);
+}
+window.setSolThinking = setSolThinking;
 
 function attachAiActions(aiDiv, text) {
   if (!aiDiv || !text || aiDiv.querySelector(".gemini-ai-actions")) return;
@@ -1008,7 +1050,7 @@ function initStartHerePanel() {
         <div class="gemini-ai-content-col">
           <div class="gemini-ai-response">
             <div class="gemini-ai-body">
-              <i class="fa-solid fa-spinner fa-spin" style="color: var(--accent-yellow);"></i> Thinking...
+              <span class="sol-thinking-bubble-dots"><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span></span>
             </div>
           </div>
         </div>
@@ -1018,6 +1060,7 @@ function initStartHerePanel() {
     if (typeof attachSolToLastMessage === "function") {
       attachSolToLastMessage();
     }
+    setSolThinking(true);
     aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
     const aiBody = aiDiv.querySelector(".gemini-ai-body");
@@ -1048,12 +1091,14 @@ Key Conversational Principles:
         systemInstruction,
         activeModel || "gemini-3.6-flash",
         (chunk) => {
+          setSolThinking(false);
           if (responseText === "") aiBody.innerHTML = "";
           responseText += chunk;
           aiBody.innerHTML = marked.parse(responseText) + `<span class="cursor-blink"></span>`;
           aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
         },
         (errorMsg) => {
+          setSolThinking(false);
           aiBody.innerHTML = `
             <div style="color: #ef4444; font-weight: 500; padding: 0.25rem 0;">
               <i class="fa-solid fa-circle-exclamation"></i> <strong>Gemini API Error:</strong> ${escapeHtml(errorMsg)}
@@ -1065,6 +1110,7 @@ Key Conversational Principles:
           `;
         },
         (finalText) => {
+          setSolThinking(false);
           if (finalText) {
             responseText = finalText;
             aiBody.innerHTML = marked.parse(responseText);
@@ -1091,11 +1137,14 @@ Key Conversational Principles:
         requestAiTitleUpdate(currentHomeConvId, query, responseText);
       }
     } catch (err) {
+      setSolThinking(false);
       aiBody.innerHTML = `
         <div style="color: #ef4444; font-weight: 500;">
           <i class="fa-solid fa-circle-exclamation"></i> <strong>Connection Error:</strong> ${escapeHtml(err.message || String(err))}
         </div>
       `;
+    } finally {
+      setSolThinking(false);
     }
   };
 

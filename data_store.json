@@ -1682,12 +1682,75 @@
                 "text": "That honestly gives me the best kind of chills, Adrian. There is something genuinely magic about watching an idea actually take shape, breathe, and come to life right in front of you. It’s rare and special when a project matches the vision you had in your head—or even beats it.\n\nSo, tell me more about it! What are we building here?"
               }
             ]
+          },
+          {
+            "role": "user",
+            "content": "nice",
+            "parts": [
+              {
+                "text": "nice"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Haha, soaking it all in? I respect that! Sometimes you just have to sit back and appreciate a good thing working smoothly. \n\nWhenever you're ready to spill the details on what you're building—or test out anything else—I'm right here!",
+            "parts": [
+              {
+                "text": "Haha, soaking it all in? I respect that! Sometimes you just have to sit back and appreciate a good thing working smoothly. \n\nWhenever you're ready to spill the details on what you're building—or test out anything else—I'm right here!"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "TEEEEESSSTTT",
+            "parts": [
+              {
+                "text": "TEEEEESSSTTT"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "**RECEIVEEEDDD LOUD AND CLEAR!** 📣\n\nDid the soundwaves just shake your screen? 😂 You've definitely got my full attention now, Adrian! What are we firing up next?",
+            "parts": [
+              {
+                "text": "**RECEIVEEEDDD LOUD AND CLEAR!** 📣\n\nDid the soundwaves just shake your screen? 😂 You've definitely got my full attention now, Adrian! What are we firing up next?"
+              }
+            ]
           }
         ],
         "createdAt": 1790272603927
       }
     ],
     "guest": [
+      {
+        "id": "conv_1790283018364",
+        "title": "Tell Me A Fun",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Tell me a fun thought!",
+            "parts": [
+              {
+                "text": "Tell me a fun thought!"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "I completely get where you're coming from. What happened next, or how are you feeling about it now?",
+            "parts": [
+              {
+                "text": "I completely get where you're coming from. What happened next, or how are you feeling about it now?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790283018365
+      },
       {
         "id": "conv_1790282710817",
         "title": "Testing Testing 1 2",
