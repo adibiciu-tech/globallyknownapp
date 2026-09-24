@@ -5442,15 +5442,15 @@ function renderDesktopPlaylistGallery(categories) {
     const thumbUrl = (firstVid && firstVid.thumbUrl) ? firstVid.thumbUrl : "https://img.youtube.com/vi/RJbUtcaoNCY/hqdefault.jpg";
     const levelStr = firstVid ? (firstVid.level || "A1") : "A1";
 
-    // Build the 3 mini previews strip
+    // Build the 3 mini previews strip: displays Videos 2, 3, 4 (with Video 1 featured in the Hero above)
     let miniPreviewsHtml = "";
-    for (let i = 0; i < 3; i++) {
-      const mv = vids[i];
+    for (let slot = 1; slot <= 3; slot++) {
+      const mv = vids[slot];
       if (mv && mv.thumbUrl) {
-        const num = (i + 1) < 10 ? `0${i + 1}` : `${i + 1}`;
+        const num = (slot + 1) < 10 ? `0${slot + 1}` : `${slot + 1}`;
         const durBadge = mv.durationStr ? `<span class="yt-mini-badge">${mv.durationStr}</span>` : `<span class="yt-mini-badge">#${num}</span>`;
         miniPreviewsHtml += `
-          <div class="yt-mini-thumb-item" data-mini-idx="${i}" title="${escapeHtml(mv.title || 'Lesson ' + (i + 1))}">
+          <div class="yt-mini-thumb-item" data-mini-idx="${slot}" title="${escapeHtml(mv.title || 'Lesson ' + (slot + 1))}">
             <img src="${mv.thumbUrl}" alt="${escapeHtml(mv.title || '')}" loading="lazy" />
             ${durBadge}
           </div>
@@ -5459,7 +5459,7 @@ function renderDesktopPlaylistGallery(categories) {
         miniPreviewsHtml += `
           <div class="yt-mini-thumb-item yt-mini-empty-slot" title="Add Video">
             <i class="fa-solid fa-plus"></i>
-            <span>Lesson ${i + 1}</span>
+            <span>Lesson ${slot + 1}</span>
           </div>
         `;
       }
