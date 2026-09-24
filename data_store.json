@@ -1617,6 +1617,33 @@
     ],
     "guest": [
       {
+        "id": "conv_1790281456037",
+        "title": "Hello Sol How Are",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Hello Sol, how are you today?",
+            "parts": [
+              {
+                "text": "Hello Sol, how are you today?"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?",
+            "parts": [
+              {
+                "text": "I'm doing really well, thanks for asking! Feeling sharp and ready for whatever you want to chat about. How's your day treating you?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790281456037
+      },
+      {
         "id": "conv_1790277733144",
         "title": "Tell Me A Fun",
         "icon": "fa-comments",

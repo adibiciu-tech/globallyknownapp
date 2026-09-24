@@ -792,7 +792,22 @@ function attachSolCompanion() {
   const inputBar = document.querySelector(".gemini-home-input-bar");
   if (!inputWrapper || !inputBar) return;
 
+  const conversationEl = document.getElementById("gemini-home-conversation");
+  const hasMsgs = conversationEl && conversationEl.querySelectorAll(".gemini-inline-message").length > 0;
+
   let companion = document.getElementById("sol-last-msg-companion");
+
+  // Keep Sol ONLY in the conversation chat box (never on the empty SOL tab landing page)
+  if (!hasMsgs) {
+    if (companion && !companion.classList.contains("sol-free-floating")) {
+      companion.style.display = "none";
+    }
+    return;
+  }
+
+  if (companion) {
+    companion.style.display = "flex";
+  }
 
   // If user moved Sol to a custom spot anywhere on screen, do NOT move Sol or create any clone!
   if (companion && (companion.getAttribute("data-custom-placed") === "true" || companion.classList.contains("sol-free-floating"))) {
@@ -801,6 +816,7 @@ function attachSolCompanion() {
 
   if (!companion) {
     companion = createSolCompanionElement();
+    companion.style.display = "flex";
   } else if (!companion.__solBound) {
     bindSolCompanionEvents(companion);
   }
@@ -915,6 +931,22 @@ function resetHomeConversationScreen() {
     syncInputBarHasText(homeInput);
     homeInput.focus();
   }
+
+  // Reset Sol companion back to docked position and hide him on the empty SOL tab
+  const companion = document.getElementById("sol-last-msg-companion");
+  if (companion) {
+    companion.classList.remove("sol-free-floating", "sol-is-held", "show-speech");
+    companion.removeAttribute("data-custom-placed");
+    companion.style.left = "";
+    companion.style.top = "";
+    companion.style.display = "none";
+    const inputWrapper = document.getElementById("gemini-input-wrapper");
+    const inputBar = document.querySelector(".gemini-home-input-bar");
+    if (inputWrapper && inputBar && companion.parentNode !== inputWrapper) {
+      inputWrapper.insertBefore(companion, inputBar);
+    }
+  }
+
   updateGreetingText();
   updateHomeChatModeState();
   if (typeof window.switchPanel === "function") {

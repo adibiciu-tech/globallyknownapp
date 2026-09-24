@@ -1731,10 +1731,25 @@ body {
   transition: none !important;
 }
 
-/* Hide floating companion if Sol chat panel is not active */
+/* Hide companion if Sol chat panel is not active */
 #panel-sol-chat:not(.active) .sol-last-msg-companion,
 .workspace-panel:not(.active) .sol-last-msg-companion.sol-free-floating {
   display: none !important;
+}
+
+/* Mini Sol is strictly for the conversation chat box - removed from the SOL tab landing screen */
+#panel-sol-chat:not(.has-messages) .sol-last-msg-companion,
+#panel-sol-chat:not(:has(.gemini-inline-message)) .sol-last-msg-companion,
+.gemini-home-content:not(.has-messages) .sol-last-msg-companion,
+.gemini-home-content:not(:has(.gemini-inline-message)) .sol-last-msg-companion {
+  display: none !important;
+}
+
+#panel-sol-chat.has-messages .sol-last-msg-companion,
+#panel-sol-chat:has(.gemini-inline-message) .sol-last-msg-companion,
+.gemini-home-content.has-messages .sol-last-msg-companion,
+.gemini-home-content:has(.gemini-inline-message) .sol-last-msg-companion {
+  display: flex !important;
 }
 
 .gemini-ai-bubble-row:has(.sol-last-msg-companion) + .gemini-ai-actions,
