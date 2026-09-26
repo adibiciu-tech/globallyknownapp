@@ -1700,7 +1700,7 @@ body {
   transition: transform 0.25s ease, filter 0.25s ease;
   animation: solCompanionFloat 4s ease-in-out infinite;
   position: relative;
-  touch-action: pan-y;
+  touch-action: none !important;
 }
 
 .sol-last-msg-companion:hover {
@@ -1733,7 +1733,9 @@ body {
 
 /* Hide companion if Sol chat panel is not active */
 #panel-sol-chat:not(.active) .sol-last-msg-companion,
-.workspace-panel:not(.active) .sol-last-msg-companion.sol-free-floating {
+.workspace-panel:not(.active) .sol-last-msg-companion.sol-free-floating,
+body:not(:has(#panel-sol-chat.active)) .sol-last-msg-companion.sol-free-floating,
+body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-floating {
   display: none !important;
 }
 

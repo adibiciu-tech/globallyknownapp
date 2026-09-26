@@ -644,14 +644,17 @@ function bindSolCompanionEvents(div) {
         inputWrapper.removeChild(div);
       }
 
-      const panelChat = document.getElementById("panel-sol-chat") || document.body;
-      if (div.parentNode !== panelChat) {
+      // Append directly to document.body so position:fixed coordinates match the viewport 1:1
+      // with ZERO parent transform offsets, ZERO jumps, and ZERO containing-block shifts!
+      if (div.parentNode !== document.body) {
         if (div.parentNode) div.parentNode.removeChild(div);
-        panelChat.appendChild(div);
+        document.body.appendChild(div);
       }
 
+      // Preserve exact pixel position: rect.left and rect.top are viewport coordinates!
+      div.style.left = `${rect.left}px`;
+      div.style.top = `${rect.top}px`;
       div.classList.add("sol-free-floating", "sol-is-held");
-      clampToConversationWindow(e.clientX, e.clientY);
 
       try { div.setPointerCapture(e.pointerId); } catch (err) {}
 
@@ -2227,6 +2230,18 @@ window.switchPanel = function(panelId) {
       p.style.setProperty("opacity", "0", "important");
     }
   });
+
+  // Sync free-floating Sol visibility across panel switches
+  const freeSol = document.getElementById("sol-last-msg-companion");
+  if (freeSol && freeSol.classList.contains("sol-free-floating")) {
+    const solChatPanel = document.getElementById("panel-sol-chat");
+    const hasMessages = solChatPanel && solChatPanel.classList.contains("has-messages");
+    if (panelId === "sol-chat" && hasMessages) {
+      freeSol.style.setProperty("display", "flex", "important");
+    } else {
+      freeSol.style.setProperty("display", "none", "important");
+    }
+  }
 
   // 3. Reset slideshow view if routing away from the dictionary
   if (panelId !== "dictionary") {
