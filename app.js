@@ -640,8 +640,11 @@ function bindSolCompanionEvents(div) {
 
       // Detach ENTIRELY from the input wrapper so zero clone remains!
       const inputWrapper = document.getElementById("gemini-input-wrapper") || document.querySelector(".gemini-input-wrapper");
-      if (inputWrapper && inputWrapper.contains(div)) {
-        inputWrapper.removeChild(div);
+      if (inputWrapper) {
+        inputWrapper.classList.add("sol-away");
+        if (inputWrapper.contains(div)) {
+          inputWrapper.removeChild(div);
+        }
       }
 
       // Append directly to document.body so position:fixed coordinates match the viewport 1:1
@@ -709,6 +712,7 @@ function bindSolCompanionEvents(div) {
           div.classList.remove("sol-free-floating");
           div.style.left = "";
           div.style.top = "";
+          if (inputWrapper) inputWrapper.classList.remove("sol-away");
           attachSolCompanion();
           showCompanionSpeech("Back home! 🏠✨", 2200);
           dockedBack = true;
@@ -716,6 +720,7 @@ function bindSolCompanionEvents(div) {
       }
 
       if (!dockedBack) {
+        if (inputWrapper) inputWrapper.classList.add("sol-away");
         showCompanionSpeech("I like it here! 💛", 2200);
       }
       return;
@@ -820,6 +825,7 @@ function attachSolCompanion() {
     if (companion && !companion.classList.contains("sol-free-floating")) {
       companion.style.display = "none";
     }
+    inputWrapper.classList.remove("sol-away");
     return;
   }
 
@@ -829,8 +835,11 @@ function attachSolCompanion() {
 
   // If user moved Sol to a custom spot anywhere on screen, do NOT move Sol or create any clone!
   if (companion && (companion.getAttribute("data-custom-placed") === "true" || companion.classList.contains("sol-free-floating"))) {
+    inputWrapper.classList.add("sol-away");
     return;
   }
+
+  inputWrapper.classList.remove("sol-away");
 
   if (!companion) {
     companion = createSolCompanionElement();

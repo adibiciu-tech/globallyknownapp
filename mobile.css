@@ -617,7 +617,8 @@ html, body {
   font-size: clamp(0.85rem, 3.2vw, 0.95rem) !important;
 }
 
-#panel-sol-chat .sol-last-msg-companion {
+#panel-sol-chat .sol-last-msg-companion,
+#panel-sol-chat .sol-companion-home-placeholder {
   width: 28px !important;
   height: 44px !important;
   flex-shrink: 0 !important;
