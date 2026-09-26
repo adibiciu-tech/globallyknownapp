@@ -330,6 +330,15 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
+        elif path.startswith("/api/youtube/categories"):
+            data = load_data()
+            cats = data.get("playlist_categories", [])
+            resp = json.dumps({"success": True, "categories": cats}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers()
+            self.wfile.write(resp)
             return
         elif path.startswith("/api/youtube/playlist"):
             target_url = query.get("url", [None])[0] or query.get("list", [None])[0]
@@ -866,12 +875,37 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(resp)
             return
 
+        elif self.path.startswith("/api/youtube/categories"):
+            try:
+                payload = json.loads(body)
+                cats = payload if isinstance(payload, list) else payload.get("categories", [])
+                data = load_data()
+                data["playlist_categories"] = cats
+                save_data(data)
+                resp = json.dumps({"success": True, "categories": cats}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"success": False, "error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
         elif self.path.startswith("/api/youtube/playlist/import"):
             try:
                 payload = json.loads(body)
                 url = payload.get("url", "")
-                cat_id = payload.get("categoryId", "city")
+                cat_id = payload.get("categoryId", "")
+                cat_title_override = (payload.get("categoryTitle") or "").strip()
+                cat_flag_override = (payload.get("categoryFlag") or "").strip()
                 vid_type = payload.get("videoType", "videos")
+                create_category = payload.get("createCategory", False)
                 
                 result = fetch_youtube_playlist(url)
                 if not result.get("success"):
@@ -885,6 +919,29 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 
                 pl_videos = result.get("videos", [])
                 pl_title = result.get("playlistTitle", "YouTube Playlist")
+                
+                data = load_data()
+                new_cat_obj = None
+
+                if create_category or not cat_id or cat_id == "new":
+                    import re
+                    chosen_title = cat_title_override or pl_title
+                    chosen_flag = cat_flag_override or ("⚡" if vid_type == "shorts" else "🎬")
+                    slug = re.sub(r'[^a-zA-Z0-9]+', '_', chosen_title.lower()).strip('_')[:20]
+                    cat_id = f"custom_pl_{int(time.time())}_{slug}"
+                    
+                    custom_cats = data.get("playlist_categories", [])
+                    new_cat_obj = {
+                        "id": cat_id,
+                        "type": vid_type,
+                        "flag": chosen_flag,
+                        "title": chosen_title,
+                        "count": f"{len(pl_videos)} {'Shorts' if vid_type == 'shorts' else 'Videos'}"
+                    }
+                    if not any(c.get("id") == cat_id for c in custom_cats):
+                        custom_cats.append(new_cat_obj)
+                        data["playlist_categories"] = custom_cats
+
                 new_videos = []
                 now = int(time.time() * 1000)
                 for idx, v in enumerate(pl_videos):
@@ -901,7 +958,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     }
                     new_videos.append(new_vid)
                 
-                data = load_data()
                 existing = data.get("videos", [])
                 existing_urls = {item.get("embedUrl") for item in existing if isinstance(item, dict)}
                 to_add = [v for v in new_videos if v["embedUrl"] not in existing_urls]
@@ -915,6 +971,8 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     "count": len(to_add),
                     "total": len(new_videos),
                     "playlistTitle": pl_title,
+                    "categoryId": cat_id,
+                    "category": new_cat_obj,
                     "videos": to_add
                 }).encode("utf-8")
                 self.send_response(200)

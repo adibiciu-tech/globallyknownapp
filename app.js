@@ -5443,7 +5443,7 @@ function syncUserDataToCloud(user) {
 // -------------------------------------------------------------
 // Video Panel Category Definitions (Videos vs Shorts)
 // -------------------------------------------------------------
-const PLAYLIST_CATEGORIES = [
+const DEFAULT_PLAYLIST_CATEGORIES = [
   // Standard Long Video Playlists
   { id: "city",      type: "videos", flag: "🏙️",  title: "Into The City!",            videos: [], count: "0 Videos" },
   { id: "house",     type: "videos", flag: "🛋️",  title: "Inside The House!",         videos: [], count: "0 Videos" },
@@ -5463,6 +5463,57 @@ const PLAYLIST_CATEGORIES = [
   { id: "shorts_slang",     type: "shorts", flag: "🔥", title: "Slang & Expressions",    videos: [], count: "0 Shorts" },
   { id: "shorts_grammar",   type: "shorts", flag: "🎯", title: "1-Minute Grammar",       videos: [], count: "0 Shorts" }
 ];
+
+function loadStoredPlaylistCategories() {
+  try {
+    const raw = localStorage.getItem("sol_custom_playlist_categories");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const idSet = new Set(parsed.map(c => c.id));
+        const merged = [...parsed];
+        DEFAULT_PLAYLIST_CATEGORIES.forEach(def => {
+          if (!idSet.has(def.id)) merged.push(def);
+        });
+        return merged;
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load stored playlist categories:", e);
+  }
+  return [...DEFAULT_PLAYLIST_CATEGORIES];
+}
+
+function persistPlaylistCategories(cats) {
+  PLAYLIST_CATEGORIES = cats;
+  localStorage.setItem("sol_custom_playlist_categories", JSON.stringify(cats));
+  try {
+    fetch("/api/youtube/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categories: cats })
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+async function syncCategoriesFromServer() {
+  try {
+    const res = await fetch("/api/youtube/categories");
+    const data = await res.json();
+    if (data && data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+      const idSet = new Set(data.categories.map(c => c.id));
+      const merged = [...data.categories];
+      PLAYLIST_CATEGORIES.forEach(c => {
+        if (!idSet.has(c.id)) merged.push(c);
+      });
+      persistPlaylistCategories(merged);
+    }
+  } catch (e) {
+    console.warn("Could not sync categories from server:", e);
+  }
+}
+
+let PLAYLIST_CATEGORIES = loadStoredPlaylistCategories();
 
 let currentVideoCategoryType = localStorage.getItem("sol_video_category_type") || "videos";
 
@@ -5484,6 +5535,197 @@ function setVideoCategoryType(newType) {
     initVideosPanel();
   }
 }
+window.setVideoCategoryType = setVideoCategoryType;
+
+// -------------------------------------------------------------
+// Add Playlist Modal Handling (Create Category & Import YouTube Playlist)
+// -------------------------------------------------------------
+let addPlaylistModalInitialized = false;
+
+function openAddPlaylistModal(defaultType = null) {
+  const modal = document.getElementById("modal-add-playlist");
+  if (!modal) return;
+
+  const urlInput = document.getElementById("add-playlist-url-input");
+  const nameInput = document.getElementById("add-playlist-name-input");
+  const flagInput = document.getElementById("add-playlist-flag-input");
+  const previewBox = document.getElementById("modal-add-pl-preview");
+  const previewTitle = document.getElementById("modal-pl-preview-title");
+  const previewCount = document.getElementById("modal-pl-preview-count");
+  const submitBtn = document.getElementById("btn-submit-add-playlist");
+  const submitText = document.getElementById("btn-submit-add-playlist-text");
+
+  let selectedType = defaultType || currentVideoCategoryType || "videos";
+
+  const btnTypeVideos = document.getElementById("modal-pl-type-videos");
+  const btnTypeShorts = document.getElementById("modal-pl-type-shorts");
+
+  const updateTypeBtns = () => {
+    if (selectedType === "shorts") {
+      btnTypeShorts?.classList.add("active");
+      btnTypeVideos?.classList.remove("active");
+      if (flagInput && (flagInput.value === "🎬" || !flagInput.value)) flagInput.value = "⚡";
+    } else {
+      btnTypeVideos?.classList.add("active");
+      btnTypeShorts?.classList.remove("active");
+      if (flagInput && (flagInput.value === "⚡" || !flagInput.value)) flagInput.value = "🎬";
+    }
+  };
+  updateTypeBtns();
+
+  if (urlInput) urlInput.value = "";
+  if (nameInput) nameInput.value = "";
+  if (previewBox) previewBox.classList.add("hidden");
+
+  modal.classList.remove("hidden");
+  setTimeout(() => urlInput?.focus(), 100);
+
+  if (!addPlaylistModalInitialized) {
+    addPlaylistModalInitialized = true;
+    const btnClose = document.getElementById("btn-close-add-playlist-modal");
+    const btnCancel = document.getElementById("btn-cancel-add-playlist");
+    const form = document.getElementById("form-add-playlist");
+
+    const closeModal = () => modal.classList.add("hidden");
+    if (btnClose) btnClose.onclick = closeModal;
+    if (btnCancel) btnCancel.onclick = closeModal;
+    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+    if (btnTypeVideos) {
+      btnTypeVideos.onclick = () => {
+        selectedType = "videos";
+        updateTypeBtns();
+      };
+    }
+    if (btnTypeShorts) {
+      btnTypeShorts.onclick = () => {
+        selectedType = "shorts";
+        updateTypeBtns();
+      };
+    }
+
+    let plTimer = null;
+    if (urlInput) {
+      urlInput.addEventListener("input", () => {
+        clearTimeout(plTimer);
+        const val = urlInput.value.trim();
+        if (!val || (!val.includes("list=") && !val.includes("/playlist"))) {
+          previewBox?.classList.add("hidden");
+          return;
+        }
+
+        previewBox?.classList.remove("hidden");
+        if (previewTitle) previewTitle.textContent = "Scanning YouTube Playlist...";
+        if (previewCount) previewCount.textContent = "Fetching playlist items from YouTube...";
+
+        plTimer = setTimeout(async () => {
+          try {
+            const res = await fetch(`/api/youtube/playlist?url=${encodeURIComponent(val)}`);
+            const data = await res.json();
+            if (data && data.success && Array.isArray(data.videos) && data.videos.length > 0) {
+              if (previewTitle) previewTitle.textContent = data.playlistTitle || "YouTube Playlist";
+              if (previewCount) previewCount.textContent = `${data.count} videos found in sequential order`;
+              if (nameInput && (!nameInput.value || nameInput.value === "YouTube Playlist")) {
+                nameInput.value = data.playlistTitle || "";
+              }
+            } else {
+              if (previewTitle) previewTitle.textContent = "Playlist Not Accessible";
+              if (previewCount) previewCount.textContent = (data && data.error) ? data.error : "Make sure playlist is Public or Unlisted.";
+            }
+          } catch (e) {
+            if (previewTitle) previewTitle.textContent = "Connection Error";
+            if (previewCount) previewCount.textContent = "Could not contact server.";
+          }
+        }, 300);
+      });
+    }
+
+    const handleCreatePlaylist = async (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      const url = urlInput ? urlInput.value.trim() : "";
+      if (!url) {
+        showToast("⚠️ Please enter a YouTube playlist link.");
+        urlInput?.focus();
+        return;
+      }
+      const title = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : "Custom Playlist";
+      const flag = (flagInput && flagInput.value.trim()) ? flagInput.value.trim() : (selectedType === "shorts" ? "⚡" : "🎬");
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        if (submitText) submitText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating & Importing...';
+      }
+
+      try {
+        const res = await fetch("/api/youtube/playlist/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: url,
+            categoryTitle: title,
+            categoryFlag: flag,
+            videoType: selectedType,
+            createCategory: true
+          })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          const newCat = data.category || {
+            id: data.categoryId,
+            type: selectedType,
+            flag: flag,
+            title: title,
+            count: `${data.count} ${selectedType === "shorts" ? "Shorts" : "Videos"}`
+          };
+
+          const existingIndex = PLAYLIST_CATEGORIES.findIndex(c => c.id === newCat.id);
+          let updatedList;
+          if (existingIndex >= 0) {
+            updatedList = [...PLAYLIST_CATEGORIES];
+            updatedList[existingIndex] = newCat;
+          } else {
+            updatedList = [...PLAYLIST_CATEGORIES, newCat];
+          }
+          persistPlaylistCategories(updatedList);
+
+          // If created in different type than current, switch to that type
+          if (currentVideoCategoryType !== selectedType) {
+            currentVideoCategoryType = selectedType;
+            localStorage.setItem("sol_video_category_type", selectedType);
+          }
+
+          closeModal();
+          showToast(`🎉 Playlist "${title}" added with ${data.count} videos in exact order!`);
+          await initVideosPanel();
+
+          // Highlight / Open newly created category
+          const createdCatObj = PLAYLIST_CATEGORIES.find(c => c.id === newCat.id);
+          if (createdCatObj) {
+            if (window.innerWidth >= 901) {
+              openDesktopPlaylistPage(createdCatObj);
+            } else {
+              openMobilePlaylistPage(createdCatObj);
+            }
+          }
+        } else {
+          showToast("⚠️ Could not import playlist: " + (data.error || "Unknown error"));
+        }
+      } catch (err) {
+        console.error("Create playlist error:", err);
+        showToast("⚠️ Failed to create and import playlist.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          if (submitText) submitText.textContent = "Create & Import All Videos";
+        }
+      }
+    };
+
+    if (form) form.addEventListener("submit", handleCreatePlaylist);
+    if (submitBtn) submitBtn.addEventListener("click", handleCreatePlaylist);
+  }
+}
+window.openAddPlaylistModal = openAddPlaylistModal;
 
 
 
@@ -6220,6 +6462,51 @@ function renderDesktopPlaylistGallery(allCategories) {
 
     desktopGrid.appendChild(card);
   });
+
+  if (categories.length === 0) {
+    const emptyNotice = document.createElement("div");
+    emptyNotice.style.cssText = "grid-column: 1 / -1; padding: 2rem 1rem; text-align: center; color: #94a3b8;";
+    emptyNotice.innerHTML = `
+      <div style="font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; color: #cbd5e1;">No ${currentVideoCategoryType === "shorts" ? "Shorts" : "Video"} Playlists Yet</div>
+      <p style="font-size: 0.82rem; color: #64748b;">Click the frame below to import a YouTube playlist!</p>
+    `;
+    desktopGrid.appendChild(emptyNotice);
+  }
+
+  // Append "+ Add New Playlist" frame at the end of the desktop categories grid
+  const desktopAddCard = document.createElement("div");
+  desktopAddCard.className = "yt-clean-playlist-card yt-add-playlist-card";
+  desktopAddCard.id = "btn-desktop-add-playlist";
+  const deskLabelType = currentVideoCategoryType === "shorts" ? "Shorts Playlist" : "Video Playlist";
+  desktopAddCard.innerHTML = `
+    <div class="yt-hero-preview-box yt-add-hero-box">
+      <div class="yt-add-large-circle">
+        <i class="fa-solid fa-plus"></i>
+      </div>
+      <span class="yt-add-card-label">Add New ${deskLabelType}</span>
+      <span class="yt-add-card-sub">Paste YouTube Playlist Link</span>
+    </div>
+    <div class="yt-card-bottom-info">
+      <div class="yt-card-header-row">
+        <h3 class="yt-card-clean-title" style="color: #38bdf8;"><i class="fa-solid fa-folder-plus"></i> Import Playlist</h3>
+      </div>
+      <div class="yt-card-sub-meta">
+        <span>Auto-embeds all videos in order</span>
+      </div>
+      <div class="yt-card-action-bar">
+        <span class="yt-card-action-link" style="color: #38bdf8;">
+          <i class="fa-solid fa-file-import"></i> Click to Add
+        </span>
+        <span class="yt-card-arrow-pill" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+          <i class="fa-solid fa-arrow-right"></i>
+        </span>
+      </div>
+    </div>
+  `;
+  desktopAddCard.addEventListener("click", () => {
+    openAddPlaylistModal(currentVideoCategoryType);
+  });
+  desktopGrid.appendChild(desktopAddCard);
 }
 
 function openDesktopPlaylistPage(cat, videoToPlay = null) {
@@ -6477,13 +6764,47 @@ function renderMobilePlaylistGallery(allCategories) {
       return t.includes(query) || catId.includes(query);
     });
 
-    if (filtered.length === 0) {
-      mobList.innerHTML = `
-        <div style="padding: 2rem; text-align: center; color: #94a3b8; font-size: 0.85rem;">
-          <i class="fa-solid fa-search" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
-          No playlists matching "${escapeHtml(filterText)}"
+    // Prepare "+ Add New Playlist" frame for the end of mobile list
+    const mobAddCard = document.createElement("div");
+    mobAddCard.className = "mob-playlist-card mob-add-playlist-card";
+    mobAddCard.id = "btn-mob-add-playlist";
+    const mobLabelType = currentVideoCategoryType === "shorts" ? "Shorts Playlist" : "Video Playlist";
+    mobAddCard.innerHTML = `
+      <div class="mob-card-thumb-wrap mob-add-thumb-wrap">
+        <div class="mob-add-plus-circle">
+          <i class="fa-solid fa-plus"></i>
         </div>
-      `;
+      </div>
+      <div class="mob-card-info-col">
+        <h3 class="mob-card-title">
+          <span>Add New ${mobLabelType}</span>
+        </h3>
+        <span class="mob-card-count" style="color: #38bdf8;">+ Import YouTube Playlist</span>
+        <span class="mob-card-curator">Paste YouTube link • Auto-import in order</span>
+      </div>
+      <i class="fa-solid fa-cloud-arrow-down mob-card-arrow" style="color: #38bdf8; font-size: 1.1rem;"></i>
+    `;
+    mobAddCard.addEventListener("click", () => {
+      openAddPlaylistModal(currentVideoCategoryType);
+    });
+
+    if (filtered.length === 0) {
+      if (query) {
+        mobList.innerHTML = `
+          <div style="padding: 2rem; text-align: center; color: #94a3b8; font-size: 0.85rem;">
+            <i class="fa-solid fa-search" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+            No playlists matching "${escapeHtml(filterText)}"
+          </div>
+        `;
+      } else {
+        mobList.innerHTML = `
+          <div style="padding: 1.5rem 1rem; text-align: center; color: #94a3b8; font-size: 0.85rem;">
+            <p style="margin-bottom: 0.5rem; font-weight: 600;">No ${currentVideoCategoryType === "shorts" ? "Shorts" : "Video"} Playlists Yet</p>
+            <p style="font-size: 0.75rem; color: #64748b;">Tap below to import a YouTube playlist!</p>
+          </div>
+        `;
+      }
+      mobList.appendChild(mobAddCard);
       return;
     }
 
@@ -6518,6 +6839,8 @@ function renderMobilePlaylistGallery(allCategories) {
 
       mobList.appendChild(card);
     });
+
+    mobList.appendChild(mobAddCard);
   };
 
   buildItems(searchInput ? searchInput.value : "");
@@ -6752,6 +7075,7 @@ async function initVideosPanel() {
 
   let userAddedVideos = [];
   try {
+    await syncCategoriesFromServer();
     userAddedVideos = await fetchServerVideos();
   } catch (err) {
     console.warn("fetchServerVideos error:", err);

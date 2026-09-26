@@ -1540,5 +1540,15 @@
     "isUserAdded": true,
     "addedAt": 1790463931484,
     "videoType": "shorts"
+  },
+  {
+    "id": "custom_1790464712703_aji0w",
+    "categoryId": "shorts_quick",
+    "title": "Embedded Video",
+    "desc": "Custom embedded video lesson",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/videoseries?list=PLPSdgTGGxv5NeuCl3abgKrSJpxAF5_ii_",
+    "videoType": "shorts",
+    "isUserAdded": true,
+    "addedAt": 1790464712703
   }
 ]
