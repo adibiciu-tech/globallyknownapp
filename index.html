@@ -1047,8 +1047,18 @@
                     <h2 class="gallery-main-title">Your Playlists</h2>
                     <p class="gallery-subtitle">Select a category window to open its dedicated cinema player and curated lesson stream.</p>
                   </div>
-                  <div class="gallery-stats-badge" id="gallery-total-categories-badge">
-                    <i class="fa-solid fa-layer-group"></i> 10 Playlists Available
+                  <div class="gallery-header-controls" style="display: flex; align-items: center; gap: 12px;">
+                    <div class="video-type-toggle-bar" id="desktop-video-type-toggle">
+                      <button type="button" class="video-type-btn active" data-type="videos" title="Show Long Video Playlists">
+                        <i class="fa-solid fa-play"></i> <span>Videos</span>
+                      </button>
+                      <button type="button" class="video-type-btn" data-type="shorts" title="Show YouTube Shorts Playlists">
+                        <i class="fa-solid fa-bolt"></i> <span>Shorts</span>
+                      </button>
+                    </div>
+                    <div class="gallery-stats-badge" id="gallery-total-categories-badge">
+                      <i class="fa-solid fa-layer-group"></i> 10 Playlists Available
+                    </div>
                   </div>
                 </div>
 
@@ -1163,6 +1173,15 @@
                   <div class="mobile-search-box">
                     <i class="fa-solid fa-magnifying-glass mobile-search-icon"></i>
                     <input type="text" id="mobile-playlist-search-input" class="mobile-search-input" placeholder="Search playlists..." />
+                  </div>
+                  <!-- TWO BUTTONS CATEGORY (VIDEOS / SHORTS) -->
+                  <div class="video-type-toggle-bar mobile-toggle-bar" id="mobile-video-type-toggle">
+                    <button type="button" class="video-type-btn active" data-type="videos" title="Show Long Video Playlists">
+                      <i class="fa-solid fa-play"></i> <span>Videos</span>
+                    </button>
+                    <button type="button" class="video-type-btn" data-type="shorts" title="Show YouTube Shorts Playlists">
+                      <i class="fa-solid fa-bolt"></i> <span>Shorts</span>
+                    </button>
                   </div>
                 </div>
 
@@ -2405,6 +2424,20 @@
           <span style="display: block; font-size: 0.75rem; color: #94a3b8; margin-top: 0.35rem;">
             Supports YouTube URLs, Shorts, Playlists, youtu.be, Vimeo, and &lt;iframe&gt; embed codes.
           </span>
+          <!-- Dynamic YouTube Playlist Detected Banner -->
+          <div id="add-video-playlist-banner" class="playlist-detect-banner hidden">
+            <div class="playlist-banner-header">
+              <div class="playlist-banner-icon"><i class="fa-brands fa-youtube"></i></div>
+              <div class="playlist-banner-info">
+                <span class="playlist-banner-badge"><i class="fa-solid fa-sparkles"></i> YouTube Playlist Detected</span>
+                <h4 class="playlist-banner-title" id="playlist-banner-title">Loading playlist details...</h4>
+                <span class="playlist-banner-count" id="playlist-banner-count">Checking videos...</span>
+              </div>
+            </div>
+            <button type="button" class="btn-playlist-import-all" id="btn-import-all-playlist-vids">
+              <i class="fa-solid fa-cloud-arrow-down"></i> <span id="btn-import-all-text">Import All Videos in Exact Order</span>
+            </button>
+          </div>
         </div>
 
         <div>

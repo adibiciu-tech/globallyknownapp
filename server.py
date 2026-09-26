@@ -169,6 +169,52 @@ def get_saving_lists():
             data["saving_lists"] = []
     return data.get("saving_lists", [])
 
+def fetch_youtube_playlist(url_or_id):
+    import re, xml.etree.ElementTree as ET
+    m = re.search(r'[?&]list=([a-zA-Z0-9_-]+)', url_or_id)
+    pl_id = m.group(1) if m else url_or_id.strip()
+    
+    if not pl_id:
+        return {"success": False, "error": "Invalid playlist URL or ID"}
+    
+    feed_url = f"https://www.youtube.com/feeds/videos.xml?playlist_id={pl_id}"
+    req = urllib.request.Request(feed_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+    try:
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            content = resp.read().decode("utf-8")
+        root = ET.fromstring(content)
+        
+        ns = {
+            "atom": "http://www.w3.org/2005/Atom",
+            "yt": "http://www.youtube.com/xml/schemas/2015",
+            "media": "http://search.yahoo.com/mrss/"
+        }
+        title_el = root.find("atom:title", ns)
+        pl_title = title_el.text if title_el is not None and title_el.text else "YouTube Playlist"
+        
+        videos = []
+        for entry in root.findall("atom:entry", ns):
+            vid_id_el = entry.find("yt:videoId", ns)
+            t_el = entry.find("atom:title", ns)
+            if vid_id_el is not None and vid_id_el.text:
+                vid_id = vid_id_el.text.strip()
+                v_title = t_el.text.strip() if t_el is not None and t_el.text else f"Lesson {len(videos)+1}"
+                videos.append({
+                    "videoId": vid_id,
+                    "title": v_title,
+                    "embedUrl": f"https://www.youtube-nocookie.com/embed/{vid_id}",
+                    "thumbUrl": f"https://img.youtube.com/vi/{vid_id}/hqdefault.jpg"
+                })
+        return {
+            "success": True,
+            "playlistId": pl_id,
+            "playlistTitle": pl_title,
+            "count": len(videos),
+            "videos": videos
+        }
+    except Exception as e:
+        return {"success": False, "error": f"Failed to fetch YouTube playlist: {str(e)}"}
+
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
@@ -284,6 +330,24 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
+            return
+        elif path.startswith("/api/youtube/playlist"):
+            target_url = query.get("url", [None])[0] or query.get("list", [None])[0]
+            if not target_url:
+                resp = json.dumps({"success": False, "error": "Missing url or list parameter"}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+                return
+            result = fetch_youtube_playlist(target_url)
+            resp = json.dumps(result).encode("utf-8")
+            self.send_response(200 if result.get("success") else 400)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers()
+            self.wfile.write(resp)
             return
         elif path.startswith("/api/videos"):
             data = load_data()
@@ -796,6 +860,71 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 resp = json.dumps({"error": str(e)}).encode("utf-8")
                 self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
+        elif self.path.startswith("/api/youtube/playlist/import"):
+            try:
+                payload = json.loads(body)
+                url = payload.get("url", "")
+                cat_id = payload.get("categoryId", "city")
+                vid_type = payload.get("videoType", "videos")
+                
+                result = fetch_youtube_playlist(url)
+                if not result.get("success"):
+                    resp = json.dumps(result).encode("utf-8")
+                    self.send_response(400)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                    return
+                
+                pl_videos = result.get("videos", [])
+                pl_title = result.get("playlistTitle", "YouTube Playlist")
+                new_videos = []
+                now = int(time.time() * 1000)
+                for idx, v in enumerate(pl_videos):
+                    new_vid = {
+                        "id": f"custom_{now}_{idx}_{v['videoId'][:8]}",
+                        "categoryId": cat_id,
+                        "title": v["title"],
+                        "desc": f"Imported from playlist: {pl_title}",
+                        "embedUrl": v["embedUrl"],
+                        "thumbUrl": v["thumbUrl"],
+                        "isUserAdded": True,
+                        "addedAt": now + idx,
+                        "videoType": vid_type
+                    }
+                    new_videos.append(new_vid)
+                
+                data = load_data()
+                existing = data.get("videos", [])
+                existing_urls = {item.get("embedUrl") for item in existing if isinstance(item, dict)}
+                to_add = [v for v in new_videos if v["embedUrl"] not in existing_urls]
+                
+                data["videos"] = existing + to_add
+                save_data(data)
+                save_permanent_videos(data["videos"])
+                
+                resp = json.dumps({
+                    "success": True,
+                    "count": len(to_add),
+                    "total": len(new_videos),
+                    "playlistTitle": pl_title,
+                    "videos": to_add
+                }).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"success": False, "error": str(e)}).encode("utf-8")
+                self.send_response(500)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(resp)))
                 self.end_headers()

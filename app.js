@@ -5441,22 +5441,50 @@ function syncUserDataToCloud(user) {
 }
 
 // -------------------------------------------------------------
-// Video Panel Category Definitions
+// Video Panel Category Definitions (Videos vs Shorts)
 // -------------------------------------------------------------
 const PLAYLIST_CATEGORIES = [
-  { id: "city",      flag: "🏙️",  title: "Into The City!",            videos: [], count: "0 Videos" },
-  { id: "house",     flag: "🛋️",  title: "Inside The House!",         videos: [], count: "0 Videos" },
-  { id: "action",    flag: "🎬",  title: "English In Action!",        videos: [], count: "0 Videos" },
-  { id: "bathroom",  flag: "🚽",  title: "Inside The Bathroom!",      videos: [], count: "0 Videos" },
-  { id: "kitchen",   flag: "🍽️",  title: "Inside The Kitchen!",       videos: [], count: "0 Videos" },
-  { id: "bodies",    flag: "🧘‍♂️", title: "Our Body!",                 videos: [], count: "0 Videos" },
-  { id: "different", flag: "📝",  title: "Different English Lessons!", videos: [], count: "0 Videos" },
-  { id: "nature",    flag: "🌳",  title: "Outside In Nature!",        videos: [], count: "0 Videos" },
-  { id: "seaside",   flag: "🌊",  title: "Sea Side!",                 videos: [], count: "0 Videos" },
-  { id: "whathouse", flag: "🏠",  title: "What About The House?!",     videos: [], count: "0 Videos" }
+  // Standard Long Video Playlists
+  { id: "city",      type: "videos", flag: "🏙️",  title: "Into The City!",            videos: [], count: "0 Videos" },
+  { id: "house",     type: "videos", flag: "🛋️",  title: "Inside The House!",         videos: [], count: "0 Videos" },
+  { id: "action",    type: "videos", flag: "🎬",  title: "English In Action!",        videos: [], count: "0 Videos" },
+  { id: "bathroom",  type: "videos", flag: "🚽",  title: "Inside The Bathroom!",      videos: [], count: "0 Videos" },
+  { id: "kitchen",   type: "videos", flag: "🍽️",  title: "Inside The Kitchen!",       videos: [], count: "0 Videos" },
+  { id: "bodies",    type: "videos", flag: "🧘‍♂️", title: "Our Body!",                 videos: [], count: "0 Videos" },
+  { id: "different", type: "videos", flag: "📝",  title: "Different English Lessons!", videos: [], count: "0 Videos" },
+  { id: "nature",    type: "videos", flag: "🌳",  title: "Outside In Nature!",        videos: [], count: "0 Videos" },
+  { id: "seaside",   type: "videos", flag: "🌊",  title: "Sea Side!",                 videos: [], count: "0 Videos" },
+  { id: "whathouse", type: "videos", flag: "🏠",  title: "What About The House?!",     videos: [], count: "0 Videos" },
+
+  // Dedicated YouTube Shorts Categories
+  { id: "shorts_quick",     type: "shorts", flag: "⚡", title: "Quick English Hacks",   videos: [], count: "0 Shorts" },
+  { id: "shorts_vocab",     type: "shorts", flag: "💡", title: "Daily Vocab Shorts",     videos: [], count: "0 Shorts" },
+  { id: "shorts_pronounce", type: "shorts", flag: "🗣️", title: "Accent & Pronunciation", videos: [], count: "0 Shorts" },
+  { id: "shorts_slang",     type: "shorts", flag: "🔥", title: "Slang & Expressions",    videos: [], count: "0 Shorts" },
+  { id: "shorts_grammar",   type: "shorts", flag: "🎯", title: "1-Minute Grammar",       videos: [], count: "0 Shorts" }
 ];
 
-// -------------------------------------------------------------
+let currentVideoCategoryType = localStorage.getItem("sol_video_category_type") || "videos";
+
+function setVideoCategoryType(newType) {
+  currentVideoCategoryType = newType === "shorts" ? "shorts" : "videos";
+  localStorage.setItem("sol_video_category_type", currentVideoCategoryType);
+
+  // Update all toggle buttons on desktop and mobile
+  document.querySelectorAll(".video-type-btn").forEach(btn => {
+    if (btn.getAttribute("data-type") === currentVideoCategoryType) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  // Re-render gallery views with new category filter
+  if (typeof initVideosPanel === "function") {
+    initVideosPanel();
+  }
+}
+
 
 
 
@@ -5560,7 +5588,8 @@ function getYoutubeThumbnailUrl(url) {
 
 function enrichVideoMetadata(video, index) {
   const ytId = extractYoutubeId(video.embedUrl);
-  const thumbUrl = getYoutubeThumbnailUrl(video.embedUrl);
+  const thumbUrl = video.thumbUrl || getYoutubeThumbnailUrl(video.embedUrl);
+  const isShortVideo = video.videoType === "shorts" || String(video.embedUrl || "").includes("/shorts/");
 
   // Logical CEFR levels across playlists
   let level = "A1";
@@ -5573,9 +5602,15 @@ function enrichVideoMetadata(video, index) {
 
   // Deterministic realistic duration based on title/id
   const hash = Math.abs((video.title || "").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) + index * 17);
-  const baseMinutes = 8 + (hash % 12);
-  const baseSeconds = (hash % 50) + 9;
-  const durationStr = `${baseMinutes}:${baseSeconds < 10 ? '0' : ''}${baseSeconds}`;
+  let durationStr = "10:24";
+  if (isShortVideo) {
+    const sec = 30 + (hash % 29);
+    durationStr = `0:${sec < 10 ? '0' : ''}${sec}`;
+  } else {
+    const baseMinutes = 8 + (hash % 12);
+    const baseSeconds = (hash % 50) + 9;
+    durationStr = `${baseMinutes}:${baseSeconds < 10 ? '0' : ''}${baseSeconds}`;
+  }
 
   return {
     ...video,
@@ -5723,28 +5758,51 @@ async function deleteVideoFromServer(videoId) {
 // -------------------------------------------------------------
 let addVideoModalInitialized = false;
 
-function openAddVideoModal(defaultCategoryId = "city") {
+function openAddVideoModal(defaultCategoryId = null) {
   const modal = document.getElementById("modal-add-video");
   const selectCat = document.getElementById("add-video-category-select");
   const inputUrl = document.getElementById("add-video-url-input");
   const inputTitle = document.getElementById("add-video-title-input");
+  const banner = document.getElementById("add-video-playlist-banner");
 
   if (!modal) return;
 
-  // Populate category select
+  const targetDefaultCat = defaultCategoryId || (currentVideoCategoryType === "shorts" ? "shorts_quick" : "city");
+
+  // Populate category select with current mode categories first
   if (selectCat) {
     selectCat.innerHTML = "";
-    PLAYLIST_CATEGORIES.forEach(c => {
+    const activeCats = PLAYLIST_CATEGORIES.filter(c => (c.type || "videos") === currentVideoCategoryType);
+    const otherCats = PLAYLIST_CATEGORIES.filter(c => (c.type || "videos") !== currentVideoCategoryType);
+
+    const groupActive = document.createElement("optgroup");
+    groupActive.label = currentVideoCategoryType === "shorts" ? "⚡ YouTube Shorts Playlists" : "▶ Long Video Playlists";
+    activeCats.forEach(c => {
       const opt = document.createElement("option");
       opt.value = c.id;
       opt.textContent = `${c.flag} ${c.title}`;
-      if (c.id === defaultCategoryId) opt.selected = true;
-      selectCat.appendChild(opt);
+      if (c.id === targetDefaultCat) opt.selected = true;
+      groupActive.appendChild(opt);
     });
+    selectCat.appendChild(groupActive);
+
+    if (otherCats.length > 0) {
+      const groupOther = document.createElement("optgroup");
+      groupOther.label = currentVideoCategoryType === "shorts" ? "▶ Long Video Playlists" : "⚡ YouTube Shorts Playlists";
+      otherCats.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = `${c.flag} ${c.title}`;
+        if (c.id === targetDefaultCat) opt.selected = true;
+        groupOther.appendChild(opt);
+      });
+      selectCat.appendChild(groupOther);
+    }
   }
 
   if (inputUrl) inputUrl.value = "";
   if (inputTitle) inputTitle.value = "";
+  if (banner) banner.classList.add("hidden");
 
   modal.classList.remove("hidden");
   setTimeout(() => {
@@ -5757,7 +5815,11 @@ function openAddVideoModal(defaultCategoryId = "city") {
     const btnCancel = document.getElementById("btn-cancel-add-video");
     const form = document.getElementById("form-add-video");
 
-    const closeModal = () => modal.classList.add("hidden");
+    const closeModal = () => {
+      modal.classList.add("hidden");
+      const plBanner = document.getElementById("add-video-playlist-banner");
+      if (plBanner) plBanner.classList.add("hidden");
+    };
 
     if (btnClose) btnClose.addEventListener("click", closeModal);
     if (btnCancel) btnCancel.addEventListener("click", closeModal);
@@ -5765,6 +5827,86 @@ function openAddVideoModal(defaultCategoryId = "city") {
     modal.addEventListener("click", (e) => {
       if (e.target === modal) closeModal();
     });
+
+    // YouTube Playlist Live Detection on URL input
+    let plDebounceTimer = null;
+    if (inputUrl) {
+      inputUrl.addEventListener("input", () => {
+        clearTimeout(plDebounceTimer);
+        const val = inputUrl.value.trim();
+        const plBanner = document.getElementById("add-video-playlist-banner");
+        const bannerTitle = document.getElementById("playlist-banner-title");
+        const bannerCount = document.getElementById("playlist-banner-count");
+        const btnImportAll = document.getElementById("btn-import-all-playlist-vids");
+        const btnImportText = document.getElementById("btn-import-all-text");
+
+        if (!val || (!val.includes("list=") && !val.includes("/playlist"))) {
+          if (plBanner) plBanner.classList.add("hidden");
+          return;
+        }
+
+        if (plBanner) plBanner.classList.remove("hidden");
+        if (bannerTitle) bannerTitle.textContent = "Scanning YouTube Playlist...";
+        if (bannerCount) bannerCount.textContent = "Fetching playlist items from YouTube...";
+        if (btnImportAll) btnImportAll.disabled = true;
+
+        plDebounceTimer = setTimeout(async () => {
+          try {
+            const res = await fetch(`/api/youtube/playlist?url=${encodeURIComponent(val)}`);
+            const data = await res.json();
+            if (data && data.success && Array.isArray(data.videos) && data.videos.length > 0) {
+              if (bannerTitle) bannerTitle.textContent = data.playlistTitle || "YouTube Playlist";
+              if (bannerCount) bannerCount.textContent = `${data.count} videos found in sequential order`;
+              if (btnImportText) btnImportText.textContent = `Import All ${data.count} Videos in Exact YouTube Order`;
+              if (btnImportAll) {
+                btnImportAll.disabled = false;
+                btnImportAll.onclick = async () => {
+                  const catId = (selectCat && selectCat.value) ? selectCat.value : "city";
+                  const selectedCategoryObj = PLAYLIST_CATEGORIES.find(c => c.id === catId);
+                  const determinedType = selectedCategoryObj ? (selectedCategoryObj.type || currentVideoCategoryType) : currentVideoCategoryType;
+
+                  btnImportAll.disabled = true;
+                  if (btnImportText) btnImportText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importing in order...';
+                  try {
+                    const importRes = await fetch("/api/youtube/playlist/import", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        url: val,
+                        categoryId: catId,
+                        videoType: determinedType
+                      })
+                    });
+                    const importData = await importRes.json();
+                    if (importData && importData.success) {
+                      showToast(`🎉 Imported ${importData.count} videos from "${importData.playlistTitle}" in exact order!`);
+                      closeModal();
+                      await initVideosPanel();
+                    } else {
+                      showToast("⚠️ Could not import playlist: " + (importData.error || "Unknown error"));
+                    }
+                  } catch (e) {
+                    console.error("Playlist import error:", e);
+                    showToast("⚠️ Failed to import playlist videos.");
+                  } finally {
+                    btnImportAll.disabled = false;
+                    if (btnImportText) btnImportText.textContent = `Import All Videos in Exact YouTube Order`;
+                  }
+                };
+              }
+            } else {
+              if (bannerTitle) bannerTitle.textContent = "Playlist Not Accessible";
+              if (bannerCount) bannerCount.textContent = (data && data.error) ? data.error : "Please make sure playlist is Public or Unlisted.";
+              if (btnImportAll) btnImportAll.disabled = true;
+            }
+          } catch (err) {
+            if (bannerTitle) bannerTitle.textContent = "Connection Error";
+            if (bannerCount) bannerCount.textContent = "Could not contact server.";
+            if (btnImportAll) btnImportAll.disabled = true;
+          }
+        }, 300);
+      });
+    }
 
     const handleSubmit = async (e) => {
       if (e) {
@@ -5782,6 +5924,8 @@ function openAddVideoModal(defaultCategoryId = "city") {
 
       const title = (inputTitle && inputTitle.value.trim()) ? inputTitle.value.trim() : "Embedded Video";
       const catId = (selectCat && selectCat.value) ? selectCat.value : "city";
+      const selectedCategoryObj = PLAYLIST_CATEGORIES.find(c => c.id === catId);
+      const determinedType = selectedCategoryObj ? (selectedCategoryObj.type || currentVideoCategoryType) : currentVideoCategoryType;
 
       const newVid = {
         id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -5789,6 +5933,7 @@ function openAddVideoModal(defaultCategoryId = "city") {
         title: title,
         desc: "Custom embedded video lesson",
         embedUrl: parsedEmbedUrl,
+        videoType: determinedType,
         isUserAdded: true,
         addedAt: Date.now()
       };
@@ -5829,6 +5974,7 @@ function openAddVideoModal(defaultCategoryId = "city") {
     }
   }
 }
+window.openAddVideoModal = openAddVideoModal;
 
 let editVideoModalInitialized = false;
 
@@ -5945,17 +6091,25 @@ const CATEGORY_GRADIENTS = {
   different: "linear-gradient(135deg, #334155, #64748b)",
   nature: "linear-gradient(135deg, #15803d, #22c55e)",
   seaside: "linear-gradient(135deg, #0369a1, #38bdf8)",
-  whathouse: "linear-gradient(135deg, #c2410c, #f97316)"
+  whathouse: "linear-gradient(135deg, #c2410c, #f97316)",
+  shorts_quick: "linear-gradient(135deg, #ef4444, #f97316)",
+  shorts_vocab: "linear-gradient(135deg, #f59e0b, #eab308)",
+  shorts_pronounce: "linear-gradient(135deg, #8b5cf6, #ec4899)",
+  shorts_slang: "linear-gradient(135deg, #dc2626, #b91c1c)",
+  shorts_grammar: "linear-gradient(135deg, #06b6d4, #3b82f6)"
 };
 
-function renderDesktopPlaylistGallery(categories) {
+function renderDesktopPlaylistGallery(allCategories) {
   const desktopGrid = document.getElementById("desktop-categories-grid");
   const totalCountBadge = document.getElementById("gallery-total-categories-badge");
   if (!desktopGrid) return;
 
+  const categories = (allCategories || []).filter(c => (c.type || "videos") === currentVideoCategoryType);
+
   desktopGrid.innerHTML = "";
   if (totalCountBadge) {
-    totalCountBadge.innerHTML = `<i class="fa-solid fa-layer-group"></i> ${categories.length} Playlists Available`;
+    const label = currentVideoCategoryType === "shorts" ? "Shorts Playlists" : "Playlists";
+    totalCountBadge.innerHTML = `<i class="fa-solid fa-layer-group"></i> ${categories.length} ${label} Available`;
   }
 
   categories.forEach(cat => {
@@ -6169,6 +6323,13 @@ function loadDesktopCinemaVideo(video, cat, index, itemEl) {
   const counterEl = document.getElementById("desktop-sidebar-progress-counter");
   const trackEl = document.getElementById("desktop-playlist-items-track");
   const adminActionsEl = document.getElementById("desktop-cinema-admin-actions");
+  const iframeWrapper = document.getElementById("desktop-cinema-iframe-wrapper");
+
+  const isShort = (cat && cat.type === "shorts") || (video && (video.videoType === "shorts" || String(video.embedUrl || "").includes("/shorts/")));
+  if (iframeWrapper) {
+    if (isShort) iframeWrapper.classList.add("is-short-mode");
+    else iframeWrapper.classList.remove("is-short-mode");
+  }
 
   // Format clean embed URL with autoplay
   let activeEmbedUrl = video.embedUrl || "";
@@ -6292,14 +6453,17 @@ function closeDesktopPlaylistPage() {
 let currentMobileActiveCategory = null;
 let currentMobileActiveVideo = null;
 
-function renderMobilePlaylistGallery(categories) {
+function renderMobilePlaylistGallery(allCategories) {
   const mobList = document.getElementById("mobile-playlists-list");
   const countBadge = document.getElementById("mobile-total-playlists-badge");
   const searchInput = document.getElementById("mobile-playlist-search-input");
   if (!mobList) return;
 
+  const categories = (allCategories || []).filter(c => (c.type || "videos") === currentVideoCategoryType);
+
   if (countBadge) {
-    countBadge.textContent = `${categories.length} Playlists`;
+    const label = currentVideoCategoryType === "shorts" ? "Shorts" : "Playlists";
+    countBadge.textContent = `${categories.length} ${label}`;
   }
 
   const buildItems = (filterText = "") => {
@@ -6504,6 +6668,13 @@ function loadMobileCinemaVideo(video, cat, index, itemEl) {
   const totalCount = cat.enrichedVideos ? cat.enrichedVideos.length : 1;
   if (counterEl) counterEl.textContent = `${index + 1} / ${totalCount}`;
 
+  const mobWrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+  const isMobShort = (cat && cat.type === "shorts") || (video && (video.videoType === "shorts" || String(video.embedUrl || "").includes("/shorts/")));
+  if (mobWrapper) {
+    if (isMobShort) mobWrapper.classList.add("is-short-mode");
+    else mobWrapper.classList.remove("is-short-mode");
+  }
+
   // Embed URL with autoplay
   if (iframe) {
     let activeEmbedUrl = video.embedUrl || "";
@@ -6652,6 +6823,20 @@ async function initVideosPanel() {
     };
   }
 
+  // 1.5. Initialize Video Type Toggle Buttons (Videos vs Shorts)
+  document.querySelectorAll(".video-type-btn").forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const type = btn.getAttribute("data-type") || "videos";
+      setVideoCategoryType(type);
+    };
+    if (btn.getAttribute("data-type") === currentVideoCategoryType) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
   // 2. Initialize Quick Filter Chips
   const filterChips = document.querySelectorAll(".filter-chip");
   filterChips.forEach(chip => {
@@ -6723,8 +6908,13 @@ async function initVideosPanel() {
     category.enrichedVideos = enrichedCustom;
     let allVids = [...customForCategory, { id: "add_card_" + category.id, isAddTemplate: true }];
     category.videos = allVids;
-    category.count = `${Math.max(0, category.videos.length - 1)} Videos`;
+    const itemNoun = category.type === "shorts" ? "Shorts" : "Videos";
+    category.count = `${Math.max(0, category.videos.length - 1)} ${itemNoun}`;
+  });
 
+  const displayCategories = uniqueCategories.filter(cat => (cat.type || "videos") === currentVideoCategoryType);
+
+  displayCategories.forEach(category => {
     const row = document.createElement("div");
     row.className = "playlist-category-row";
     row.setAttribute("data-category-id", category.id);
