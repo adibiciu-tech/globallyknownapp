@@ -3882,7 +3882,7 @@ function initOutputPracticingPanel() {
 
     // Origin: slightly above the top center of the big microphone button
     const xOrigin = (mRect.left + mRect.width / 2) - wRect.left;
-    const yOrigin = (mRect.top - wRect.top) - 8.6;
+    const yOrigin = (mRect.top - wRect.top) - 8.7;
 
     // Left target: bottom center of video call button
     const xLeft = (vRect.left + vRect.width / 2) - wRect.left;
@@ -4003,7 +4003,7 @@ function initOutputPracticingPanel() {
         const mRect = mic.getBoundingClientRect();
 
         const xOrigin = (mRect.left + mRect.width / 2) - wRect.left;
-        const yOrigin = (mRect.top - wRect.top) - 8.6;
+        const yOrigin = (mRect.top - wRect.top) - 8.7;
 
         const xLeft = (vRect.left + vRect.width / 2) - wRect.left;
         const yLeft = vRect.bottom - wRect.top + 2;
