@@ -3828,24 +3828,32 @@ function initOutputPracticingPanel() {
   const statusText = document.getElementById("output-status-text");
   const conversationEl = document.getElementById("output-home-conversation");
 
-  // Video Call Elements
+  // Video Call Elements (Gemini Live Experience)
   const videoModal = document.getElementById("sol-video-call-modal");
   const videoFeed = document.getElementById("video-call-user-feed");
+  const camOffOverlay = document.getElementById("pip-camera-off");
   const videoSubtitles = document.getElementById("video-call-sol-subtitles");
   const videoTimer = document.getElementById("video-call-timer");
   const btnVideoClose = document.getElementById("btn-video-call-close");
   const btnCallMute = document.getElementById("btn-call-mute");
   const btnCallCam = document.getElementById("btn-call-cam");
   const btnCallEnd = document.getElementById("btn-call-end");
-  const pipContainer = document.getElementById("video-call-pip");
+  const btnCallFlipCam = document.getElementById("btn-call-flip-cam");
+  const btnCallFlipBottom = document.getElementById("btn-call-flip-bottom");
+  const camPickerWrapper = document.getElementById("camera-picker-wrapper");
+  const camSelect = document.getElementById("video-call-camera-select");
+  const solCapsule = document.getElementById("sol-live-capsule");
 
-  // Active call state
+  // Active call & device state
   let activeCallMode = null; // 'normal' | 'transcript' | 'video'
   let videoStream = null;
   let videoSeconds = 0;
   let videoTimerInterval = null;
   let isMuted = false;
   let isCamOff = false;
+  let currentCameraDeviceId = null;
+  let currentFacingMode = "user";
+  let availableVideoDevices = [];
 
   const currentLang = { label: "English", code: "en-US" };
 
@@ -4073,12 +4081,114 @@ function initOutputPracticingPanel() {
     };
   }
 
+  // Camera Device Management & Enumeration (Desktop multi-camera selection & mobile flip)
+  async function updateCameraDevicesList() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      availableVideoDevices = devices.filter(d => d.kind === "videoinput");
+
+      if (camSelect && camPickerWrapper) {
+        if (availableVideoDevices.length > 1) {
+          camSelect.innerHTML = "";
+          availableVideoDevices.forEach((dev, idx) => {
+            const opt = document.createElement("option");
+            opt.value = dev.deviceId;
+            opt.textContent = dev.label || `Camera ${idx + 1}`;
+            if (dev.deviceId === currentCameraDeviceId) opt.selected = true;
+            camSelect.appendChild(opt);
+          });
+          camPickerWrapper.style.display = "flex";
+        } else {
+          camPickerWrapper.style.display = "none";
+        }
+      }
+
+      if (btnCallFlipCam) {
+        const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone/i.test(navigator.userAgent);
+        btnCallFlipCam.style.display = (availableVideoDevices.length > 1 || isMobile) ? "flex" : "none";
+      }
+    } catch (e) {
+      console.warn("Could not enumerate camera devices:", e);
+    }
+  }
+
+  async function switchCamera(deviceIdOrFacingMode) {
+    if (!videoStream) return;
+
+    videoStream.getVideoTracks().forEach(track => track.stop());
+
+    const constraints = { audio: false };
+    if (deviceIdOrFacingMode === "user" || deviceIdOrFacingMode === "environment") {
+      currentFacingMode = deviceIdOrFacingMode;
+      constraints.video = { facingMode: { ideal: currentFacingMode } };
+    } else if (typeof deviceIdOrFacingMode === "string" && deviceIdOrFacingMode) {
+      currentCameraDeviceId = deviceIdOrFacingMode;
+      constraints.video = { deviceId: { exact: currentCameraDeviceId } };
+    } else {
+      constraints.video = true;
+    }
+
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const newVideoTrack = newStream.getVideoTracks()[0];
+
+      const oldTracks = videoStream.getVideoTracks();
+      oldTracks.forEach(t => videoStream.removeTrack(t));
+      videoStream.addTrack(newVideoTrack);
+
+      if (videoFeed) {
+        videoFeed.srcObject = videoStream;
+        videoFeed.play().catch(() => {});
+        const isBackCamera = currentFacingMode === "environment";
+        videoFeed.style.transform = isBackCamera ? "scaleX(1)" : "scaleX(-1)";
+      }
+
+      const settings = newVideoTrack.getSettings();
+      if (settings && settings.deviceId) currentCameraDeviceId = settings.deviceId;
+      await updateCameraDevicesList();
+    } catch (err) {
+      console.warn("Failed to switch camera:", err);
+    }
+  }
+
+  function toggleFlipCamera() {
+    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+    switchCamera(currentFacingMode);
+  }
+
+  if (btnCallFlipCam) btnCallFlipCam.onclick = toggleFlipCamera;
+  if (btnCallFlipBottom) btnCallFlipBottom.onclick = toggleFlipCamera;
+  if (camSelect) {
+    camSelect.onchange = (e) => {
+      switchCamera(e.target.value);
+    };
+  }
+
+  // Tapping the Gemini Live capsule interrupts Sol or resumes listening
+  if (solCapsule) {
+    solCapsule.onclick = () => {
+      if (isSolSpeaking || (window.speechSynthesis && window.speechSynthesis.speaking)) {
+        window.speechSynthesis.cancel();
+        isSolSpeaking = false;
+        if (videoSubtitles) videoSubtitles.textContent = "Listening to you... Speak now!";
+        solCapsule.classList.remove("speaking");
+        solCapsule.classList.add("listening");
+        startListeningTurn();
+      }
+    };
+  }
+
   // Video Call Setup & Lifecycle
   async function startVideoCall() {
     activeCallMode = "video";
     if (videoModal) videoModal.classList.add("active");
-    if (videoSubtitles) videoSubtitles.textContent = "Connecting video call with Sol...";
-    
+    if (videoSubtitles) videoSubtitles.textContent = "Connecting live video call with Sol...";
+    if (solCapsule) {
+      solCapsule.classList.remove("speaking");
+      solCapsule.classList.add("listening");
+    }
+
     // Start timer
     videoSeconds = 0;
     if (videoTimer) videoTimer.textContent = "00:00";
@@ -4093,16 +4203,32 @@ function initOutputPracticingPanel() {
     // Request camera & mic
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const videoConstraints = currentCameraDeviceId
+          ? { deviceId: { exact: currentCameraDeviceId } }
+          : { facingMode: { ideal: currentFacingMode } };
+
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
         if (videoFeed) {
           videoFeed.srcObject = videoStream;
-          videoFeed.play();
+          videoFeed.play().catch(() => {});
+          const isBackCamera = currentFacingMode === "environment";
+          videoFeed.style.transform = isBackCamera ? "scaleX(1)" : "scaleX(-1)";
         }
-        if (pipContainer) pipContainer.classList.remove("cam-off");
+        if (camOffOverlay) camOffOverlay.classList.remove("active");
+        if (btnCallCam) btnCallCam.classList.remove("active-off");
+
+        const tracks = videoStream.getVideoTracks();
+        if (tracks.length > 0) {
+          const settings = tracks[0].getSettings();
+          if (settings && settings.deviceId) currentCameraDeviceId = settings.deviceId;
+        }
+
+        await updateCameraDevicesList();
       }
     } catch (err) {
       console.warn("Camera access denied or unavailable:", err);
-      if (pipContainer) pipContainer.classList.add("cam-off");
+      if (camOffOverlay) camOffOverlay.classList.add("active");
+      if (btnCallCam) btnCallCam.classList.add("active-off");
     }
 
     if (videoSubtitles) videoSubtitles.textContent = "Sol is listening... Speak freely!";
@@ -4120,6 +4246,7 @@ function initOutputPracticingPanel() {
     if (outputSpeechRecognition && isOutputListening) {
       try { outputSpeechRecognition.stop(); } catch (e) {}
     }
+    if (solCapsule) solCapsule.classList.remove("speaking", "listening");
     isOutputListening = false;
     isSolSpeaking = false;
     activeCallMode = null;
@@ -4141,6 +4268,11 @@ function initOutputPracticingPanel() {
       if (videoSubtitles) {
         videoSubtitles.textContent = isMuted ? "Your microphone is muted." : "Sol is listening... Speak freely!";
       }
+      if (isMuted && outputSpeechRecognition) {
+        try { outputSpeechRecognition.stop(); } catch (e) {}
+      } else if (!isMuted) {
+        startListeningTurn();
+      }
     };
   }
 
@@ -4153,7 +4285,7 @@ function initOutputPracticingPanel() {
       }
       btnCallCam.classList.toggle("active-off", isCamOff);
       btnCallCam.innerHTML = isCamOff ? '<i class="fa-solid fa-video-slash"></i>' : '<i class="fa-solid fa-video"></i>';
-      if (pipContainer) pipContainer.classList.toggle("cam-off", isCamOff);
+      if (camOffOverlay) camOffOverlay.classList.toggle("active", isCamOff);
     };
   }
 
@@ -4232,6 +4364,10 @@ function initOutputPracticingPanel() {
           setOutputLiveState("listening", `🎙️ "${combinedText.length > 32 ? '...' + combinedText.slice(-32) : combinedText}"`);
         } else if (activeCallMode === "video") {
           if (videoSubtitles) videoSubtitles.textContent = `You: "${combinedText}"`;
+          if (solCapsule) {
+            solCapsule.classList.remove("speaking");
+            solCapsule.classList.add("listening");
+          }
         }
         if (liveUserBubble) liveUserBubble.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
@@ -4298,6 +4434,10 @@ function initOutputPracticingPanel() {
     setOutputLiveState("processing", "⏳ Sol is thinking...");
     if (activeCallMode === "video" && videoSubtitles) {
       videoSubtitles.textContent = "⏳ Sol is thinking...";
+      if (solCapsule) {
+        solCapsule.classList.remove("speaking");
+        solCapsule.classList.add("listening");
+      }
     }
 
     let aiDiv = null;
@@ -4439,18 +4579,26 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
 
     utterance.onstart = () => {
       isSolSpeaking = true;
+      if (activeCallMode === "video" && solCapsule) {
+        solCapsule.classList.remove("listening");
+        solCapsule.classList.add("speaking");
+      }
       setOutputLiveState("speaking", "🔊 Sol is speaking...");
     };
 
     utterance.onend = () => {
       isSolSpeaking = false;
       if (activeCallMode === "video") {
+        if (solCapsule) {
+          solCapsule.classList.remove("speaking");
+          solCapsule.classList.add("listening");
+        }
         if (videoSubtitles) videoSubtitles.textContent = "Sol is listening... Your turn!";
         setTimeout(() => {
           if (activeCallMode === "video" && videoModal && videoModal.classList.contains("active")) {
             startListeningTurn();
           }
-        }, 500);
+        }, 400);
       } else if (activeCallMode === "normal") {
         setOutputLiveState("listening", "📞 Sol is listening... Speak now!");
         setTimeout(() => {

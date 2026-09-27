@@ -3611,8 +3611,8 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(4, 7, 15, 0.96);
-  backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.96);
+  backdrop-filter: blur(24px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -3627,44 +3627,103 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   pointer-events: auto;
 }
 
+/* Video Call Container - Desktop: Sleek Floating Canvas; Mobile: Edge-to-Edge Viewfinder */
 .video-call-container {
-  width: 92vw;
-  max-width: 900px;
-  height: 85vh;
-  max-height: 700px;
-  background: #090d16;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(246, 202, 33, 0.15);
+  width: 94vw;
+  max-width: 960px;
+  height: 88vh;
+  max-height: 740px;
+  background: #020617;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 50px rgba(56, 189, 248, 0.15);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  .video-call-container {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+  .camera-picker-dropdown-wrapper {
+    display: none !important;
+  }
+}
+
+/* Full Viewport Live Camera Feed */
+.video-call-full-feed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  transform: scaleX(-1);
+  background: #050811;
+}
+
+.video-call-camera-off-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: #0b0f19;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.video-call-camera-off-overlay.active {
+  display: flex;
+}
+
+/* Top Header Bar */
 .video-call-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.6);
-  z-index: 10;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
 }
 
 .video-call-status-badge {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #f1f5f9;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 5px 12px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
 }
 
 .live-recording-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #ef4444;
   box-shadow: 0 0 10px #ef4444;
@@ -3672,151 +3731,290 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 }
 
 .video-call-timer {
-  background: rgba(255, 255, 255, 0.08);
-  padding: 2px 8px;
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
   font-family: monospace;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #38bdf8;
 }
 
-.video-call-close-btn {
+.video-call-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: auto;
+}
+
+/* Desktop Camera Switcher Dropdown */
+.camera-picker-dropdown-wrapper {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.camera-picker-dropdown-wrapper select {
   background: transparent;
   border: none;
-  color: #94a3b8;
-  font-size: 1.25rem;
+  color: #f8fafc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  outline: none;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 8px;
+  max-width: 180px;
+  text-overflow: ellipsis;
+}
+
+.camera-picker-dropdown-wrapper select option {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.video-call-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-.video-call-close-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
+.video-call-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.05);
 }
 
-.video-call-sol-stage {
-  flex: 1;
+/* Floating Sol Live Presence & Subtitles Banner */
+.video-call-sol-live-banner {
+  position: absolute;
+  top: 75px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 2rem;
-  background: radial-gradient(circle at center, rgba(246, 202, 33, 0.08) 0%, transparent 70%);
+  gap: 0.6rem;
+  width: 90%;
+  max-width: 580px;
+  pointer-events: none;
 }
 
-.sol-video-avatar {
-  width: 140px;
-  height: 155px;
+.sol-live-avatar-pill {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  filter: drop-shadow(0 0 25px rgba(246, 202, 33, 0.5));
+  gap: 8px;
+  background: rgba(10, 15, 26, 0.82);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: 999px;
+  padding: 4px 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.35);
   animation: solCompanionFloat 3.5s ease-in-out infinite;
 }
 
+.sol-pill-eye {
+  width: 22px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #38bdf8;
+}
+
+.sol-pill-eye svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  fill: none;
+}
+
+.sol-pill-badge-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
 .video-call-sol-subtitles {
-  max-width: 650px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(246, 202, 33, 0.3);
+  background: rgba(8, 12, 22, 0.82);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   padding: 0.75rem 1.4rem;
-  border-radius: 16px;
+  border-radius: 18px;
   font-size: 0.95rem;
+  font-weight: 500;
   color: #f8fafc;
   text-align: center;
   line-height: 1.5;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-}
-
-.video-call-pip-container {
-  position: absolute;
-  bottom: 85px;
-  right: 24px;
-  width: 180px;
-  height: 120px;
-  border-radius: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.25);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-  background: #020617;
-  z-index: 20;
+  max-height: 90px;
+  overflow-y: auto;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
-.video-call-pip-container video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1);
-}
-
-.pip-user-label {
+/* Floating Bottom Gemini Live Controls Bar */
+.video-call-gemini-controls-bar {
   position: absolute;
-  bottom: 6px;
-  left: 8px;
-  background: rgba(0, 0, 0, 0.65);
-  color: #ffffff;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  backdrop-filter: blur(4px);
-}
-
-.pip-camera-off-placeholder {
-  position: absolute;
-  inset: 0;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  background: #0f172a;
-  color: #64748b;
-  font-size: 0.75rem;
-}
-
-.video-call-pip-container.cam-off .pip-camera-off-placeholder {
-  display: flex;
-}
-
-.video-call-controls-bar {
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
-  padding: 1rem;
-  background: rgba(15, 23, 42, 0.8);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  z-index: 10;
+  gap: 1.1rem;
+  width: 92%;
+  max-width: 480px;
+  pointer-events: auto;
 }
 
-.call-action-btn {
+.call-action-circle-btn {
   width: 52px;
   height: 52px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-  font-size: 1.25rem;
-  cursor: pointer;
+  background: rgba(30, 41, 59, 0.88);
+  backdrop-filter: blur(16px);
+  color: #f8fafc;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-.call-action-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+.call-action-circle-btn:hover {
+  transform: scale(1.08);
+  background: rgba(51, 65, 85, 0.95);
+}
+
+/* Camera button is solid blue like Gemini */
+.call-action-circle-btn.btn-call-cam {
+  background: #2563eb;
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+}
+
+.call-action-circle-btn.btn-call-cam.active-off {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+
+.call-action-circle-btn.btn-call-mute.active-off {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.call-action-circle-btn.btn-call-end {
+  background: rgba(15, 23, 42, 0.88);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.call-action-circle-btn.btn-call-end:hover {
+  background: rgba(239, 68, 68, 0.9);
+  border-color: #ef4444;
   transform: scale(1.08);
 }
 
-.call-action-btn.active-off {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.4);
+/* Center: Gemini Live Voice Waveform / Presence Capsule */
+.sol-live-gemini-capsule {
+  position: relative;
+  width: 114px;
+  height: 52px;
+  background: #030712;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.capsule-ambient-glow {
+  position: absolute;
+  inset: -4px -6px -22px -6px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at 50% 120%, #38bdf8 0%, rgba(59, 130, 246, 0.65) 45%, transparent 75%);
+  filter: blur(12px);
+  z-index: -1;
+  opacity: 0.9;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.capsule-wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+}
+
+.c-bar {
+  width: 3.5px;
+  height: 8px;
+  border-radius: 999px;
+  background: #38bdf8;
+  transition: height 0.15s ease;
+}
+
+/* Animated wave when Sol is speaking */
+.sol-live-gemini-capsule.speaking .capsule-ambient-glow {
+  opacity: 1;
+  filter: blur(14px);
+  animation: geminiLiveGlow 1.2s infinite alternate ease-in-out;
+}
+
+.sol-live-gemini-capsule.speaking .c-bar.bar-1 { animation: geminiWave 0.7s infinite 0.1s; }
+.sol-live-gemini-capsule.speaking .c-bar.bar-2 { animation: geminiWave 0.7s infinite 0.3s; }
+.sol-live-gemini-capsule.speaking .c-bar.bar-3 { animation: geminiWave 0.7s infinite 0.0s; }
+.sol-live-gemini-capsule.speaking .c-bar.bar-4 { animation: geminiWave 0.7s infinite 0.4s; }
+.sol-live-gemini-capsule.speaking .c-bar.bar-5 { animation: geminiWave 0.7s infinite 0.2s; }
+
+/* Subtle pulse when listening */
+.sol-live-gemini-capsule.listening .c-bar {
+  animation: geminiListenSoft 1.8s infinite ease-in-out;
+}
+.sol-live-gemini-capsule.listening .c-bar.bar-2 { animation-delay: 0.2s; }
+.sol-live-gemini-capsule.listening .c-bar.bar-3 { animation-delay: 0.4s; }
+.sol-live-gemini-capsule.listening .c-bar.bar-4 { animation-delay: 0.6s; }
+
+@keyframes geminiWave {
+  0%, 100% { height: 8px; }
+  50% { height: 26px; }
+}
+
+@keyframes geminiListenSoft {
+  0%, 100% { height: 8px; opacity: 0.6; }
+  50% { height: 16px; opacity: 1; }
+}
+
+@keyframes geminiLiveGlow {
+  0% { transform: scaleY(0.9); opacity: 0.85; }
+  100% { transform: scaleY(1.3); opacity: 1; filter: blur(16px); }
 }
 
 .call-action-btn.btn-end-call {

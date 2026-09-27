@@ -1622,66 +1622,6 @@
             <div class="gemini-home-conversation" id="output-home-conversation"></div>
           </div>
 
-          <!-- Live Video Call Modal Overlay -->
-          <div class="sol-video-call-modal" id="sol-video-call-modal">
-            <div class="video-call-container">
-              <div class="video-call-header">
-                <div class="video-call-status-badge">
-                  <span class="live-recording-dot"></span>
-                  <span>LIVE VIDEO CALL WITH SOL</span>
-                  <span class="video-call-timer" id="video-call-timer">00:00</span>
-                </div>
-                <button class="video-call-close-btn" id="btn-video-call-close" title="Close"><i class="fa-solid fa-xmark"></i></button>
-              </div>
-
-              <!-- Main View: Sol's Avatar & Live Voice Response Visualizer -->
-              <div class="video-call-sol-stage">
-                <div class="sol-video-avatar" id="sol-video-avatar">
-                  <svg class="sol-eye-icon-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
-                    <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-                    <g class="sol-rays">
-                      <line x1="20.9" y1="101.9" x2="16.3" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
-                      <line x1="35.0" y1="97.4" x2="32.9" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
-                      <line x1="50.0" y1="96.0" x2="50.0" y2="85.0" stroke-width="4.5" stroke-linecap="round" />
-                      <line x1="65.0" y1="97.4" x2="67.1" y2="86.6" stroke-width="4.5" stroke-linecap="round" />
-                      <line x1="79.1" y1="101.9" x2="83.7" y2="91.9" stroke-width="4.5" stroke-linecap="round" />
-                    </g>
-                    <g class="sol-eyelid-group">
-                      <path class="sol-eye-outline" d="M 12 120 C 26 100 74 100 88 120 C 74 140 26 140 12 120 Z" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-                      <g class="sol-pupil-group">
-                        <circle class="sol-iris" cx="50" cy="120" r="11.5" stroke-width="4.5" fill="none" />
-                        <circle class="sol-pupil-dot" cx="50" cy="120" r="5.8" />
-                        <circle class="sol-pupil-highlight" cx="47.8" cy="117.8" r="1.8" />
-                      </g>
-                    </g>
-                  </svg>
-                </div>
-                <div class="video-call-sol-subtitles" id="video-call-sol-subtitles">Sol is listening... Speak freely!</div>
-              </div>
-
-              <!-- Picture-in-Picture: User Live Camera Feed -->
-              <div class="video-call-pip-container" id="video-call-pip">
-                <video id="video-call-user-feed" autoplay playsinline muted></video>
-                <div class="pip-user-label"><i class="fa-solid fa-user"></i> You</div>
-                <div class="pip-camera-off-placeholder" id="pip-camera-off">
-                  <i class="fa-solid fa-video-slash"></i>
-                  <span>Camera Off</span>
-                </div>
-              </div>
-
-              <!-- Bottom Controls -->
-              <div class="video-call-controls-bar">
-                <button class="call-action-btn btn-mute-toggle" id="btn-call-mute" title="Mute/Unmute Mic">
-                  <i class="fa-solid fa-microphone"></i>
-                </button>
-                <button class="call-action-btn btn-cam-toggle" id="btn-call-cam" title="Turn Camera On/Off">
-                  <i class="fa-solid fa-video"></i>
-                </button>
-                <button class="call-action-btn btn-end-call" id="btn-call-end" title="End Call">
-                  <i class="fa-solid fa-phone-slash"></i>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1796,6 +1736,9 @@
                     <span style="font-size: 0.78rem; color: #94a3b8; align-self: center;">Scan QR code with your phone camera</span>
                   </div>
                 </div>
+              </div>
+            </div>
+
             <!-- Video Library Settings & Permanent Storage Card -->
             <div class="settings-card video-settings-card" id="video-settings-card" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.04);">
               <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
@@ -2639,6 +2582,107 @@
 
         <button type="button" id="btn-dismiss-pro-upgrade" style="background: none; border: none; color: #94a3b8; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
           Maybe later
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Video Call Modal Overlay (Gemini Live Experience) -->
+  <div class="sol-video-call-modal" id="sol-video-call-modal">
+    <div class="video-call-container">
+      <!-- Full Viewport Live Camera Feed -->
+      <video id="video-call-user-feed" class="video-call-full-feed" autoplay playsinline muted></video>
+      <div class="video-call-camera-off-overlay" id="pip-camera-off">
+        <i class="fa-solid fa-video-slash"></i>
+        <span>Camera is paused</span>
+      </div>
+
+      <!-- Top Floating Controls & Info -->
+      <div class="video-call-header">
+        <div class="video-call-status-badge">
+          <span class="live-recording-dot"></span>
+          <span>LIVE WITH SOL</span>
+          <span class="video-call-timer" id="video-call-timer">00:00</span>
+        </div>
+        
+        <div class="video-call-top-actions">
+          <!-- Desktop Camera Switcher (Visible when multiple cameras exist) -->
+          <div class="camera-picker-dropdown-wrapper" id="camera-picker-wrapper" style="display: none;">
+            <i class="fa-solid fa-camera" style="color: #38bdf8; font-size: 0.85rem;"></i>
+            <select id="video-call-camera-select" title="Switch Camera"></select>
+          </div>
+
+          <!-- Flip Camera Button (Front / Back on Mobile) -->
+          <button class="video-call-icon-btn" id="btn-call-flip-cam" title="Flip Camera">
+            <i class="fa-solid fa-camera-rotate"></i>
+          </button>
+
+          <!-- Close / Exit Call Button -->
+          <button class="video-call-icon-btn" id="btn-video-call-close" title="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Floating Sol Live Presence & Subtitles Banner -->
+      <div class="video-call-sol-live-banner" id="video-call-sol-banner">
+        <div class="sol-live-avatar-pill">
+          <div class="sol-pill-eye">
+            <svg viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg">
+              <path class="sol-stem" d="M 37.6 78 L 37.6 56 C 37.6 44, 42.2 10, 50 0 C 57.8 10, 62.4 44, 62.4 56 L 62.4 78 Q 50 71 37.6 78 Z" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+              <g class="sol-rays">
+                <line x1="20.9" y1="101.9" x2="16.3" y2="91.9" stroke-width="5" stroke-linecap="round" />
+                <line x1="35.0" y1="97.4" x2="32.9" y2="86.6" stroke-width="5" stroke-linecap="round" />
+                <line x1="50.0" y1="96.0" x2="50.0" y2="85.0" stroke-width="5" stroke-linecap="round" />
+                <line x1="65.0" y1="97.4" x2="67.1" y2="86.6" stroke-width="5" stroke-linecap="round" />
+                <line x1="79.1" y1="101.9" x2="83.7" y2="91.9" stroke-width="5" stroke-linecap="round" />
+              </g>
+              <g class="sol-eyelid-group">
+                <path class="sol-eye-outline" d="M 12 120 C 26 100 74 100 88 120 C 74 140 26 140 12 120 Z" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                <g class="sol-pupil-group">
+                  <circle class="sol-iris" cx="50" cy="120" r="11.5" stroke-width="5" fill="none" />
+                  <circle class="sol-pupil-dot" cx="50" cy="120" r="6" />
+                </g>
+              </g>
+            </svg>
+          </div>
+          <span class="sol-pill-badge-name">SOL</span>
+        </div>
+        <div class="video-call-sol-subtitles" id="video-call-sol-subtitles">Sol is listening... Speak freely!</div>
+      </div>
+
+      <!-- Floating Bottom Gemini Live Controls Bar -->
+      <div class="video-call-gemini-controls-bar">
+        <!-- Camera Toggle Button (Blue like Gemini) -->
+        <button class="call-action-circle-btn btn-call-cam" id="btn-call-cam" title="Turn Camera On/Off">
+          <i class="fa-solid fa-video"></i>
+        </button>
+
+        <!-- Flip Camera Button (Bottom Bar) -->
+        <button class="call-action-circle-btn btn-call-flip" id="btn-call-flip-bottom" title="Flip Camera">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i>
+        </button>
+
+        <!-- Center: Gemini Live Waveform / Voice Presence Capsule -->
+        <div class="sol-live-gemini-capsule" id="sol-live-capsule" title="Sol's Live Voice Presence">
+          <div class="capsule-ambient-glow"></div>
+          <div class="capsule-wave-bars">
+            <span class="c-bar bar-1"></span>
+            <span class="c-bar bar-2"></span>
+            <span class="c-bar bar-3"></span>
+            <span class="c-bar bar-4"></span>
+            <span class="c-bar bar-5"></span>
+          </div>
+        </div>
+
+        <!-- Mic Toggle Button -->
+        <button class="call-action-circle-btn btn-call-mute" id="btn-call-mute" title="Mute/Unmute Mic">
+          <i class="fa-solid fa-microphone"></i>
+        </button>
+
+        <!-- End Call Button (X) -->
+        <button class="call-action-circle-btn btn-call-end" id="btn-call-end" title="End Call">
+          <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
     </div>
