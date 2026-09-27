@@ -3131,6 +3131,47 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   gap: 0.5rem;
 }
 
+.slideshow-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.slide-rotate-btn {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.slide-rotate-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+}
+
+.slide-rotate-btn.active {
+  background-color: rgba(246, 202, 33, 0.15);
+  color: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+}
+
+@media (min-width: 901px) {
+  .slide-rotate-btn {
+    display: none !important;
+  }
+}
+
 .slide-counter {
   font-family: 'Outfit', sans-serif;
   font-size: 0.95rem;

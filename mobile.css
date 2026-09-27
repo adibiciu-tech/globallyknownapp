@@ -482,6 +482,198 @@ html, body {
   left: 0.5rem !important;
 }
 
+/* ==========================================================================
+   Visual Dictionary: Mobile Fullscreen Wide Mode (Landscape Auto-Rotation)
+   ========================================================================== */
+.dict-slideshow-container.mobile-fullscreen-wide {
+  position: fixed !important;
+  top: 0 !important;
+  left: 100vw !important;
+  width: 100dvh !important;
+  width: 100vh !important;
+  height: 100dvw !important;
+  height: 100vw !important;
+  transform: rotate(90deg) !important;
+  transform-origin: 0 0 !important;
+  z-index: 999999 !important;
+  background: #090a0f !important;
+  margin: 0 !important;
+  padding: max(6px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  gap: 0.25rem !important;
+}
+
+/* Physical landscape override */
+@media (orientation: landscape) {
+  .dict-slideshow-container.mobile-fullscreen-wide {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    width: 100dvw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    transform: none !important;
+    transform-origin: initial !important;
+  }
+}
+
+/* Compact header in Mobile Wide Fullscreen */
+.dict-slideshow-container.mobile-fullscreen-wide .slideshow-header {
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 0 0.3rem 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  gap: 0.5rem !important;
+  flex-shrink: 0 !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slideshow-header-left {
+  gap: 0.65rem !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-back-circle-btn {
+  padding: 0.3rem 0.75rem !important;
+  font-size: 0.78rem !important;
+  border-radius: 20px !important;
+  height: 30px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+  flex-shrink: 0 !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slideshow-deck-title {
+  font-size: 0.92rem !important;
+  max-width: 200px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slideshow-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  flex-shrink: 0 !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-counter {
+  font-size: 0.78rem !important;
+  padding: 0.2rem 0.55rem !important;
+  height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-rotate-btn {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 0.8rem !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: var(--accent-yellow, #f6ca21) !important;
+}
+
+/* Maximized Slide Display Area in Mobile Wide Fullscreen */
+.dict-slideshow-container.mobile-fullscreen-wide .slide-display-area {
+  flex: 1 1 auto !important;
+  height: calc(100% - 76px) !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-image-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  max-width: 100% !important;
+  aspect-ratio: auto !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-image-wrapper img {
+  width: auto !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  border-radius: 6px !important;
+}
+
+/* Floating arrows on sides */
+.dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav {
+  width: 38px !important;
+  height: 38px !important;
+  font-size: 0.95rem !important;
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  opacity: 0.8 !important;
+  z-index: 100 !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav.prev {
+  left: 0.5rem !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav.next {
+  right: 0.5rem !important;
+}
+
+/* Sleek compact bottom bar */
+.dict-slideshow-container.mobile-fullscreen-wide .slideshow-pagination-controls {
+  margin-top: 0.2rem !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  gap: 0.8rem !important;
+  flex-shrink: 0 !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-nav-arrow {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 0.8rem !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-dots-container {
+  gap: 0.35rem !important;
+  overflow-x: auto !important;
+  max-width: 70% !important;
+  padding: 2px 4px !important;
+}
+
+.dict-slideshow-container.mobile-fullscreen-wide .slide-dot {
+  width: 6px !important;
+  height: 6px !important;
+  flex-shrink: 0 !important;
+}
+
 /* 5. Mobile Video Library & Touch Carousels */
 .video-grid {
   grid-template-columns: 1fr !important;

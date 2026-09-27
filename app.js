@@ -2257,11 +2257,14 @@ window.switchPanel = function(panelId) {
     const slideshowView = document.getElementById("dict-slideshow-view");
     const coverView = document.getElementById("dict-cover-view");
     const headerIntro = document.getElementById("dict-header-intro");
-    if (slideshowView && coverView) {
+    const btnToggleDictRotate = document.getElementById("btn-toggle-dict-rotate");
+    if (slideshowView) {
+      slideshowView.classList.remove("mobile-fullscreen-wide");
       slideshowView.classList.add("hidden");
-      coverView.classList.remove("hidden");
-      if (headerIntro) headerIntro.classList.remove("hidden");
     }
+    if (btnToggleDictRotate) btnToggleDictRotate.classList.remove("active");
+    if (coverView) coverView.classList.remove("hidden");
+    if (headerIntro) headerIntro.classList.remove("hidden");
   }
 
   // 4. Update Header Information
@@ -2798,8 +2801,32 @@ function initDictionaryPanel() {
   // Floating side navigation buttons
   const btnFloatingPrev = document.getElementById("btn-floating-prev");
   const btnFloatingNext = document.getElementById("btn-floating-next");
+  const btnToggleDictRotate = document.getElementById("btn-toggle-dict-rotate");
 
   if (!coverView) return; // Guard in case of hot-reload rendering shifts
+
+  // Helper functions for Mobile Fullscreen Wide Mode (Landscape Auto-Rotation)
+  const enterMobileWideMode = () => {
+    if (window.innerWidth <= 900) {
+      if (slideshowView) slideshowView.classList.add("mobile-fullscreen-wide");
+      if (btnToggleDictRotate) btnToggleDictRotate.classList.add("active");
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock("landscape").catch(() => {});
+        }
+      } catch (e) {}
+    }
+  };
+
+  const exitMobileWideMode = () => {
+    if (slideshowView) slideshowView.classList.remove("mobile-fullscreen-wide");
+    if (btnToggleDictRotate) btnToggleDictRotate.classList.remove("active");
+    try {
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    } catch (e) {}
+  };
 
   // Scroll the main content window and panel back to top
   const scrollPanelToTop = () => {
@@ -3017,6 +3044,7 @@ function initDictionaryPanel() {
       coverView.classList.add("hidden");
       if (headerIntro) headerIntro.classList.add("hidden");
       slideshowView.classList.remove("hidden");
+      enterMobileWideMode();
       currentDeck = "body";
       maxSlides = 17;
       currentSlideIdx = 1;
@@ -3032,6 +3060,7 @@ function initDictionaryPanel() {
       coverView.classList.add("hidden");
       if (headerIntro) headerIntro.classList.add("hidden");
       slideshowView.classList.remove("hidden");
+      enterMobileWideMode();
       currentDeck = "bathroom";
       maxSlides = 18;
       currentSlideIdx = 1;
@@ -3047,6 +3076,7 @@ function initDictionaryPanel() {
       coverView.classList.add("hidden");
       if (headerIntro) headerIntro.classList.add("hidden");
       slideshowView.classList.remove("hidden");
+      enterMobileWideMode();
       currentDeck = "seaside";
       maxSlides = 21;
       currentSlideIdx = 1;
@@ -3056,9 +3086,25 @@ function initDictionaryPanel() {
     });
   }
 
+  // Orientation Toggle Button (Mobile Landscape <-> Portrait)
+  if (btnToggleDictRotate) {
+    btnToggleDictRotate.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!slideshowView) return;
+      const isWide = slideshowView.classList.contains("mobile-fullscreen-wide");
+      if (isWide) {
+        exitMobileWideMode();
+      } else {
+        enterMobileWideMode();
+      }
+      resetZoom();
+    });
+  }
+
   // 2. Back / Close Button Click
   if (btnCloseSlides) {
     btnCloseSlides.addEventListener("click", () => {
+      exitMobileWideMode();
       slideshowView.classList.add("hidden");
       coverView.classList.remove("hidden");
       if (headerIntro) headerIntro.classList.remove("hidden");
@@ -3396,19 +3442,45 @@ function initDictionaryPanel() {
 
       slideImageWrapper.addEventListener("touchend", (e) => {
         const isMobile = window.innerWidth <= 900;
-        if (!isMobile || !isZoomed || e.changedTouches.length === 0) return;
+        if (!isMobile || e.changedTouches.length === 0) return;
         const diffX = e.changedTouches[0].clientX - touchStartX;
         const diffY = e.changedTouches[0].clientY - touchStartY;
-        if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
-          if (diffX < 0) {
-            // Swipe left -> next column
-            if (currentZoomedColumn === "left") snapToAnchor("center");
-            else if (currentZoomedColumn === "center") snapToAnchor("right");
-          } else {
-            // Swipe right -> prev column
-            if (currentZoomedColumn === "right") snapToAnchor("center");
-            else if (currentZoomedColumn === "center") snapToAnchor("left");
+
+        // In Zoomed mode: swipe across columns
+        if (isZoomed) {
+          if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+            if (diffX < 0) {
+              // Swipe left -> next column
+              if (currentZoomedColumn === "left") snapToAnchor("center");
+              else if (currentZoomedColumn === "center") snapToAnchor("right");
+            } else {
+              // Swipe right -> prev column
+              if (currentZoomedColumn === "right") snapToAnchor("center");
+              else if (currentZoomedColumn === "center") snapToAnchor("left");
+            }
           }
+          return;
+        }
+
+        // In Non-Zoomed mode: swipe to go to next/previous slide
+        const isWide = slideshowView && slideshowView.classList.contains("mobile-fullscreen-wide");
+        const isPhysLandscape = window.innerWidth > window.innerHeight;
+        let delta = 0;
+        if (isWide && !isPhysLandscape) {
+          // In CSS pseudo-landscape (rotate 90deg), dragging horizontally across the rotated screen changes Y in screen coords
+          if (Math.abs(diffY) > 35) delta = diffY < 0 ? 1 : -1;
+        } else {
+          if (Math.abs(diffX) > 35) delta = diffX < 0 ? 1 : -1;
+        }
+
+        if (delta === 1 && currentSlideIdx < maxSlides) {
+          currentSlideIdx++;
+          updateSlideDisplay();
+          scrollPanelToTop();
+        } else if (delta === -1 && currentSlideIdx > 1) {
+          currentSlideIdx--;
+          updateSlideDisplay();
+          scrollPanelToTop();
         }
       }, { passive: true });
     }
