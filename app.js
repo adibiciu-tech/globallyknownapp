@@ -2845,6 +2845,8 @@ function initDictionaryPanel() {
 
   // Scroll the main content window and panel back to top
   const scrollPanelToTop = () => {
+    // Don't scroll when in wide fullscreen mode (element is on body, scroll would displace it)
+    if (slideshowView && slideshowView.classList.contains("mobile-fullscreen-wide")) return;
     const dictionaryPanel = document.getElementById("panel-dictionary");
     if (dictionaryPanel) {
       dictionaryPanel.scrollTo({ top: 0, behavior: "smooth" });
@@ -2869,6 +2871,17 @@ function initDictionaryPanel() {
 
   // Dynamically toggle zoom anchor visibility based on column position
   const updateAnchorVisibility = () => {
+    // In wide (landscape) mode: zoom is disabled; force-hide all anchors via inline styles
+    // (CSS !important alone can't override JS inline style, so we do it here too)
+    if (slideshowView && slideshowView.classList.contains("mobile-fullscreen-wide")) {
+      const anchors = [btnAnchorLeft, btnAnchorCenter, btnAnchorRight];
+      anchors.forEach(btn => {
+        if (btn) { btn.style.display = "none"; btn.style.visibility = "hidden"; btn.style.pointerEvents = "none"; }
+      });
+      if (btnZoomReset) btnZoomReset.classList.add("hidden");
+      return;
+    }
+
     const isMobile = window.innerWidth <= 900;
     const leftIcon = btnAnchorLeft ? btnAnchorLeft.querySelector("i") : null;
     const rightIcon = btnAnchorRight ? btnAnchorRight.querySelector("i") : null;

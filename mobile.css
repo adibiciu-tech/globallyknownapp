@@ -623,24 +623,78 @@ html, body {
   border-radius: 6px !important;
 }
 
-/* Floating arrows on sides */
+/* Floating arrows on sides — repositioned for rotated container.
+   Container is rotated 90deg CW so coordinate mapping is:
+     element-bottom → screen-left  |  element-top → screen-right
+     element-left   → screen-bottom|  element-right → screen-top
+   We place prev at element-bottom (→screen-left) and next at element-top (→screen-right).
+   Icons are counter-rotated -90deg so they visually appear as ← and → on screen. */
 .dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav {
-  width: 38px !important;
-  height: 38px !important;
-  font-size: 0.95rem !important;
-  background: rgba(15, 23, 42, 0.7) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+  width: 40px !important;
+  height: 40px !important;
+  font-size: 1rem !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
-  opacity: 0.8 !important;
   z-index: 100 !important;
+  /* Clear default left/right positioning */
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  /* Center horizontally in element space (= center vertically on screen) */
+  transform: translateX(-50%) !important;
 }
 
+/* Prev: element-bottom → screen-LEFT edge */
 .dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav.prev {
-  left: 0.5rem !important;
+  bottom: 14px !important;
+  top: auto !important;
+  left: calc(50dvh) !important;
+  right: auto !important;
 }
 
+/* Next: element-top → screen-RIGHT edge */
 .dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav.next {
-  right: 0.5rem !important;
+  top: 14px !important;
+  bottom: auto !important;
+  left: calc(50dvh) !important;
+  right: auto !important;
+}
+
+/* Counter-rotate icons so they appear as ← → on screen (not ↓ ↑) */
+.dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav i {
+  display: inline-block !important;
+  transform: rotate(-90deg) !important;
+}
+
+/* Physical landscape — revert to normal left/right positioning */
+@media (orientation: landscape) {
+  .dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav {
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+  }
+  .dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav.prev {
+    left: 0.5rem !important;
+    right: auto !important;
+  }
+  .dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav.next {
+    right: 0.5rem !important;
+    left: auto !important;
+  }
+  .dict-slideshow-container.mobile-fullscreen-wide .slide-floating-nav i {
+    transform: none !important;
+  }
+}
+
+/* Zoom anchor & reset buttons: hidden in wide mode.
+   JS also enforces display:none since it sets inline styles. */
+.dict-slideshow-container.mobile-fullscreen-wide .zoom-anchor-btn,
+.dict-slideshow-container.mobile-fullscreen-wide .zoom-reset-btn {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Sleek compact bottom bar */
