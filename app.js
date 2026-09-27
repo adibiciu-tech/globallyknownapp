@@ -7175,16 +7175,16 @@ function renderDesktopPlaylistGallery(allCategories) {
     </div>
     <div class="yt-card-bottom-info">
       <div class="yt-card-header-row">
-        <h3 class="yt-card-clean-title" style="color: #38bdf8;"><i class="fa-solid fa-folder-plus"></i> Import Playlist</h3>
+        <h3 class="yt-card-clean-title" style="color: var(--accent-yellow, #c084fc);"><i class="fa-solid fa-folder-plus"></i> Import Playlist</h3>
       </div>
       <div class="yt-card-sub-meta">
         <span>Auto-embeds all videos in order</span>
       </div>
       <div class="yt-card-action-bar">
-        <span class="yt-card-action-link" style="color: #38bdf8;">
+        <span class="yt-card-action-link" style="color: var(--accent-yellow, #c084fc);">
           <i class="fa-solid fa-file-import"></i> Click to Add
         </span>
-        <span class="yt-card-arrow-pill" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+        <span class="yt-card-arrow-pill" style="background: var(--glow-color-1, rgba(192, 132, 252, 0.2)); color: var(--accent-yellow, #c084fc);">
           <i class="fa-solid fa-arrow-right"></i>
         </span>
       </div>
@@ -7532,10 +7532,10 @@ function renderMobilePlaylistGallery(allCategories) {
         <h3 class="mob-card-title">
           <span>Add New ${mobLabelType}</span>
         </h3>
-        <span class="mob-card-count" style="color: #38bdf8;">+ Import YouTube Playlist</span>
+        <span class="mob-card-count" style="color: var(--accent-yellow, #c084fc);">+ Import YouTube Playlist</span>
         <span class="mob-card-curator">Paste YouTube link • Auto-import in order</span>
       </div>
-      <i class="fa-solid fa-cloud-arrow-down mob-card-arrow" style="color: #38bdf8; font-size: 1.1rem;"></i>
+      <i class="fa-solid fa-cloud-arrow-down mob-card-arrow" style="color: var(--accent-yellow, #c084fc); font-size: 1.1rem;"></i>
     `;
     mobAddCard.addEventListener("click", () => {
       openAddPlaylistModal(currentVideoCategoryType);

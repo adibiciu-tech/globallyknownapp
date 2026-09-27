@@ -10038,12 +10038,56 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   color: #f8fafc;
 }
 
-/* Active Videos: Cyan / Sky glow */
+/* Active Videos: Dynamically inherits active theme accent color */
 .video-type-btn[data-type="videos"].active {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.28), rgba(14, 165, 233, 0.18));
-  border-color: rgba(56, 189, 248, 0.5);
-  color: #38bdf8;
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.28);
+  background: var(--glow-color-1, rgba(192, 132, 252, 0.22)) !important;
+  border-color: var(--accent-yellow, #c084fc) !important;
+  color: var(--accent-yellow, #c084fc) !important;
+  box-shadow: 0 0 14px var(--glow-color-1, rgba(192, 132, 252, 0.35)) !important;
+}
+
+/* Explicit theme overrides to guarantee exact color matching across all themes */
+:root[data-theme="purple"] .video-type-btn[data-type="videos"].active {
+  background: rgba(192, 132, 252, 0.22) !important;
+  border-color: #c084fc !important;
+  color: #c084fc !important;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.4) !important;
+}
+
+:root[data-theme="emerald"] .video-type-btn[data-type="videos"].active {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.4) !important;
+}
+
+:root[data-theme="crimson"] .video-type-btn[data-type="videos"].active {
+  background: rgba(244, 63, 94, 0.22) !important;
+  border-color: #f43f5e !important;
+  color: #f43f5e !important;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.4) !important;
+}
+
+:root[data-theme="cyan"] .video-type-btn[data-type="videos"].active {
+  background: rgba(6, 182, 212, 0.22) !important;
+  border-color: #06b6d4 !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.4) !important;
+}
+
+:root[data-theme="dark"] .video-type-btn[data-type="videos"].active,
+:root:not([data-theme]) .video-type-btn[data-type="videos"].active {
+  background: rgba(246, 202, 33, 0.2) !important;
+  border-color: #f6ca21 !important;
+  color: #f6ca21 !important;
+  box-shadow: 0 0 14px rgba(246, 202, 33, 0.4) !important;
+}
+
+:root[data-theme="rainbow"] .video-type-btn[data-type="videos"].active {
+  background: linear-gradient(135deg, rgba(255, 0, 127, 0.3), rgba(0, 229, 255, 0.2)) !important;
+  border-color: #ff007f !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(255, 0, 127, 0.45) !important;
 }
 
 /* Active Shorts: YouTube Shorts Crimson / Rose glow */
@@ -10203,7 +10247,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   align-items: center !important;
   gap: 12px !important;
   background: rgba(15, 23, 42, 0.45) !important;
-  border: 2px dashed rgba(56, 189, 248, 0.4) !important;
+  border: 2px dashed var(--accent-yellow, #c084fc) !important;
   border-radius: 14px !important;
   padding: 12px 14px !important;
   cursor: pointer !important;
@@ -10216,10 +10260,10 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 
 .mob-add-playlist-card:hover,
 .mob-add-playlist-card:active {
-  background: rgba(56, 189, 248, 0.08) !important;
-  border-color: rgba(56, 189, 248, 0.8) !important;
+  background: var(--glow-color-1, rgba(192, 132, 252, 0.12)) !important;
+  border-color: var(--accent-yellow, #c084fc) !important;
   transform: scale(0.99) !important;
-  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.2) !important;
+  box-shadow: 0 6px 20px var(--glow-color-1, rgba(192, 132, 252, 0.25)) !important;
 }
 
 .mob-add-thumb-wrap {
@@ -10227,7 +10271,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   aspect-ratio: 16 / 10 !important;
   border-radius: 10px !important;
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.8)) !important;
-  border: 1px dashed rgba(56, 189, 248, 0.45) !important;
+  border: 1px dashed var(--accent-yellow, #c084fc) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -10239,14 +10283,14 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   width: 36px !important;
   height: 36px !important;
   border-radius: 50% !important;
-  background: rgba(56, 189, 248, 0.2) !important;
-  border: 1px solid rgba(56, 189, 248, 0.5) !important;
-  color: #38bdf8 !important;
+  background: var(--glow-color-1, rgba(192, 132, 252, 0.2)) !important;
+  border: 1px solid var(--accent-yellow, #c084fc) !important;
+  color: var(--accent-yellow, #c084fc) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-size: 1.05rem !important;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 0 12px var(--glow-color-1, rgba(192, 132, 252, 0.35)) !important;
   transition: transform 0.2s ease !important;
 }
 
@@ -10257,7 +10301,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 /* 2. Desktop Add Playlist Card Frame (3-Column Grid matching yt-clean-playlist-card) */
 .yt-add-playlist-card {
   background: rgba(15, 23, 42, 0.5) !important;
-  border: 2px dashed rgba(56, 189, 248, 0.35) !important;
+  border: 2px dashed var(--accent-yellow, #c084fc) !important;
   border-radius: 15px !important;
   overflow: hidden !important;
   cursor: pointer !important;
@@ -10268,10 +10312,10 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 }
 
 .yt-add-playlist-card:hover {
-  border-color: rgba(56, 189, 248, 0.8) !important;
-  background: rgba(56, 189, 248, 0.06) !important;
+  border-color: var(--accent-yellow, #c084fc) !important;
+  background: var(--glow-color-1, rgba(192, 132, 252, 0.08)) !important;
   transform: translateY(-4px) !important;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(56, 189, 248, 0.22) !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6), 0 0 24px var(--glow-color-1, rgba(192, 132, 252, 0.35)) !important;
 }
 
 .yt-add-hero-box {
@@ -10279,7 +10323,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   width: 100% !important;
   aspect-ratio: 16 / 9 !important;
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8)) !important;
-  border-bottom: 1px dashed rgba(56, 189, 248, 0.25) !important;
+  border-bottom: 1px dashed var(--accent-yellow, #c084fc) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -10291,21 +10335,22 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   width: 52px !important;
   height: 52px !important;
   border-radius: 50% !important;
-  background: rgba(56, 189, 248, 0.16) !important;
-  border: 1px solid rgba(56, 189, 248, 0.55) !important;
-  color: #38bdf8 !important;
+  background: var(--glow-color-1, rgba(192, 132, 252, 0.18)) !important;
+  border: 1px solid var(--accent-yellow, #c084fc) !important;
+  color: var(--accent-yellow, #c084fc) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-size: 1.45rem !important;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 0 16px var(--glow-color-1, rgba(192, 132, 252, 0.35)) !important;
   transition: all 0.2s ease !important;
 }
 
 .yt-add-playlist-card:hover .yt-add-large-circle {
   transform: scale(1.12) !important;
-  background: rgba(56, 189, 248, 0.3) !important;
-  box-shadow: 0 0 24px rgba(56, 189, 248, 0.6) !important;
+  background: var(--accent-yellow, #c084fc) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 24px var(--glow-color-1, rgba(192, 132, 252, 0.6)) !important;
 }
 
 .yt-add-card-label {
@@ -10324,11 +10369,11 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 
 /* Cinema Player Play/Pause Interactive Buttons */
 .cinema-btn.cinema-play-pause-btn {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(14, 165, 233, 0.35)) !important;
-  border: 1px solid rgba(56, 189, 248, 0.6) !important;
-  color: #38bdf8 !important;
+  background: var(--glow-color-1, rgba(192, 132, 252, 0.2)) !important;
+  border: 1px solid var(--accent-yellow, #c084fc) !important;
+  color: var(--accent-yellow, #c084fc) !important;
   font-weight: 700 !important;
-  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25) !important;
+  box-shadow: 0 4px 14px var(--glow-color-1, rgba(192, 132, 252, 0.25)) !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
@@ -10337,10 +10382,10 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 }
 
 .cinema-btn.cinema-play-pause-btn:hover {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(14, 165, 233, 0.55)) !important;
-  border-color: #38bdf8 !important;
+  background: var(--accent-gradient, #c084fc) !important;
+  border-color: var(--accent-yellow, #c084fc) !important;
   color: #ffffff !important;
-  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 6px 20px var(--glow-color-1, rgba(192, 132, 252, 0.45)) !important;
   transform: translateY(-1px);
 }
 
@@ -10352,9 +10397,9 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 }
 
 .btn-mobile-action.btn-mobile-play-pause {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(14, 165, 233, 0.28)) !important;
-  border: 1px solid rgba(56, 189, 248, 0.5) !important;
-  color: #38bdf8 !important;
+  background: var(--glow-color-1, rgba(192, 132, 252, 0.18)) !important;
+  border: 1px solid var(--accent-yellow, #c084fc) !important;
+  color: var(--accent-yellow, #c084fc) !important;
   font-weight: 700 !important;
   cursor: pointer !important;
 }
