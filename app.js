@@ -4905,6 +4905,7 @@ function applyTheme(themeName) {
     card.classList.toggle("active", card.getAttribute("data-theme-val") === currentTheme);
   });
 }
+window.applyTheme = applyTheme;
 
 // Global Theme Dropdown Toggle
 window.toggleThemeDropdown = function(e) {

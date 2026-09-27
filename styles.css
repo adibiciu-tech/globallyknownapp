@@ -3336,17 +3336,28 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   overflow-y: auto;
   min-height: calc(100vh - 64px);
   position: relative;
+  box-sizing: border-box;
 }
 
-#panel-output-practicing .gemini-home-content {
-  padding-top: 1.5rem;
-  padding-bottom: 3rem;
+#panel-output-practicing.workspace-panel.active {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#panel-output-practicing .gemini-home-content,
+#panel-output-practicing .output-practicing-content {
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+  padding: 2rem 1rem !important;
   width: 100%;
   max-width: 800px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
 }
 
 #panel-output-practicing .sol-eye-icon-wrapper {
@@ -3365,12 +3376,12 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 
 #panel-output-practicing .output-live-status {
   order: 3;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 #panel-output-practicing .gemini-home-greeting {
   order: 4;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 #panel-output-practicing .gemini-home-conversation {
@@ -3794,21 +3805,222 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   width: 92px;
   height: 92px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-yellow, #f6ca21), var(--accent-orange, #f59e0b));
-  border: 3px solid rgba(255, 255, 255, 0.25);
-  color: #000000;
+  border: 3px solid rgba(255, 255, 255, 0.3);
   font-size: 2.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 30px rgba(246, 202, 33, 0.35), inset 0 2px 5px rgba(255, 255, 255, 0.5);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.output-live-mic-btn:hover {
+/* Default / Sol Amber Theme (Yellow / Gold) */
+.output-live-mic-btn,
+:root[data-theme="dark"] .output-live-mic-btn {
+  background: linear-gradient(135deg, #f6ca21 0%, #d97706 100%);
+  color: #000000;
+  box-shadow: 0 8px 30px rgba(246, 202, 33, 0.45), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+.output-live-mic-btn:hover,
+:root[data-theme="dark"] .output-live-mic-btn:hover {
   transform: scale(1.08);
-  box-shadow: 0 12px 35px rgba(246, 202, 33, 0.55), inset 0 2px 8px rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, #fde047 0%, #eab308 100%);
+  box-shadow: 0 12px 36px rgba(246, 202, 33, 0.65), inset 0 2px 8px rgba(255, 255, 255, 0.7);
+}
+
+/* Cyber Cyan Theme (Pure Blue / Cyan - Zero Yellow) */
+:root[data-theme="cyan"] .output-live-mic-btn:not(.listening):not(.speaking) {
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #030712 !important;
+  box-shadow: 0 8px 32px rgba(14, 165, 233, 0.5), inset 0 2px 6px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="cyan"] .output-live-mic-btn:not(.listening):not(.speaking):hover {
+  transform: scale(1.08);
+  background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%) !important;
+  box-shadow: 0 12px 38px rgba(14, 165, 233, 0.7), inset 0 2px 8px rgba(255, 255, 255, 0.75) !important;
+}
+
+:root[data-theme="cyan"] .output-option-btn.btn-normal-call {
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #030712 !important;
+  box-shadow: 0 6px 24px rgba(14, 165, 233, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="cyan"] .output-option-btn.btn-normal-call:hover {
+  background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%) !important;
+  box-shadow: 0 10px 32px rgba(14, 165, 233, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.8) !important;
+}
+
+:root[data-theme="cyan"] .mic-pulse-ring {
+  border-color: #38bdf8 !important;
+}
+
+:root[data-theme="cyan"] .output-options-branches-svg path,
+:root[data-theme="cyan"] .output-options-branches-svg line {
+  stroke: rgba(56, 189, 248, 0.6) !important;
+}
+
+/* Emerald Mint Theme (Green) */
+:root[data-theme="emerald"] .output-live-mic-btn:not(.listening):not(.speaking) {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #022c22 !important;
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.5), inset 0 2px 6px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="emerald"] .output-live-mic-btn:not(.listening):not(.speaking):hover {
+  transform: scale(1.08);
+  background: linear-gradient(135deg, #6ee7b7 0%, #10b981 100%) !important;
+  box-shadow: 0 12px 38px rgba(16, 185, 129, 0.7), inset 0 2px 8px rgba(255, 255, 255, 0.75) !important;
+}
+
+:root[data-theme="emerald"] .output-option-btn.btn-normal-call {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #022c22 !important;
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="emerald"] .output-option-btn.btn-normal-call:hover {
+  background: linear-gradient(135deg, #6ee7b7 0%, #10b981 100%) !important;
+  box-shadow: 0 10px 32px rgba(16, 185, 129, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.8) !important;
+}
+
+:root[data-theme="emerald"] .mic-pulse-ring {
+  border-color: #10b981 !important;
+}
+
+:root[data-theme="emerald"] .output-options-branches-svg path,
+:root[data-theme="emerald"] .output-options-branches-svg line {
+  stroke: rgba(16, 185, 129, 0.6) !important;
+}
+
+/* Amethyst Violet Theme (Purple) */
+:root[data-theme="purple"] .output-live-mic-btn:not(.listening):not(.speaking) {
+  background: linear-gradient(135deg, #c084fc 0%, #7c3aed 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #090514 !important;
+  box-shadow: 0 8px 32px rgba(192, 132, 252, 0.5), inset 0 2px 6px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="purple"] .output-live-mic-btn:not(.listening):not(.speaking):hover {
+  transform: scale(1.08);
+  background: linear-gradient(135deg, #e9d5ff 0%, #9333ea 100%) !important;
+  box-shadow: 0 12px 38px rgba(192, 132, 252, 0.7), inset 0 2px 8px rgba(255, 255, 255, 0.75) !important;
+}
+
+:root[data-theme="purple"] .output-option-btn.btn-normal-call {
+  background: linear-gradient(135deg, #c084fc 0%, #7c3aed 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #090514 !important;
+  box-shadow: 0 6px 24px rgba(192, 132, 252, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="purple"] .output-option-btn.btn-normal-call:hover {
+  background: linear-gradient(135deg, #e9d5ff 0%, #9333ea 100%) !important;
+  box-shadow: 0 10px 32px rgba(192, 132, 252, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.8) !important;
+}
+
+:root[data-theme="purple"] .mic-pulse-ring {
+  border-color: #c084fc !important;
+}
+
+:root[data-theme="purple"] .output-options-branches-svg path,
+:root[data-theme="purple"] .output-options-branches-svg line {
+  stroke: rgba(192, 132, 252, 0.6) !important;
+}
+
+/* Crimson Sunset Theme (Red) */
+:root[data-theme="crimson"] .output-live-mic-btn:not(.listening):not(.speaking) {
+  background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #110507 !important;
+  box-shadow: 0 8px 32px rgba(244, 63, 94, 0.5), inset 0 2px 6px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="crimson"] .output-live-mic-btn:not(.listening):not(.speaking):hover {
+  transform: scale(1.08);
+  background: linear-gradient(135deg, #fda4af 0%, #f43f5e 100%) !important;
+  box-shadow: 0 12px 38px rgba(244, 63, 94, 0.7), inset 0 2px 8px rgba(255, 255, 255, 0.75) !important;
+}
+
+:root[data-theme="crimson"] .output-option-btn.btn-normal-call {
+  background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #110507 !important;
+  box-shadow: 0 6px 24px rgba(244, 63, 94, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="crimson"] .output-option-btn.btn-normal-call:hover {
+  background: linear-gradient(135deg, #fda4af 0%, #f43f5e 100%) !important;
+  box-shadow: 0 10px 32px rgba(244, 63, 94, 0.65), inset 0 2px 6px rgba(255, 255, 255, 0.8) !important;
+}
+
+:root[data-theme="crimson"] .mic-pulse-ring {
+  border-color: #f43f5e !important;
+}
+
+:root[data-theme="crimson"] .output-options-branches-svg path,
+:root[data-theme="crimson"] .output-options-branches-svg line {
+  stroke: rgba(244, 63, 94, 0.6) !important;
+}
+
+/* Spectrum Rainbow Theme */
+:root[data-theme="rainbow"] .output-live-mic-btn:not(.listening):not(.speaking) {
+  background: linear-gradient(135deg, #ff007f, #ff7f00, #ffeb00, #00ff7f, #00e5ff, #7f00ff) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #000000 !important;
+  box-shadow: 0 8px 32px rgba(0, 229, 255, 0.5), inset 0 2px 6px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="rainbow"] .output-option-btn.btn-normal-call {
+  background: linear-gradient(135deg, #ff007f, #ff7f00, #ffeb00, #00ff7f, #00e5ff, #7f00ff) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #000000 !important;
+  box-shadow: 0 6px 24px rgba(0, 229, 255, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="rainbow"] .mic-pulse-ring {
+  border-color: #00e5ff !important;
+}
+
+:root[data-theme="rainbow"] .output-options-branches-svg path,
+:root[data-theme="rainbow"] .output-options-branches-svg line {
+  stroke: rgba(0, 229, 255, 0.6) !important;
+}
+
+/* Minimal Light Theme */
+:root[data-theme="light"] .output-live-mic-btn:not(.listening):not(.speaking) {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.35), inset 0 2px 6px rgba(255, 255, 255, 0.5) !important;
+}
+
+:root[data-theme="light"] .output-live-mic-btn:not(.listening):not(.speaking):hover {
+  transform: scale(1.08);
+  background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%) !important;
+  box-shadow: 0 12px 35px rgba(37, 99, 235, 0.5), inset 0 2px 8px rgba(255, 255, 255, 0.65) !important;
+}
+
+:root[data-theme="light"] .output-option-btn.btn-normal-call {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.5) !important;
+}
+
+:root[data-theme="light"] .mic-pulse-ring {
+  border-color: #2563eb !important;
+}
+
+:root[data-theme="light"] .output-options-branches-svg path,
+:root[data-theme="light"] .output-options-branches-svg line {
+  stroke: rgba(37, 99, 235, 0.6) !important;
 }
 
 .output-live-mic-btn:active {
@@ -3816,18 +4028,18 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 }
 
 .output-live-mic-btn.listening {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 40px rgba(239, 68, 68, 0.7);
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.7) !important;
   animation: liveMicPulse 1.4s infinite;
 }
 
 .output-live-mic-btn.speaking {
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 40px rgba(99, 102, 241, 0.7);
+  background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.7) !important;
   animation: liveMicSpeakingPulse 1.8s infinite;
 }
 

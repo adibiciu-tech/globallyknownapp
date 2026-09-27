@@ -50,7 +50,33 @@ html, body {
 }
 
 #panel-output-practicing {
-  padding: 0 0.5rem 2rem 0.5rem !important;
+  padding: 0 !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+#panel-output-practicing .gemini-home-content,
+#panel-output-practicing .output-practicing-content {
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+  padding: 1.5rem 0.75rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#panel-output-practicing .gemini-home-greeting {
+  font-size: clamp(1.4rem, 5.2vw, 2.1rem) !important;
+  margin-bottom: 0.5rem !important;
+  text-align: center !important;
 }
 
 /* 2. Mobile Drawer Navigation & Touch Header */
