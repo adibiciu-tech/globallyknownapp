@@ -1140,7 +1140,12 @@
                         <span class="playlist-header-label">PLAYLIST:</span>
                         <h3 class="playlist-sidebar-title" id="desktop-sidebar-category-title">Category Name</h3>
                       </div>
-                      <span class="playlist-sidebar-counter" id="desktop-sidebar-progress-counter">1 / 25</span>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="btn-sidebar-delete-playlist" id="btn-desktop-delete-current-playlist" title="Delete this playlist">
+                          <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                        <span class="playlist-sidebar-counter" id="desktop-sidebar-progress-counter">1 / 25</span>
+                      </div>
                     </div>
 
                     <!-- Embed / + Add Video Window Card -->
@@ -1202,9 +1207,14 @@
                     <i class="fa-solid fa-arrow-left"></i> <span>Playlists</span>
                   </button>
                   <div class="mobile-player-cat-title" id="mobile-player-cat-title">Category Name</div>
-                  <button type="button" class="btn-mobile-add-vid-header" id="btn-mobile-header-add" title="Embed Video into this playlist">
-                    <i class="fa-solid fa-plus"></i>
-                  </button>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="btn-mobile-delete-header" id="btn-mobile-header-delete" title="Delete this Playlist">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                    <button type="button" class="btn-mobile-add-vid-header" id="btn-mobile-header-add" title="Embed Video into this playlist">
+                      <i class="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- 16:9 Video Player Box -->
@@ -1249,6 +1259,9 @@
                     </button>
                     <button type="button" class="btn-mobile-action" id="btn-mobile-save-list">
                       <i class="fa-solid fa-bookmark"></i> Save
+                    </button>
+                    <button type="button" class="btn-mobile-action btn-mobile-delete-pl" id="btn-mobile-delete-playlist" title="Delete this Playlist" style="color: #f87171;">
+                      <i class="fa-regular fa-trash-can"></i> Delete
                     </button>
                     <button type="button" class="btn-mobile-action" id="btn-mobile-share-vid">
                       <i class="fa-solid fa-share-nodes"></i> Share

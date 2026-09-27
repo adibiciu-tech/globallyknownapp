@@ -1470,6 +1470,29 @@ html, body {
   flex-shrink: 0;
 }
 
+.btn-mobile-delete-header {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.btn-mobile-delete-header:hover,
+.btn-mobile-delete-header:active {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
 /* 16:9 Cinema Player */
 .mobile-cinema-iframe-wrapper {
   width: 100%;

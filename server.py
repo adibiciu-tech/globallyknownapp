@@ -477,7 +477,8 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         elif path.startswith("/api/youtube/categories"):
             data = load_data()
             cats = data.get("playlist_categories", [])
-            resp = json.dumps({"success": True, "categories": cats}).encode("utf-8")
+            deleted_ids = data.get("deleted_playlist_categories", [])
+            resp = json.dumps({"success": True, "categories": cats, "deletedCategoryIds": deleted_ids}).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(resp)))
@@ -1408,6 +1409,49 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(resp)
                 return
+
+        elif path.startswith("/api/youtube/categories"):
+            query = urllib.parse.parse_qs(parsed_url.query)
+            cat_id = query.get("id", [None])[0]
+            if not cat_id:
+                parts = path.strip("/").split("/")
+                if len(parts) >= 4:
+                    cat_id = parts[3]
+            
+            if not cat_id:
+                resp = json.dumps({"success": False, "error": "Missing category id"}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+                return
+
+            data = load_data()
+            cats = [c for c in data.get("playlist_categories", []) if c.get("id") != cat_id]
+            data["playlist_categories"] = cats
+
+            deleted_ids = data.get("deleted_playlist_categories", [])
+            if cat_id not in deleted_ids:
+                deleted_ids.append(cat_id)
+            data["deleted_playlist_categories"] = deleted_ids
+
+            videos = [v for v in data.get("videos", []) if v.get("categoryId") != cat_id]
+            data["videos"] = videos
+
+            save_data(data)
+
+            resp = json.dumps({
+                "success": True,
+                "deletedCategoryId": cat_id,
+                "categories": cats
+            }).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers()
+            self.wfile.write(resp)
+            return
 
         self.send_error(404, "Not Found")
 

@@ -9800,4 +9800,110 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   color: #4ade80 !important;
 }
 
+/* Playlist Card Delete Button Styling */
+.yt-card-delete-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.yt-card-delete-btn:hover {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  transform: scale(1.08);
+}
+
+.btn-sidebar-delete-playlist {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  padding: 5px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-sidebar-delete-playlist:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.mob-card-side-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.mob-card-delete-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.05rem;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.mob-card-delete-btn:hover,
+.mob-card-delete-btn:active {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.mobile-player-actions-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  padding-bottom: 6px !important;
+  margin-top: 10px !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.mobile-player-actions-row::-webkit-scrollbar {
+  display: none !important;
+}
+
+.btn-mobile-action {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-mobile-action.btn-mobile-delete-pl {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+.btn-mobile-action.btn-mobile-delete-pl:hover,
+.btn-mobile-action.btn-mobile-delete-pl:active {
+  background: rgba(239, 68, 68, 0.28) !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+
 

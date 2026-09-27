@@ -5467,17 +5467,21 @@ const DEFAULT_PLAYLIST_CATEGORIES = [
 function loadStoredPlaylistCategories() {
   try {
     const raw = localStorage.getItem("sol_custom_playlist_categories");
+    const deletedRaw = localStorage.getItem("sol_deleted_playlist_categories");
+    const deletedIds = new Set(deletedRaw ? JSON.parse(deletedRaw) : []);
+
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const idSet = new Set(parsed.map(c => c.id));
         const merged = [...parsed];
         DEFAULT_PLAYLIST_CATEGORIES.forEach(def => {
-          if (!idSet.has(def.id)) merged.push(def);
+          if (!idSet.has(def.id) && !deletedIds.has(def.id)) merged.push(def);
         });
-        return merged;
+        return merged.filter(c => !deletedIds.has(c.id));
       }
     }
+    return DEFAULT_PLAYLIST_CATEGORIES.filter(c => !deletedIds.has(c.id));
   } catch (e) {
     console.warn("Could not load stored playlist categories:", e);
   }
@@ -5500,18 +5504,82 @@ async function syncCategoriesFromServer() {
   try {
     const res = await fetch("/api/youtube/categories");
     const data = await res.json();
-    if (data && data.success && Array.isArray(data.categories) && data.categories.length > 0) {
-      const idSet = new Set(data.categories.map(c => c.id));
-      const merged = [...data.categories];
-      PLAYLIST_CATEGORIES.forEach(c => {
-        if (!idSet.has(c.id)) merged.push(c);
-      });
-      persistPlaylistCategories(merged);
+    if (data && data.success) {
+      if (Array.isArray(data.deletedCategoryIds)) {
+        const localDeleted = JSON.parse(localStorage.getItem("sol_deleted_playlist_categories") || "[]");
+        const mergedDeleted = Array.from(new Set([...localDeleted, ...data.deletedCategoryIds]));
+        localStorage.setItem("sol_deleted_playlist_categories", JSON.stringify(mergedDeleted));
+      }
+      const deletedRaw = localStorage.getItem("sol_deleted_playlist_categories");
+      const deletedIds = new Set(deletedRaw ? JSON.parse(deletedRaw) : []);
+
+      if (Array.isArray(data.categories)) {
+        const idSet = new Set(data.categories.map(c => c.id));
+        const merged = [...data.categories];
+        PLAYLIST_CATEGORIES.forEach(c => {
+          if (!idSet.has(c.id) && !deletedIds.has(c.id)) merged.push(c);
+        });
+        const finalCats = merged.filter(c => !deletedIds.has(c.id));
+        persistPlaylistCategories(finalCats);
+      }
     }
   } catch (e) {
     console.warn("Could not sync categories from server:", e);
   }
 }
+
+async function deletePlaylistCategory(catId, catTitle) {
+  if (!catId) return;
+  const displayName = catTitle || catId;
+  const confirmed = confirm(`Are you sure you want to delete the playlist "${displayName}" and all its videos?`);
+  if (!confirmed) return;
+
+  // 1. Record in deleted categories
+  let deletedIds = [];
+  try {
+    deletedIds = JSON.parse(localStorage.getItem("sol_deleted_playlist_categories") || "[]");
+  } catch (_) {}
+  if (!deletedIds.includes(catId)) {
+    deletedIds.push(catId);
+  }
+  localStorage.setItem("sol_deleted_playlist_categories", JSON.stringify(deletedIds));
+
+  // 2. Remove from PLAYLIST_CATEGORIES
+  PLAYLIST_CATEGORIES = PLAYLIST_CATEGORIES.filter(c => c.id !== catId);
+  localStorage.setItem("sol_custom_playlist_categories", JSON.stringify(PLAYLIST_CATEGORIES));
+
+  // 3. Remove videos in this category from local user videos
+  try {
+    let storedVideos = JSON.parse(localStorage.getItem("sol_user_added_videos") || "[]");
+    storedVideos = storedVideos.filter(v => v.categoryId !== catId);
+    localStorage.setItem("sol_user_added_videos", JSON.stringify(storedVideos));
+  } catch (_) {}
+
+  // 4. Notify server
+  try {
+    await fetch(`/api/youtube/categories?id=${encodeURIComponent(catId)}`, {
+      method: "DELETE"
+    });
+  } catch (e) {
+    console.warn("Failed to delete category on server:", e);
+  }
+
+  // 5. If currently viewing this playlist, close player page
+  if (currentDesktopActiveCategory && currentDesktopActiveCategory.id === catId) {
+    closeDesktopPlaylistPage();
+  }
+  if (currentMobileActiveCategory && currentMobileActiveCategory.id === catId) {
+    closeMobilePlaylistPage();
+  }
+
+  showToast(`🗑️ Playlist "${displayName}" deleted.`);
+
+  // 6. Re-render galleries
+  if (typeof initVideosPanel === "function") {
+    initVideosPanel();
+  }
+}
+window.deletePlaylistCategory = deletePlaylistCategory;
 
 let PLAYLIST_CATEGORIES = loadStoredPlaylistCategories();
 
@@ -6415,9 +6483,14 @@ function renderDesktopPlaylistGallery(allCategories) {
       <div class="yt-card-bottom-info">
         <div class="yt-card-header-row">
           <h3 class="yt-card-clean-title">${cat.flag} ${escapeHtml(cat.title)}</h3>
-          <button type="button" class="yt-card-options-btn" title="Add video to ${escapeHtml(cat.title)}">
-            <i class="fa-solid fa-ellipsis-vertical"></i>
-          </button>
+          <div style="display: inline-flex; align-items: center; gap: 4px;">
+            <button type="button" class="yt-card-delete-btn" title="Delete playlist ${escapeHtml(cat.title)}">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+            <button type="button" class="yt-card-options-btn" title="Add video to ${escapeHtml(cat.title)}">
+              <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
+          </div>
         </div>
         <div class="yt-card-sub-meta">
           <span>${count} Videos</span> • <span class="meta-highlight">Level ${levelStr}</span> • <span>Globally Known</span>
@@ -6450,6 +6523,15 @@ function renderDesktopPlaylistGallery(allCategories) {
         }
       });
     });
+
+    // Clicking delete button opens confirmation and removes playlist
+    const deleteBtn = card.querySelector(".yt-card-delete-btn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deletePlaylistCategory(cat.id, cat.title);
+      });
+    }
 
     // Clicking options button opens add video modal
     const optionsBtn = card.querySelector(".yt-card-options-btn");
@@ -6546,6 +6628,14 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
     btnDeskPlayPause.onclick = (e) => {
       e.stopPropagation();
       toggleVideoPlayback("desktop-cinema-iframe");
+    };
+  }
+
+  const btnDeskDeleteCurrentPl = document.getElementById("btn-desktop-delete-current-playlist");
+  if (btnDeskDeleteCurrentPl) {
+    btnDeskDeleteCurrentPl.onclick = (e) => {
+      e.stopPropagation();
+      deletePlaylistCategory(cat.id, cat.title);
     };
   }
 
@@ -6888,8 +6978,21 @@ function renderMobilePlaylistGallery(allCategories) {
           <span class="mob-card-count">${count} Videos</span>
           <span class="mob-card-curator">By Globally Known • Level ${levelStr}</span>
         </div>
-        <i class="fa-solid fa-chevron-right mob-card-arrow"></i>
+        <div class="mob-card-side-actions">
+          <button type="button" class="mob-card-delete-btn" title="Delete playlist ${escapeHtml(cat.title)}">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+          <i class="fa-solid fa-chevron-right mob-card-arrow"></i>
+        </div>
       `;
+
+      const mobDelBtn = card.querySelector(".mob-card-delete-btn");
+      if (mobDelBtn) {
+        mobDelBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          deletePlaylistCategory(cat.id, cat.title);
+        });
+      }
 
       card.addEventListener("click", () => {
         openMobilePlaylistPage(cat);
@@ -6982,6 +7085,22 @@ function openMobilePlaylistPage(cat, videoToPlay = null) {
       } else {
         showToast(`🔗 Link copied to clipboard!`);
       }
+    };
+  }
+
+  const btnMobileDeletePl = document.getElementById("btn-mobile-delete-playlist");
+  if (btnMobileDeletePl) {
+    btnMobileDeletePl.onclick = (e) => {
+      e.stopPropagation();
+      deletePlaylistCategory(cat.id, cat.title);
+    };
+  }
+
+  const btnMobileHeaderDelete = document.getElementById("btn-mobile-header-delete");
+  if (btnMobileHeaderDelete) {
+    btnMobileHeaderDelete.onclick = (e) => {
+      e.stopPropagation();
+      deletePlaylistCategory(cat.id, cat.title);
     };
   }
 
