@@ -774,14 +774,15 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(resp)
                     return
 
-                # Build Gemini API request contents
+                # Build Gemini API request contents (Supports multimodal live camera vision!)
                 contents = []
                 for m in messages:
                     role = "model" if m.get("role") == "model" else "user"
-                    text = m.get("content") or ""
-                    if not text and m.get("parts") and len(m.get("parts")) > 0:
-                        text = m["parts"][0].get("text", "")
-                    contents.append({"role": role, "parts": [{"text": text}]})
+                    if m.get("parts") and isinstance(m["parts"], list) and len(m["parts"]) > 0:
+                        contents.append({"role": role, "parts": m["parts"]})
+                    else:
+                        text = m.get("content") or ""
+                        contents.append({"role": role, "parts": [{"text": text}]})
 
                 req_body = {"contents": contents}
                 if system_instruction:
@@ -790,12 +791,14 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 if is_title:
                     req_body["generationConfig"] = {"maxOutputTokens": 16, "temperature": 0.3}
 
-                # Try production models in priority order
+                # Try production models in priority order (Flash models support multimodal vision)
                 models_to_try = [
                     requested_model,
+                    "gemini-2.5-flash",
+                    "gemini-1.5-flash",
+                    "gemini-2.0-flash",
                     "gemini-3.6-flash",
-                    "gemini-3.5-flash-lite",
-                    "gemini-2.5-flash"
+                    "gemini-3.5-flash-lite"
                 ]
                 seen = set()
                 candidate_models = []

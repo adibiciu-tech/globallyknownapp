@@ -142,7 +142,13 @@ export class GeminiService {
     const formattedContents = messages
       .filter(m => m.role === "user" || m.role === "model")
       .map(m => {
-        const text = m.content || (m.parts && m.parts[0] ? m.parts[0].text : "");
+        if (m.parts && Array.isArray(m.parts) && m.parts.length > 0) {
+          return {
+            role: m.role === "model" ? "model" : "user",
+            parts: m.parts
+          };
+        }
+        const text = m.content || "";
         return {
           role: m.role === "model" ? "model" : "user",
           parts: [{ text: text }]
@@ -227,7 +233,13 @@ export class GeminiService {
     const formattedContents = messages
       .filter(m => m.role === "user" || m.role === "model")
       .map(m => {
-        const text = m.content || (m.parts && m.parts[0] ? m.parts[0].text : "");
+        if (m.parts && Array.isArray(m.parts) && m.parts.length > 0) {
+          return {
+            role: m.role === "model" ? "model" : "user",
+            parts: m.parts
+          };
+        }
+        const text = m.content || "";
         return {
           role: m.role === "model" ? "model" : "user",
           parts: [{ text: text }]

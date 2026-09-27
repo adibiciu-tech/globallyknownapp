@@ -4451,6 +4451,46 @@ function initOutputPracticingPanel() {
     }
   }
 
+  // Capture a snapshot frame from the active live video call feed for Gemini Vision
+  function captureVideoCallFrame() {
+    if (activeCallMode !== "video") return null;
+    const video = document.getElementById("video-call-user-feed");
+    if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null;
+
+    try {
+      const canvas = document.createElement("canvas");
+      // Scale down to a clean 640px dimension for instant network transfer & fast Gemini multimodal reasoning
+      const maxDim = 640;
+      let w = video.videoWidth;
+      let h = video.videoHeight;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+
+      // For mirrored front-facing view, flip it back so Gemini sees natural orientation (e.g. text isn't backwards)
+      if (currentFacingMode === "user") {
+        ctx.translate(w, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(video, 0, 0, w, h);
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+      return dataUrl.split(",")[1];
+    } catch (e) {
+      console.warn("Could not capture video call frame:", e);
+      return null;
+    }
+  }
+
   // Handle Finish & Submit Spoken Turn -> Generate Response -> Speak Aloud
   async function finishAndSubmitSpeech(userSpeech, langObj, userDiv) {
     if (silenceTimer) clearTimeout(silenceTimer);
@@ -4505,10 +4545,34 @@ function initOutputPracticingPanel() {
       aiBody = aiDiv.querySelector(".gemini-ai-body");
     }
 
-    const systemInstruction = `You are Sol, a warm, charismatic, and intelligent AI companion powered by Google Gemini on Globally Known.
+    // Capture camera frame if in video call mode for Gemini multimodal vision
+    const frameBase64 = (activeCallMode === "video" && !isCamOff) ? captureVideoCallFrame() : null;
+
+    const systemInstruction = (activeCallMode === "video")
+      ? `You are Sol, a warm, observant, and engaging native AI partner powered by Google Gemini on Globally Known.
+You are in a LIVE INTERACTIVE VIDEO CALL with the learner. You have real-time camera vision.
+The user is pointing their camera at their surroundings or holding up objects, documents, books, or showing gestures/expressions.
+Actively observe what is visible in the camera frame. If the user asks "what is this?", "look at this", or asks about what they're showing you, immediately identify and describe it! If they ask a general question, you can still reference what you see in the room or background if relevant.
+Respond aloud in 1-3 natural, warm spoken sentences. Speak like a friend sitting across from them.
+Never output markdown symbols (no asterisks, no bullet points, no headers). Speak cleanly and conversationally.`
+      : `You are Sol, a warm, charismatic, and intelligent AI companion powered by Google Gemini on Globally Known.
 You are in a real-time live spoken conversation with the learner. Respond aloud in 1-3 spoken sentences. Speak cleanly, warmly, and naturally. Never output markdown asterisks, bullet points, formatting codes, or internal thoughts.`;
 
-    const prompt = `The user said: "${userSpeech}". Respond directly in natural spoken dialogue.`;
+    const userParts = [];
+    if (frameBase64) {
+      userParts.push({
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: frameBase64
+        }
+      });
+    }
+
+    const promptText = (activeCallMode === "video")
+      ? `[Live Camera View Attached] The user is on a live video call with you and says: "${userSpeech}". Look at what they are showing you in the camera image and respond directly, engaging naturally with the visual scene and their words.`
+      : `The user said: "${userSpeech}". Respond directly in natural spoken dialogue.`;
+
+    userParts.push({ text: promptText });
 
     let finalized = false;
     let responseText = "";
@@ -4536,11 +4600,11 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
 
     if (geminiService && geminiService.hasApiKey()) {
       try {
-        const messages = [{ role: "user", content: prompt, parts: [{ text: prompt }] }];
+        const messages = [{ role: "user", parts: userParts }];
         await geminiService.generateResponseStream(
           messages,
           systemInstruction,
-          "gemini-3.6-flash",
+          "gemini-2.5-flash",
           (chunk) => {
             if (responseText === "") {
               if (aiBody) aiBody.innerHTML = "";
