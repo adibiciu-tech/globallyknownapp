@@ -2806,9 +2806,18 @@ function initDictionaryPanel() {
   if (!coverView) return; // Guard in case of hot-reload rendering shifts
 
   // Helper functions for Mobile Fullscreen Wide Mode (Landscape Auto-Rotation)
+  // Note: We move slideshowView to document.body when in wide mode to escape
+  // the `.workspace-panel.active > *` CSS animation transform context, which
+  // otherwise breaks `position: fixed` hit-testing on iOS/Android (buttons unreachable).
+  const slideshowOriginalParent = slideshowView ? slideshowView.parentElement : null;
+
   const enterMobileWideMode = () => {
     if (window.innerWidth <= 900) {
-      if (slideshowView) slideshowView.classList.add("mobile-fullscreen-wide");
+      if (slideshowView) {
+        // Move to body to escape transformed ancestor stacking context
+        document.body.appendChild(slideshowView);
+        slideshowView.classList.add("mobile-fullscreen-wide");
+      }
       if (btnToggleDictRotate) btnToggleDictRotate.classList.add("active");
       try {
         if (screen.orientation && screen.orientation.lock) {
@@ -2819,7 +2828,13 @@ function initDictionaryPanel() {
   };
 
   const exitMobileWideMode = () => {
-    if (slideshowView) slideshowView.classList.remove("mobile-fullscreen-wide");
+    if (slideshowView) {
+      slideshowView.classList.remove("mobile-fullscreen-wide");
+      // Move back to its original parent inside the panel
+      if (slideshowOriginalParent && !slideshowOriginalParent.contains(slideshowView)) {
+        slideshowOriginalParent.appendChild(slideshowView);
+      }
+    }
     if (btnToggleDictRotate) btnToggleDictRotate.classList.remove("active");
     try {
       if (screen.orientation && screen.orientation.unlock) {
