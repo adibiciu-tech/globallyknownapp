@@ -369,6 +369,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("Alt-Svc", "clear")
         if self.path.startswith("/api/"):
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.send_header("Pragma", "no-cache")
