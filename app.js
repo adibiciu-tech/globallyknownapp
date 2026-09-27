@@ -4057,6 +4057,14 @@ function initOutputPracticingPanel() {
       if (callOptions) callOptions.classList.remove("open");
       activeCallMode = "normal";
       if (conversationEl) conversationEl.style.display = "none";
+      if ("speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.resume();
+          const prime = new SpeechSynthesisUtterance(" ");
+          prime.volume = 0.01;
+          window.speechSynthesis.speak(prime);
+        } catch(e) {}
+      }
       setOutputLiveState("listening", "📞 Normal Call with Sol — Speak now!");
       startListeningTurn();
     };
@@ -4068,6 +4076,14 @@ function initOutputPracticingPanel() {
       if (callOptions) callOptions.classList.remove("open");
       activeCallMode = "transcript";
       if (conversationEl) conversationEl.style.display = "flex";
+      if ("speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.resume();
+          const prime = new SpeechSynthesisUtterance(" ");
+          prime.volume = 0.01;
+          window.speechSynthesis.speak(prime);
+        } catch(e) {}
+      }
       setOutputLiveState("listening", "📝 Live Call with Transcript — Speak now!");
       startListeningTurn();
     };
@@ -4077,6 +4093,14 @@ function initOutputPracticingPanel() {
   if (btnVideoCall) {
     btnVideoCall.onclick = () => {
       if (callOptions) callOptions.classList.remove("open");
+      if ("speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.resume();
+          const prime = new SpeechSynthesisUtterance(" ");
+          prime.volume = 0.01;
+          window.speechSynthesis.speak(prime);
+        } catch(e) {}
+      }
       startVideoCall();
     };
   }
@@ -4231,8 +4255,24 @@ function initOutputPracticingPanel() {
       if (btnCallCam) btnCallCam.classList.add("active-off");
     }
 
-    if (videoSubtitles) videoSubtitles.textContent = "Sol is listening... Speak freely!";
-    startListeningTurn();
+    // Greet the user aloud with Sol's voice right when entering the call!
+    let userName = "";
+    try {
+      const raw = localStorage.getItem("sol_user_profile");
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p && p.name && p.name.toLowerCase() !== "guest") {
+          userName = p.name.split(" ")[0];
+        }
+      }
+    } catch (e) {}
+
+    const greeting = userName
+      ? `Hey ${userName}! I'm right here with you live. What would you like to explore together today?`
+      : `Hey there! I can see and hear you live. What would you like to explore together today?`;
+
+    if (videoSubtitles) videoSubtitles.textContent = `Sol: "${greeting}"`;
+    speakLiveAudio(greeting, "en-US");
   }
 
   function endVideoCall() {
@@ -4542,14 +4582,17 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
     }
   }
 
-  // Speak Live Audio via Web Speech Synthesis
+  // Speak Live Audio via Web Speech Synthesis (Engineered for Mobile Safari & Chrome)
   function speakLiveAudio(text, langCode) {
     if (!("speechSynthesis" in window)) {
       setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
       return;
     }
     
-    window.speechSynthesis.cancel();
+    // Only cancel if already speaking to avoid iOS Safari freeze bug
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+    }
     try { window.speechSynthesis.resume(); } catch (e) {}
 
     const cleanText = text
@@ -4566,15 +4609,24 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = langCode || "en-US";
-    utterance.rate = 1.05;
+    utterance.rate = 1.0;
     utterance.pitch = 1.0;
+    utterance.volume = 1.0;
 
     const voices = getBrowserVoices();
     if (voices && voices.length > 0) {
-      const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en"));
-      if (match) utterance.voice = match;
+      const naturalVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Samantha") || v.name.includes("Daniel")));
+      const anyEnVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en"));
+      if (naturalVoice) {
+        utterance.voice = naturalVoice;
+      } else if (anyEnVoice) {
+        utterance.voice = anyEnVoice;
+      }
     }
 
+    // Retain in a global array to prevent WebKit/Chromium garbage collection bug
+    window.__solActiveUtterances = window.__solActiveUtterances || [];
+    window.__solActiveUtterances.push(utterance);
     windowActiveUtterance = utterance;
 
     utterance.onstart = () => {
@@ -4586,8 +4638,11 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
       setOutputLiveState("speaking", "🔊 Sol is speaking...");
     };
 
-    utterance.onend = () => {
+    const cleanupAndProceed = () => {
       isSolSpeaking = false;
+      const idx = (window.__solActiveUtterances || []).indexOf(utterance);
+      if (idx !== -1) window.__solActiveUtterances.splice(idx, 1);
+
       if (activeCallMode === "video") {
         if (solCapsule) {
           solCapsule.classList.remove("speaking");
@@ -4618,11 +4673,14 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
       }
     };
 
-    utterance.onerror = () => {
-      isSolSpeaking = false;
-      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+    utterance.onend = cleanupAndProceed;
+    utterance.onerror = (e) => {
+      console.warn("SpeechSynthesis utterance error:", e);
+      cleanupAndProceed();
     };
 
+    // Ensure audio resume right before speak
+    try { window.speechSynthesis.resume(); } catch (e) {}
     window.speechSynthesis.speak(utterance);
   }
 
