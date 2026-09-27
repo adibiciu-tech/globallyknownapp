@@ -3880,9 +3880,9 @@ function initOutputPracticingPanel() {
 
     if (wRect.width === 0 || mRect.width === 0) return;
 
-    // Origin: top center of the big microphone button
+    // Origin: slightly above the top center of the big microphone button
     const xOrigin = (mRect.left + mRect.width / 2) - wRect.left;
-    const yOrigin = mRect.top - wRect.top;
+    const yOrigin = (mRect.top - wRect.top) - 14;
 
     // Left target: bottom center of video call button
     const xLeft = (vRect.left + vRect.width / 2) - wRect.left;
@@ -3961,11 +3961,18 @@ function initOutputPracticingPanel() {
         const isOpen = callOptions.classList.toggle("open");
         if (isOpen) {
           setOutputLiveState("idle", "Choose your call mode: Video, Normal, or Transcript");
-          updateCallOptionsBranches();
-          requestAnimationFrame(updateCallOptionsBranches);
-          setTimeout(updateCallOptionsBranches, 60);
-          setTimeout(updateCallOptionsBranches, 180);
-          setTimeout(updateCallOptionsBranches, 360);
+          // Smooth real-time tracking of branch lines while options animate open
+          let animStartTime = null;
+          function stepBranches(timestamp) {
+            if (!animStartTime) animStartTime = timestamp;
+            updateCallOptionsBranches();
+            if (timestamp - animStartTime < 340) {
+              requestAnimationFrame(stepBranches);
+            } else {
+              updateCallOptionsBranches();
+            }
+          }
+          requestAnimationFrame(stepBranches);
         } else {
           setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
         }
@@ -3996,7 +4003,7 @@ function initOutputPracticingPanel() {
         const mRect = mic.getBoundingClientRect();
 
         const xOrigin = (mRect.left + mRect.width / 2) - wRect.left;
-        const yOrigin = mRect.top - wRect.top;
+        const yOrigin = (mRect.top - wRect.top) - 14;
 
         const xLeft = (vRect.left + vRect.width / 2) - wRect.left;
         const yLeft = vRect.bottom - wRect.top + 2;

@@ -3389,6 +3389,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 }
 
 /* 3 Call Options Wrapper (Pop up fanning out above the big microphone) */
+/* 3 Call Options Wrapper (Pop up fanning out above the big microphone) */
 .output-call-options-wrapper {
   display: flex;
   justify-content: center;
@@ -3400,21 +3401,34 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   max-width: 340px;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(16px) scale(0.94);
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  height: 0;
-  overflow: hidden;
+  visibility: hidden;
+  max-height: 0;
+  margin-bottom: 0;
+  transform: translateY(12px) scale(0.96);
+  transition: 
+    opacity 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    max-height 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-bottom 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.24s;
+  overflow: visible;
   z-index: 25;
 }
 
 .output-call-options-wrapper.open {
   opacity: 1;
   pointer-events: auto;
+  visibility: visible;
   transform: translateY(0) scale(1);
-  height: auto;
+  max-height: 200px;
   overflow: visible;
   margin-top: 0.5rem;
   margin-bottom: 1.75rem;
+  transition: 
+    opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    margin-bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .output-options-branches-svg {
@@ -3427,6 +3441,13 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   z-index: 2;
   overflow: visible;
   color: var(--accent-yellow, #f6ca21);
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.output-call-options-wrapper.open .output-options-branches-svg {
+  opacity: 1;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1) 0.04s;
 }
 
 .output-options-branches-svg line {
@@ -3440,8 +3461,9 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 
 .output-options-branches-svg circle {
   fill: currentColor !important;
-  opacity: 0.9 !important;
+  opacity: 0.95 !important;
   filter: drop-shadow(0 0 5px currentColor);
+  transform-origin: center;
 }
 
 .output-call-option-item {
@@ -3452,27 +3474,56 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   align-items: center;
   position: relative;
   z-index: 5;
-  transition: transform 0.25s ease;
+  opacity: 0;
+  transition: 
+    opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.output-call-option-item.option-video {
-  transform: translateY(6px);
+/* Closed state initial transforms */
+.output-call-options-wrapper:not(.open) .output-call-option-item.option-video {
+  transform: translateY(16px) scale(0.9);
+}
+.output-call-options-wrapper:not(.open) .output-call-option-item.option-normal {
+  transform: translateY(16px) scale(0.9);
+}
+.output-call-options-wrapper:not(.open) .output-call-option-item.option-transcript {
+  transform: translateY(16px) scale(0.9);
 }
 
-.output-call-option-item.option-normal {
-  transform: translateY(-8px);
+/* Open state staggered blossom */
+.output-call-options-wrapper.open .output-call-option-item {
+  opacity: 1;
+  transition: 
+    opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.output-call-option-item.option-transcript {
-  transform: translateY(6px);
+.output-call-options-wrapper.open .output-call-option-item.option-video {
+  transform: translateY(6px) scale(1);
+  transition-delay: 0.035s;
 }
 
-.output-call-option-item:hover {
-  transform: translateY(-2px) scale(1.05);
+.output-call-options-wrapper.open .output-call-option-item.option-normal {
+  transform: translateY(-8px) scale(1);
+  transition-delay: 0s;
 }
 
-.output-call-option-item.option-normal:hover {
-  transform: translateY(-14px) scale(1.05);
+.output-call-options-wrapper.open .output-call-option-item.option-transcript {
+  transform: translateY(6px) scale(1);
+  transition-delay: 0.035s;
+}
+
+.output-call-options-wrapper.open .output-call-option-item.option-video:hover {
+  transform: translateY(4px) scale(1.05);
+}
+
+.output-call-options-wrapper.open .output-call-option-item.option-normal:hover {
+  transform: translateY(-11px) scale(1.05);
+}
+
+.output-call-options-wrapper.open .output-call-option-item.option-transcript:hover {
+  transform: translateY(4px) scale(1.05);
 }
 
 .output-option-label {
