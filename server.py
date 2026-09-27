@@ -170,28 +170,172 @@ def get_saving_lists():
     return data.get("saving_lists", [])
 
 def fetch_youtube_playlist(url_or_id):
-    import re, xml.etree.ElementTree as ET
+    import re, json, urllib.parse, xml.etree.ElementTree as ET
     m = re.search(r'[?&]list=([a-zA-Z0-9_-]+)', url_or_id)
     pl_id = m.group(1) if m else url_or_id.strip()
     
     if not pl_id:
         return {"success": False, "error": "Invalid playlist URL or ID"}
-    
-    feed_url = f"https://www.youtube.com/feeds/videos.xml?playlist_id={pl_id}"
-    req = urllib.request.Request(feed_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
+    }
+
+    def extract_items_from_json(obj, items, seen):
+        if isinstance(obj, dict):
+            # 1. playlistVideoRenderer
+            if 'playlistVideoRenderer' in obj:
+                pvr = obj['playlistVideoRenderer']
+                vid = pvr.get('videoId')
+                if vid and vid not in seen:
+                    seen.add(vid)
+                    t = pvr.get('title', {})
+                    title = ''
+                    if 'runs' in t: title = ''.join(r.get('text', '') for r in t['runs'])
+                    elif 'simpleText' in t: title = t.get('simpleText', '')
+                    lt = pvr.get('lengthText', {}).get('simpleText', '')
+                    items.append({
+                        "videoId": vid,
+                        "title": title or f"Lesson {len(items)+1}",
+                        "embedUrl": f"https://www.youtube.com/embed/{vid}",
+                        "thumbUrl": f"https://img.youtube.com/vi/{vid}/hqdefault.jpg",
+                        "duration": lt
+                    })
+
+            # 2. lockupViewModel
+            if 'lockupViewModel' in obj:
+                lvm = obj['lockupViewModel']
+                vid = None
+                try:
+                    vid = lvm['rendererContext']['commandContext']['onTap']['innertubeCommand']['watchEndpoint']['videoId']
+                except Exception:
+                    pass
+                if not vid:
+                    vid = lvm.get('contentId')
+                if vid and vid not in seen:
+                    seen.add(vid)
+                    title = ''
+                    try:
+                        title = lvm['metadata']['lockupMetadataViewModel']['title']['content']
+                    except Exception:
+                        pass
+                    if not title:
+                        try:
+                            title = lvm['rendererContext']['accessibilityContext']['label']
+                        except Exception:
+                            pass
+                    items.append({
+                        "videoId": vid,
+                        "title": title or f"Lesson {len(items)+1}",
+                        "embedUrl": f"https://www.youtube.com/embed/{vid}",
+                        "thumbUrl": f"https://img.youtube.com/vi/{vid}/hqdefault.jpg",
+                        "duration": ""
+                    })
+
+            for v in obj.values():
+                extract_items_from_json(v, items, seen)
+        elif isinstance(obj, list):
+            for it in obj:
+                extract_items_from_json(it, items, seen)
+
+    def find_continuation_token(obj):
+        if isinstance(obj, dict):
+            if 'continuationCommand' in obj and 'token' in obj['continuationCommand']:
+                return obj['continuationCommand']['token']
+            for v in obj.values():
+                t = find_continuation_token(v)
+                if t: return t
+        elif isinstance(obj, list):
+            for it in obj:
+                t = find_continuation_token(it)
+                if t: return t
+        return None
+
+    # Step 1: Web Scraping for Full Playlist
     try:
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            content = resp.read().decode("utf-8")
-        root = ET.fromstring(content)
+        url = f"https://www.youtube.com/playlist?list={pl_id}"
+        req = urllib.request.Request(url, headers=headers)
+        html = urllib.request.urlopen(req, timeout=12).read().decode('utf-8', errors='ignore')
+
+        key_m = re.search(r'"INNERTUBE_API_KEY":"([a-zA-Z0-9_-]+)"', html)
+        api_key = key_m.group(1) if key_m else None
         
+        m_data = re.search(r'ytInitialData\s*=\s*({.+?});(?:</script>|\n)', html)
+        if m_data:
+            data = json.loads(m_data.group(1))
+            
+            pl_title = ""
+            try:
+                pl_title = data.get('header', {}).get('playlistHeaderRenderer', {}).get('title', {}).get('simpleText', '')
+            except Exception: pass
+            if not pl_title:
+                try:
+                    pl_title = data.get('metadata', {}).get('playlistMetadataRenderer', {}).get('title', '')
+                except Exception: pass
+            if not pl_title:
+                title_m = re.search(r'<title>(.+?)(?: - YouTube)?</title>', html)
+                if title_m: pl_title = title_m.group(1).replace(" - YouTube", "").strip()
+
+            videos = []
+            seen = set()
+            extract_items_from_json(data, videos, seen)
+
+            # Paginate through continuations if any (up to 10 pages / 1000 items max)
+            token = find_continuation_token(data)
+            pages = 0
+            while token and api_key and pages < 10:
+                pages += 1
+                try:
+                    dec_token = urllib.parse.unquote(token)
+                    browse_url = f"https://www.youtube.com/youtubei/v1/browse?key={api_key}"
+                    payload = json.dumps({
+                        "context": {
+                            "client": {
+                                "clientName": "WEB",
+                                "clientVersion": "2.20240101.00.00"
+                            }
+                        },
+                        "continuation": dec_token
+                    }).encode('utf-8')
+                    b_req = urllib.request.Request(browse_url, data=payload, headers={
+                        'Content-Type': 'application/json',
+                        'User-Agent': headers['User-Agent']
+                    })
+                    b_data = json.loads(urllib.request.urlopen(b_req, timeout=8).read().decode('utf-8'))
+                    prev_count = len(videos)
+                    extract_items_from_json(b_data, videos, seen)
+                    if len(videos) == prev_count:
+                        break
+                    token = find_continuation_token(b_data)
+                except Exception as ce:
+                    print("Continuation notice:", ce)
+                    break
+
+            if videos:
+                return {
+                    "success": True,
+                    "playlistId": pl_id,
+                    "playlistTitle": pl_title or "YouTube Playlist",
+                    "count": len(videos),
+                    "videos": videos
+                }
+    except Exception as e:
+        print("HTML scrape notice:", e)
+
+    # Step 2: Fallback to RSS Atom Feed
+    try:
+        feed_url = f"https://www.youtube.com/feeds/videos.xml?playlist_id={pl_id}"
+        req = urllib.request.Request(feed_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            content = resp.read()
+        root = ET.fromstring(content)
         ns = {
             "atom": "http://www.w3.org/2005/Atom",
-            "yt": "http://www.youtube.com/xml/schemas/2015",
-            "media": "http://search.yahoo.com/mrss/"
+            "yt": "http://www.youtube.com/xml/schemas/2015"
         }
         title_el = root.find("atom:title", ns)
         pl_title = title_el.text if title_el is not None and title_el.text else "YouTube Playlist"
-        
         videos = []
         for entry in root.findall("atom:entry", ns):
             vid_id_el = entry.find("yt:videoId", ns)
@@ -202,7 +346,7 @@ def fetch_youtube_playlist(url_or_id):
                 videos.append({
                     "videoId": vid_id,
                     "title": v_title,
-                    "embedUrl": f"https://www.youtube-nocookie.com/embed/{vid_id}",
+                    "embedUrl": f"https://www.youtube.com/embed/{vid_id}",
                     "thumbUrl": f"https://img.youtube.com/vi/{vid_id}/hqdefault.jpg"
                 })
         return {
@@ -212,8 +356,8 @@ def fetch_youtube_playlist(url_or_id):
             "count": len(videos),
             "videos": videos
         }
-    except Exception as e:
-        return {"success": False, "error": f"Failed to fetch YouTube playlist: {str(e)}"}
+    except Exception as e2:
+        return {"success": False, "error": f"Failed to fetch YouTube playlist: {str(e2)}"}
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):

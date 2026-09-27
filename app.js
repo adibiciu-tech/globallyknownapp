@@ -5780,20 +5780,20 @@ function parseEmbedVideoUrl(rawInput) {
   // 1. YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
   const shortsMatch = text.match(/(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/i);
   if (shortsMatch) {
-    return `https://www.youtube-nocookie.com/embed/${shortsMatch[1]}`;
+    return `https://www.youtube.com/embed/${shortsMatch[1]}`;
   }
 
   // 2. YouTube Playlist: https://www.youtube.com/playlist?list=LIST_ID
   const playlistOnlyMatch = text.match(/youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/i);
   if (playlistOnlyMatch) {
-    return `https://www.youtube-nocookie.com/embed/videoseries?list=${playlistOnlyMatch[1]}`;
+    return `https://www.youtube.com/embed/videoseries?list=${playlistOnlyMatch[1]}`;
   }
 
   // 3. YouTube Watch, youtu.be, or existing /embed/ (DO NOT append ?list= to avoid 403 / unavailable errors)
   const ytMatch = text.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]+)/i);
   if (ytMatch) {
     const videoId = ytMatch[1];
-    return `https://www.youtube-nocookie.com/embed/${videoId}`;
+    return `https://www.youtube.com/embed/${videoId}`;
   }
 
   // 4. Vimeo: https://vimeo.com/VIDEO_ID or https://player.vimeo.com/video/VIDEO_ID
@@ -6541,6 +6541,14 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
     };
   }
 
+  const btnDeskPlayPause = document.getElementById("btn-desktop-cinema-play-pause");
+  if (btnDeskPlayPause) {
+    btnDeskPlayPause.onclick = (e) => {
+      e.stopPropagation();
+      toggleVideoPlayback("desktop-cinema-iframe");
+    };
+  }
+
   // Populate Playlist Track
   if (itemsTrackEl) {
     itemsTrackEl.innerHTML = "";
@@ -6598,6 +6606,62 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
   if (panelVideos) panelVideos.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function updateDesktopPlayPauseUI(isPlaying) {
+  const btn = document.getElementById("btn-desktop-cinema-play-pause");
+  const icon = document.getElementById("desktop-play-pause-icon");
+  const label = document.getElementById("desktop-play-pause-label");
+  if (!btn) return;
+  if (isPlaying) {
+    btn.classList.remove("is-paused");
+    if (icon) icon.className = "fa-solid fa-pause";
+    if (label) label.textContent = "Pause Video";
+  } else {
+    btn.classList.add("is-paused");
+    if (icon) icon.className = "fa-solid fa-play";
+    if (label) label.textContent = "Play Video";
+  }
+}
+
+function updateMobilePlayPauseUI(isPlaying) {
+  const btn = document.getElementById("btn-mobile-cinema-play-pause");
+  const icon = document.getElementById("mobile-play-pause-icon");
+  const label = document.getElementById("mobile-play-pause-label");
+  if (!btn) return;
+  if (isPlaying) {
+    btn.classList.remove("is-paused");
+    if (icon) icon.className = "fa-solid fa-pause";
+    if (label) label.textContent = "Pause";
+  } else {
+    btn.classList.add("is-paused");
+    if (icon) icon.className = "fa-solid fa-play";
+    if (label) label.textContent = "Play";
+  }
+}
+
+function toggleVideoPlayback(iframeId) {
+  const iframe = typeof iframeId === "string" ? document.getElementById(iframeId) : iframeId;
+  if (!iframe || !iframe.contentWindow) return;
+
+  const isCurrentlyPlaying = iframe.dataset.isPlaying !== "false";
+  const cmd = isCurrentlyPlaying ? "pauseVideo" : "playVideo";
+
+  iframe.contentWindow.postMessage(JSON.stringify({
+    event: "command",
+    func: cmd,
+    args: []
+  }), "*");
+
+  const nextState = !isCurrentlyPlaying;
+  iframe.dataset.isPlaying = nextState ? "true" : "false";
+
+  if (iframe.id === "desktop-cinema-iframe") {
+    updateDesktopPlayPauseUI(nextState);
+  } else if (iframe.id === "mobile-cinema-iframe") {
+    updateMobilePlayPauseUI(nextState);
+  }
+}
+window.toggleVideoPlayback = toggleVideoPlayback;
+
 function loadDesktopCinemaVideo(video, cat, index, itemEl) {
   if (!video) return;
   currentDesktopActiveVideo = video;
@@ -6618,31 +6682,25 @@ function loadDesktopCinemaVideo(video, cat, index, itemEl) {
     else iframeWrapper.classList.remove("is-short-mode");
   }
 
-  // Format clean embed URL with autoplay
+  // Format clean embed URL with enablejsapi and autoplay
   let activeEmbedUrl = video.embedUrl || "";
   if (activeEmbedUrl.includes("youtube") && !activeEmbedUrl.includes("videoseries")) {
     activeEmbedUrl = activeEmbedUrl.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
     activeEmbedUrl = activeEmbedUrl.replace(/\?&/g, "?").replace(/\?$/g, "");
   }
+  if (activeEmbedUrl.includes("youtube-nocookie.com/embed/")) {
+    activeEmbedUrl = activeEmbedUrl.replace("youtube-nocookie.com/embed/", "youtube.com/embed/");
+  }
   if (activeEmbedUrl.includes("youtube.com/embed/")) {
-    activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
+    const hasParams = activeEmbedUrl.includes("?");
+    const sep = hasParams ? "&" : "?";
+    activeEmbedUrl += `${sep}enablejsapi=1&playsinline=1&controls=1&rel=0&modestbranding=1&autoplay=1`;
   }
-  if (activeEmbedUrl.includes("youtube-nocookie.com/embed/") || activeEmbedUrl.includes("youtube.com/embed/")) {
-    if (!activeEmbedUrl.includes("fs=")) {
-      activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
-    }
-    if (!activeEmbedUrl.includes("enablejsapi=")) {
-      activeEmbedUrl += "&enablejsapi=1";
-    }
-    if (!activeEmbedUrl.includes("playsinline=")) {
-      activeEmbedUrl += "&playsinline=1";
-    }
-    if (!activeEmbedUrl.includes("origin=")) {
-      activeEmbedUrl += `&origin=${encodeURIComponent(window.location.origin)}`;
-    }
+  if (iframe) {
+    iframe.src = activeEmbedUrl;
+    iframe.dataset.isPlaying = "true";
   }
-  const autoplayParam = activeEmbedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1";
-  if (iframe) iframe.src = activeEmbedUrl + autoplayParam;
+  updateDesktopPlayPauseUI(true);
 
   if (titleEl) titleEl.textContent = video.title || "Video Lesson";
   if (levelPill) {
@@ -6880,6 +6938,14 @@ function openMobilePlaylistPage(cat, videoToPlay = null) {
     btnBack.onclick = () => closeMobilePlaylistPage();
   }
 
+  const btnActionPlayPause = document.getElementById("btn-mobile-cinema-play-pause");
+  if (btnActionPlayPause) {
+    btnActionPlayPause.onclick = (e) => {
+      e.stopPropagation();
+      toggleVideoPlayback("mobile-cinema-iframe");
+    };
+  }
+
   const btnActionRotate = document.getElementById("btn-mobile-rotate-landscape");
   if (btnActionRotate) {
     btnActionRotate.onclick = () => toggleMobileLandscapeFullscreen();
@@ -7005,25 +7071,17 @@ function loadMobileCinemaVideo(video, cat, index, itemEl) {
       activeEmbedUrl = activeEmbedUrl.replace(/[?&]list=[a-zA-Z0-9_-]+/g, "");
       activeEmbedUrl = activeEmbedUrl.replace(/\?&/g, "?").replace(/\?$/g, "");
     }
+    if (activeEmbedUrl.includes("youtube-nocookie.com/embed/")) {
+      activeEmbedUrl = activeEmbedUrl.replace("youtube-nocookie.com/embed/", "youtube.com/embed/");
+    }
     if (activeEmbedUrl.includes("youtube.com/embed/")) {
-      activeEmbedUrl = activeEmbedUrl.replace("youtube.com/embed/", "youtube-nocookie.com/embed/");
+      const hasParams = activeEmbedUrl.includes("?");
+      const sep = hasParams ? "&" : "?";
+      activeEmbedUrl += `${sep}enablejsapi=1&playsinline=1&controls=1&rel=0&modestbranding=1&autoplay=1`;
     }
-    if (activeEmbedUrl.includes("youtube-nocookie.com/embed/") || activeEmbedUrl.includes("youtube.com/embed/")) {
-      if (!activeEmbedUrl.includes("fs=")) {
-        activeEmbedUrl += (activeEmbedUrl.includes("?") ? "&" : "?") + "fs=1";
-      }
-      if (!activeEmbedUrl.includes("enablejsapi=")) {
-        activeEmbedUrl += "&enablejsapi=1";
-      }
-      if (!activeEmbedUrl.includes("playsinline=")) {
-        activeEmbedUrl += "&playsinline=1";
-      }
-      if (!activeEmbedUrl.includes("origin=")) {
-        activeEmbedUrl += `&origin=${encodeURIComponent(window.location.origin)}`;
-      }
-    }
-    const autoplayParam = activeEmbedUrl.includes("?") ? "&autoplay=1" : "?autoplay=1";
-    iframe.src = activeEmbedUrl + autoplayParam;
+    iframe.src = activeEmbedUrl;
+    iframe.dataset.isPlaying = "true";
+    updateMobilePlayPauseUI(true);
   }
 
   // Active class toggle
@@ -7045,13 +7103,21 @@ function loadMobileCinemaVideo(video, cat, index, itemEl) {
 function clearMobileCinemaPlayer() {
   const iframe = document.getElementById("mobile-cinema-iframe");
   const titleEl = document.getElementById("mobile-active-video-title");
-  if (iframe) iframe.src = "";
+  if (iframe) {
+    iframe.src = "";
+    iframe.dataset.isPlaying = "false";
+  }
+  updateMobilePlayPauseUI(false);
   if (titleEl) titleEl.textContent = "No videos in this playlist yet";
 }
 
 function closeMobilePlaylistPage() {
   const iframe = document.getElementById("mobile-cinema-iframe");
-  if (iframe) iframe.src = "";
+  if (iframe) {
+    iframe.src = "";
+    iframe.dataset.isPlaying = "false";
+  }
+  updateMobilePlayPauseUI(false);
   const wrapper = document.getElementById("mobile-cinema-iframe-wrapper");
   if (wrapper) wrapper.classList.remove("is-pseudo-landscape");
   unlockScreenOrientation();
@@ -8976,6 +9042,54 @@ window.addEventListener("message", (e) => {
       }
     }
   } catch (_) {}
+});
+
+// YouTube Iframe Player State Sync via postMessage
+window.addEventListener("message", (e) => {
+  try {
+    let payload = e.data;
+    if (typeof payload === "string") {
+      try { payload = JSON.parse(payload); } catch (_) {}
+    }
+    if (payload && payload.event === "onStateChange") {
+      // 1 = PLAYING, 2 = PAUSED, 0 = ENDED
+      if (payload.info === 1) {
+        updateDesktopPlayPauseUI(true);
+        updateMobilePlayPauseUI(true);
+        const deskIframe = document.getElementById("desktop-cinema-iframe");
+        if (deskIframe) deskIframe.dataset.isPlaying = "true";
+        const mobIframe = document.getElementById("mobile-cinema-iframe");
+        if (mobIframe) mobIframe.dataset.isPlaying = "true";
+      } else if (payload.info === 2 || payload.info === 0) {
+        updateDesktopPlayPauseUI(false);
+        updateMobilePlayPauseUI(false);
+        const deskIframe = document.getElementById("desktop-cinema-iframe");
+        if (deskIframe) deskIframe.dataset.isPlaying = "false";
+        const mobIframe = document.getElementById("mobile-cinema-iframe");
+        if (mobIframe) mobIframe.dataset.isPlaying = "false";
+      }
+    }
+  } catch (_) {}
+});
+
+// Spacebar Play / Pause Toggle Shortcut for Active Video Cinema Player
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space" || e.key === " ") {
+    const activeEl = document.activeElement;
+    const tag = activeEl ? activeEl.tagName.toLowerCase() : "";
+    if (tag === "input" || tag === "textarea" || (activeEl && activeEl.isContentEditable)) {
+      return;
+    }
+    const deskPlayer = document.getElementById("desktop-video-player-page");
+    const mobPlayer = document.getElementById("mobile-video-player-page");
+    if (deskPlayer && !deskPlayer.classList.contains("hidden")) {
+      e.preventDefault();
+      toggleVideoPlayback("desktop-cinema-iframe");
+    } else if (mobPlayer && !mobPlayer.classList.contains("hidden")) {
+      e.preventDefault();
+      toggleVideoPlayback("mobile-cinema-iframe");
+    }
+  }
 });
 
 // Start SOL Engine safely after entire module has been fully parsed & evaluated
