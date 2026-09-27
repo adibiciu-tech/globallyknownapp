@@ -3866,6 +3866,65 @@ function initOutputPracticingPanel() {
     }
   }
 
+  // Calculate and draw straight radiating branch lines connecting the mic button to the 3 options
+  function updateCallOptionsBranches() {
+    if (!callOptions || !callOptions.classList.contains("open")) return;
+    const svg = document.getElementById("output-options-branches-svg");
+    if (!svg || !btnVideoCall || !btnNormalCall || !btnTranscriptCall || !micBtn) return;
+
+    const wRect = callOptions.getBoundingClientRect();
+    const vRect = btnVideoCall.getBoundingClientRect();
+    const nRect = btnNormalCall.getBoundingClientRect();
+    const tRect = btnTranscriptCall.getBoundingClientRect();
+    const mRect = micBtn.getBoundingClientRect();
+
+    if (wRect.width === 0 || mRect.width === 0) return;
+
+    // Origin: top center of the big microphone button
+    const xOrigin = (mRect.left + mRect.width / 2) - wRect.left;
+    const yOrigin = mRect.top - wRect.top;
+
+    // Left target: bottom center of video call button
+    const xLeft = (vRect.left + vRect.width / 2) - wRect.left;
+    const yLeft = vRect.bottom - wRect.top + 2;
+
+    // Middle target: bottom center of normal call button
+    const xMid = (nRect.left + nRect.width / 2) - wRect.left;
+    const yMid = nRect.bottom - wRect.top + 2;
+
+    // Right target: bottom center of transcript call button
+    const xRight = (tRect.left + tRect.width / 2) - wRect.left;
+    const yRight = tRect.bottom - wRect.top + 2;
+
+    const lineLeft = document.getElementById("branch-line-video");
+    const lineMid = document.getElementById("branch-line-normal");
+    const lineRight = document.getElementById("branch-line-transcript");
+    const originDot = document.getElementById("branch-origin-dot");
+
+    if (lineLeft) {
+      lineLeft.setAttribute("x1", xOrigin.toFixed(1));
+      lineLeft.setAttribute("y1", yOrigin.toFixed(1));
+      lineLeft.setAttribute("x2", xLeft.toFixed(1));
+      lineLeft.setAttribute("y2", yLeft.toFixed(1));
+    }
+    if (lineMid) {
+      lineMid.setAttribute("x1", xOrigin.toFixed(1));
+      lineMid.setAttribute("y1", yOrigin.toFixed(1));
+      lineMid.setAttribute("x2", xMid.toFixed(1));
+      lineMid.setAttribute("y2", yMid.toFixed(1));
+    }
+    if (lineRight) {
+      lineRight.setAttribute("x1", xOrigin.toFixed(1));
+      lineRight.setAttribute("y1", yOrigin.toFixed(1));
+      lineRight.setAttribute("x2", xRight.toFixed(1));
+      lineRight.setAttribute("y2", yRight.toFixed(1));
+    }
+    if (originDot) {
+      originDot.setAttribute("cx", xOrigin.toFixed(1));
+      originDot.setAttribute("cy", yOrigin.toFixed(1));
+    }
+  }
+
   // Toggle call options on big mic click
   if (micBtn) {
     micBtn.onclick = () => {
@@ -3902,11 +3961,79 @@ function initOutputPracticingPanel() {
         const isOpen = callOptions.classList.toggle("open");
         if (isOpen) {
           setOutputLiveState("idle", "Choose your call mode: Video, Normal, or Transcript");
+          updateCallOptionsBranches();
+          requestAnimationFrame(updateCallOptionsBranches);
+          setTimeout(updateCallOptionsBranches, 60);
+          setTimeout(updateCallOptionsBranches, 180);
+          setTimeout(updateCallOptionsBranches, 360);
         } else {
           setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
         }
       }
     };
+  }
+
+  if (callOptions && !callOptions.__branchesBound) {
+    callOptions.__branchesBound = true;
+    callOptions.addEventListener("transitionend", updateCallOptionsBranches);
+  }
+  if (!window.__outputBranchesResizeBound) {
+    window.__outputBranchesResizeBound = true;
+    window.addEventListener("resize", () => {
+      const co = document.getElementById("output-call-options");
+      if (co && co.classList.contains("open")) {
+        const mic = document.getElementById("btn-output-live-mic");
+        const btnV = document.getElementById("btn-output-video-call");
+        const btnN = document.getElementById("btn-output-normal-call");
+        const btnT = document.getElementById("btn-output-transcript-call");
+        const svg = document.getElementById("output-options-branches-svg");
+        if (!svg || !btnV || !btnN || !btnT || !mic) return;
+
+        const wRect = co.getBoundingClientRect();
+        const vRect = btnV.getBoundingClientRect();
+        const nRect = btnN.getBoundingClientRect();
+        const tRect = btnT.getBoundingClientRect();
+        const mRect = mic.getBoundingClientRect();
+
+        const xOrigin = (mRect.left + mRect.width / 2) - wRect.left;
+        const yOrigin = mRect.top - wRect.top;
+
+        const xLeft = (vRect.left + vRect.width / 2) - wRect.left;
+        const yLeft = vRect.bottom - wRect.top + 2;
+        const xMid = (nRect.left + nRect.width / 2) - wRect.left;
+        const yMid = nRect.bottom - wRect.top + 2;
+        const xRight = (tRect.left + tRect.width / 2) - wRect.left;
+        const yRight = tRect.bottom - wRect.top + 2;
+
+        const lineLeft = document.getElementById("branch-line-video");
+        const lineMid = document.getElementById("branch-line-normal");
+        const lineRight = document.getElementById("branch-line-transcript");
+        const originDot = document.getElementById("branch-origin-dot");
+
+        if (lineLeft) {
+          lineLeft.setAttribute("x1", xOrigin.toFixed(1));
+          lineLeft.setAttribute("y1", yOrigin.toFixed(1));
+          lineLeft.setAttribute("x2", xLeft.toFixed(1));
+          lineLeft.setAttribute("y2", yLeft.toFixed(1));
+        }
+        if (lineMid) {
+          lineMid.setAttribute("x1", xOrigin.toFixed(1));
+          lineMid.setAttribute("y1", yOrigin.toFixed(1));
+          lineMid.setAttribute("x2", xMid.toFixed(1));
+          lineMid.setAttribute("y2", yMid.toFixed(1));
+        }
+        if (lineRight) {
+          lineRight.setAttribute("x1", xOrigin.toFixed(1));
+          lineRight.setAttribute("y1", yOrigin.toFixed(1));
+          lineRight.setAttribute("x2", xRight.toFixed(1));
+          lineRight.setAttribute("y2", yRight.toFixed(1));
+        }
+        if (originDot) {
+          originDot.setAttribute("cx", xOrigin.toFixed(1));
+          originDot.setAttribute("cy", yOrigin.toFixed(1));
+        }
+      }
+    });
   }
 
   // Start Normal Call (Audio-only call)

@@ -1563,11 +1563,12 @@
 
             <!-- 3 Call Options (Appear when big microphone is pressed) -->
             <div class="output-call-options-wrapper" id="output-call-options">
-              <!-- Radiating branch connectors matching sketch -->
-              <svg class="output-options-branches-svg" viewBox="0 0 280 44" preserveAspectRatio="none">
-                <path d="M 140 44 C 140 24, 45 32, 45 2" stroke="rgba(246, 202, 33, 0.45)" stroke-width="2.5" stroke-dasharray="4 4" fill="none" />
-                <line x1="140" y1="44" x2="140" y2="2" stroke="rgba(246, 202, 33, 0.55)" stroke-width="2.5" stroke-dasharray="4 4" />
-                <path d="M 140 44 C 140 24, 235 32, 235 2" stroke="rgba(246, 202, 33, 0.45)" stroke-width="2.5" stroke-dasharray="4 4" fill="none" />
+              <!-- Straight radiating branch connectors -->
+              <svg class="output-options-branches-svg" id="output-options-branches-svg" xmlns="http://www.w3.org/2000/svg">
+                <line id="branch-line-video" x1="0" y1="0" x2="0" y2="0" />
+                <line id="branch-line-normal" x1="0" y1="0" x2="0" y2="0" />
+                <line id="branch-line-transcript" x1="0" y1="0" x2="0" y2="0" />
+                <circle id="branch-origin-dot" cx="0" cy="0" r="3.5" />
               </svg>
 
               <!-- Left Option: Video Call -->
