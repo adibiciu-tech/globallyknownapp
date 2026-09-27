@@ -4207,7 +4207,12 @@ function initOutputPracticingPanel() {
   async function startVideoCall() {
     activeCallMode = "video";
     if (videoModal) videoModal.classList.add("active");
-    if (videoSubtitles) videoSubtitles.textContent = "Connecting live video call with Sol...";
+    if (videoSubtitles) videoSubtitles.textContent = "";
+
+    // Show "Ready to chat?" pill at the start of the call
+    const readyPill = document.getElementById("video-call-ready-pill");
+    if (readyPill) readyPill.classList.remove("hidden-pill");
+
     if (solCapsule) {
       solCapsule.classList.remove("speaking");
       solCapsule.classList.add("listening");
@@ -4233,8 +4238,13 @@ function initOutputPracticingPanel() {
 
         videoStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
         if (videoFeed) {
+          videoFeed.muted = true;
+          videoFeed.playsInline = true;
+          videoFeed.setAttribute("playsinline", "true");
+          videoFeed.setAttribute("webkit-playsinline", "true");
+          videoFeed.setAttribute("autoplay", "true");
           videoFeed.srcObject = videoStream;
-          videoFeed.play().catch(() => {});
+          await videoFeed.play().catch(e => console.warn("Video feed play error:", e));
           const isBackCamera = currentFacingMode === "environment";
           videoFeed.style.transform = isBackCamera ? "scaleX(1)" : "scaleX(-1)";
         }
@@ -4255,24 +4265,8 @@ function initOutputPracticingPanel() {
       if (btnCallCam) btnCallCam.classList.add("active-off");
     }
 
-    // Greet the user aloud with Sol's voice right when entering the call!
-    let userName = "";
-    try {
-      const raw = localStorage.getItem("sol_user_profile");
-      if (raw) {
-        const p = JSON.parse(raw);
-        if (p && p.name && p.name.toLowerCase() !== "guest") {
-          userName = p.name.split(" ")[0];
-        }
-      }
-    } catch (e) {}
-
-    const greeting = userName
-      ? `Hey ${userName}! I'm right here with you live. What would you like to explore together today?`
-      : `Hey there! I can see and hear you live. What would you like to explore together today?`;
-
-    if (videoSubtitles) videoSubtitles.textContent = `Sol: "${greeting}"`;
-    speakLiveAudio(greeting, "en-US");
+    // Sol remains completely silent on connect with "Ready to chat?" pill showing, and immediately listens!
+    startListeningTurn();
   }
 
   function endVideoCall() {
@@ -4281,6 +4275,14 @@ function initOutputPracticingPanel() {
     if (videoStream) {
       videoStream.getTracks().forEach(track => track.stop());
       videoStream = null;
+    }
+    const readyPill = document.getElementById("video-call-ready-pill");
+    if (readyPill) readyPill.classList.add("hidden-pill");
+    if (window.__solLiveAudioPlayer) {
+      try {
+        window.__solLiveAudioPlayer.pause();
+        window.__solLiveAudioPlayer.removeAttribute("src");
+      } catch (e) {}
     }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     if (outputSpeechRecognition && isOutputListening) {
@@ -4394,6 +4396,21 @@ function initOutputPracticingPanel() {
 
       const combinedText = (finalText + interimText).trim();
       if (combinedText) {
+        // Disappear the "Ready to chat?" pill as soon as user starts talking
+        const readyPill = document.getElementById("video-call-ready-pill");
+        if (readyPill) readyPill.classList.add("hidden-pill");
+
+        // Interrupt Sol if Sol was currently speaking
+        if (isSolSpeaking) {
+          if (window.__solLiveAudioPlayer) {
+            try { window.__solLiveAudioPlayer.pause(); } catch (e) {}
+          }
+          if (window.speechSynthesis) {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+          }
+          isSolSpeaking = false;
+        }
+
         accumulatedLiveTranscript = combinedText;
         if (liveWordsEl) {
           liveWordsEl.textContent = combinedText;
@@ -4452,43 +4469,88 @@ function initOutputPracticingPanel() {
   }
 
   // Capture a snapshot frame from the active live video call feed for Gemini Vision
-  function captureVideoCallFrame() {
-    if (activeCallMode !== "video") return null;
+  async function captureVideoCallFrame() {
+    if (activeCallMode !== "video" || isCamOff) return null;
+
+    // 1. Try ImageCapture API if available (hardware-accelerated crisp frame on Android Chrome / Desktop)
+    if (videoStream) {
+      try {
+        const videoTrack = videoStream.getVideoTracks()[0];
+        if (videoTrack && videoTrack.readyState === "live" && typeof window.ImageCapture === "function") {
+          const ic = new window.ImageCapture(videoTrack);
+          const bitmap = await ic.grabFrame();
+          if (bitmap && bitmap.width > 0 && bitmap.height > 0) {
+            const canvas = document.createElement("canvas");
+            const maxDim = 800;
+            let w = bitmap.width;
+            let h = bitmap.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+              else { w = Math.round((w * maxDim) / h); h = maxDim; }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (currentFacingMode === "user") {
+              ctx.translate(w, 0);
+              ctx.scale(-1, 1);
+            }
+            ctx.drawImage(bitmap, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.78);
+            const b64 = dataUrl.split(",")[1];
+            if (b64 && b64.length > 500) {
+              console.log("📸 ImageCapture captured frame:", w, "x", h, "b64 bytes:", b64.length);
+              return b64;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("ImageCapture fallback to canvas:", err);
+      }
+    }
+
+    // 2. Video Element Canvas Drawing (Universal Fallback)
     const video = document.getElementById("video-call-user-feed");
-    if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null;
+    if (!video) return null;
+
+    try {
+      if (video.paused) {
+        await video.play().catch(() => {});
+      }
+    } catch (e) {}
+
+    const w = video.videoWidth || video.clientWidth || 640;
+    const h = video.videoHeight || video.clientHeight || 480;
 
     try {
       const canvas = document.createElement("canvas");
-      // Scale down to a clean 640px dimension for instant network transfer & fast Gemini multimodal reasoning
-      const maxDim = 640;
-      let w = video.videoWidth;
-      let h = video.videoHeight;
-      if (w > maxDim || h > maxDim) {
-        if (w > h) {
-          h = Math.round((h * maxDim) / w);
-          w = maxDim;
-        } else {
-          w = Math.round((w * maxDim) / h);
-          h = maxDim;
-        }
+      const maxDim = 800;
+      let dw = w;
+      let dh = h;
+      if (dw > maxDim || dh > maxDim) {
+        if (dw > dh) { dh = Math.round((dh * maxDim) / dw); dw = maxDim; }
+        else { dw = Math.round((dw * maxDim) / dh); dh = maxDim; }
       }
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = dw;
+      canvas.height = dh;
       const ctx = canvas.getContext("2d");
 
-      // For mirrored front-facing view, flip it back so Gemini sees natural orientation (e.g. text isn't backwards)
       if (currentFacingMode === "user") {
-        ctx.translate(w, 0);
+        ctx.translate(dw, 0);
         ctx.scale(-1, 1);
       }
-      ctx.drawImage(video, 0, 0, w, h);
+      ctx.drawImage(video, 0, 0, dw, dh);
 
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
-      return dataUrl.split(",")[1];
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.78);
+      const b64 = dataUrl.split(",")[1];
+      if (b64 && b64.length > 500) {
+        console.log("📸 Canvas drawn from video element:", dw, "x", dh, "b64 bytes:", b64.length);
+        return b64;
+      }
     } catch (e) {
       console.warn("Could not capture video call frame:", e);
-      return null;
     }
+    return null;
   }
 
   // Handle Finish & Submit Spoken Turn -> Generate Response -> Speak Aloud
@@ -4546,7 +4608,7 @@ function initOutputPracticingPanel() {
     }
 
     // Capture camera frame if in video call mode for Gemini multimodal vision
-    const frameBase64 = (activeCallMode === "video" && !isCamOff) ? captureVideoCallFrame() : null;
+    const frameBase64 = (activeCallMode === "video" && !isCamOff) ? await captureVideoCallFrame() : null;
 
     const systemInstruction = (activeCallMode === "video")
       ? `You are Sol, a warm, observant, and engaging native AI partner powered by Google Gemini on Globally Known.
@@ -4569,7 +4631,9 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
     }
 
     const promptText = (activeCallMode === "video")
-      ? `[Live Camera View Attached] The user is on a live video call with you and says: "${userSpeech}". Look at what they are showing you in the camera image and respond directly, engaging naturally with the visual scene and their words.`
+      ? (frameBase64
+          ? `[Live Camera View Attached] The user is on a live video call with you and says: "${userSpeech}". Look carefully at what they are showing you in the camera image and respond directly, engaging naturally with the visual scene and their words.`
+          : `The user is on a live video call with you and says: "${userSpeech}". Respond directly in natural spoken dialogue.`)
       : `The user said: "${userSpeech}". Respond directly in natural spoken dialogue.`;
 
     userParts.push({ text: promptText });
@@ -4646,22 +4710,116 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
     }
   }
 
-  // Speak Live Audio via Web Speech Synthesis (Engineered for Mobile Safari & Chrome)
-  function speakLiveAudio(text, langCode) {
-    if (!("speechSynthesis" in window)) {
-      setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
+  // Trigger Live Vision Inspection ("Look at this" button or capsule tap)
+  async function triggerLiveVisionLook() {
+    if (activeCallMode !== "video") return;
+    const readyPill = document.getElementById("video-call-ready-pill");
+    if (readyPill) readyPill.classList.add("hidden-pill");
+
+    if (isSolSpeaking) {
+      if (window.__solLiveAudioPlayer) {
+        try { window.__solLiveAudioPlayer.pause(); } catch (e) {}
+      }
+      if (window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+      }
+      isSolSpeaking = false;
+    }
+
+    if (videoSubtitles) videoSubtitles.textContent = "Sol: \"Let me take a look at what you're showing me...\"";
+    if (solCapsule) {
+      solCapsule.classList.remove("speaking");
+      solCapsule.classList.add("listening");
+    }
+
+    const frameBase64 = await captureVideoCallFrame();
+    if (!frameBase64) {
+      const msg = "I couldn't quite see the camera feed. Make sure your camera is active and try showing me again!";
+      if (videoSubtitles) videoSubtitles.textContent = `Sol: "${msg}"`;
+      speakLiveAudio(msg, "en-US");
       return;
     }
-    
-    // Only cancel if already speaking to avoid iOS Safari freeze bug
-    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-      window.speechSynthesis.cancel();
-    }
-    try { window.speechSynthesis.resume(); } catch (e) {}
 
+    const systemInstruction = `You are Sol, a warm, observant, and engaging native AI partner powered by Google Gemini on Globally Known.
+You are in a LIVE INTERACTIVE VIDEO CALL with the learner. You have real-time camera vision.
+The user is pointing their camera at something right now to show you.
+Actively observe what is visible in the camera frame. Identify and describe the object, scene, document, text, or room in front of the camera with natural conversational detail.
+Respond aloud in 1-3 natural, warm spoken sentences. Speak like a friend sitting across from them.
+Never output markdown symbols (no asterisks, no bullet points, no headers). Speak cleanly and conversationally.`;
+
+    const userParts = [
+      {
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: frameBase64
+        }
+      },
+      {
+        text: "Look at what I'm showing you right now in front of the camera. What is this, and what can you tell me about it?"
+      }
+    ];
+
+    let finalized = false;
+    let responseText = "";
+
+    const finalizeAnswer = (fullText) => {
+      if (finalized) return;
+      finalized = true;
+      responseText = fullText.trim();
+      if (videoSubtitles) videoSubtitles.textContent = `Sol: "${responseText}"`;
+      speakLiveAudio(responseText, "en-US");
+    };
+
+    if (geminiService && geminiService.hasApiKey()) {
+      try {
+        const messages = [{ role: "user", parts: userParts }];
+        await geminiService.generateResponseStream(
+          messages,
+          systemInstruction,
+          "gemini-2.5-flash",
+          (chunk) => {
+            responseText += chunk;
+            if (videoSubtitles) videoSubtitles.textContent = `Sol: "${responseText}"`;
+          },
+          (err) => {
+            console.warn("Gemini vision look error:", err);
+            finalizeAnswer("I see what you are showing me! Let's talk about it.");
+          },
+          (finalText) => {
+            if (finalText) finalizeAnswer(finalText);
+          }
+        );
+        setTimeout(() => {
+          if (!finalized && responseText) finalizeAnswer(responseText);
+        }, 800);
+      } catch (e) {
+        console.error("Gemini vision look failed:", e);
+        finalizeAnswer("I can see your camera! What would you like to explore together?");
+      }
+    } else {
+      finalizeAnswer("I see what you are showing me! Let's talk about it.");
+    }
+  }
+
+  // Hook up "Look at this" button and capsule tap for instant visual interaction
+  const btnCallLook = document.getElementById("btn-call-look-at-this");
+  if (btnCallLook) {
+    btnCallLook.onclick = triggerLiveVisionLook;
+  }
+  if (solCapsule) {
+    solCapsule.addEventListener("click", () => {
+      if (activeCallMode === "video") {
+        triggerLiveVisionLook();
+      }
+    });
+  }
+
+  // Speak Live Audio via High-Definition Natural Voice (/api/tts with SpeechSynthesis fallback)
+  function speakLiveAudio(text, langCode) {
     const cleanText = text
       .replace(/[*_#`~>]/g, "")
       .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/https?:\/\/\S+/g, "")
       .replace(/\(.*?\)/g, "")
       .replace(/\s+/g, " ")
       .trim();
@@ -4671,29 +4829,20 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = langCode || "en-US";
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    const voices = getBrowserVoices();
-    if (voices && voices.length > 0) {
-      const naturalVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Samantha") || v.name.includes("Daniel")));
-      const anyEnVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en"));
-      if (naturalVoice) {
-        utterance.voice = naturalVoice;
-      } else if (anyEnVoice) {
-        utterance.voice = anyEnVoice;
-      }
+    // Cancel any active SpeechSynthesis utterance
+    if ("speechSynthesis" in window) {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
     }
 
-    // Retain in a global array to prevent WebKit/Chromium garbage collection bug
-    window.__solActiveUtterances = window.__solActiveUtterances || [];
-    window.__solActiveUtterances.push(utterance);
-    windowActiveUtterance = utterance;
+    // If an audio element is already playing, stop it
+    if (window.__solLiveAudioPlayer) {
+      try {
+        window.__solLiveAudioPlayer.pause();
+        window.__solLiveAudioPlayer.removeAttribute("src");
+      } catch (e) {}
+    }
 
-    utterance.onstart = () => {
+    const onAudioStarted = () => {
       isSolSpeaking = true;
       if (activeCallMode === "video" && solCapsule) {
         solCapsule.classList.remove("listening");
@@ -4702,49 +4851,100 @@ You are in a real-time live spoken conversation with the learner. Respond aloud 
       setOutputLiveState("speaking", "🔊 Sol is speaking...");
     };
 
-    const cleanupAndProceed = () => {
+    const onAudioEnded = () => {
       isSolSpeaking = false;
-      const idx = (window.__solActiveUtterances || []).indexOf(utterance);
-      if (idx !== -1) window.__solActiveUtterances.splice(idx, 1);
-
       if (activeCallMode === "video") {
         if (solCapsule) {
           solCapsule.classList.remove("speaking");
           solCapsule.classList.add("listening");
         }
-        if (videoSubtitles) videoSubtitles.textContent = "Sol is listening... Your turn!";
+        if (videoSubtitles) videoSubtitles.textContent = "Sol is listening... Speak freely!";
         setTimeout(() => {
           if (activeCallMode === "video" && videoModal && videoModal.classList.contains("active")) {
             startListeningTurn();
           }
-        }, 400);
+        }, 300);
       } else if (activeCallMode === "normal") {
         setOutputLiveState("listening", "📞 Sol is listening... Speak now!");
         setTimeout(() => {
-          if (activeCallMode === "normal") {
-            startListeningTurn();
-          }
-        }, 500);
+          if (activeCallMode === "normal") startListeningTurn();
+        }, 400);
       } else if (activeCallMode === "transcript") {
         setOutputLiveState("listening", "📝 Sol is listening... Speak now!");
         setTimeout(() => {
-          if (activeCallMode === "transcript") {
-            startListeningTurn();
-          }
-        }, 500);
+          if (activeCallMode === "transcript") startListeningTurn();
+        }, 400);
       } else {
         setOutputLiveState("idle", "Tap the microphone to speak live with Sol");
       }
     };
 
-    utterance.onend = cleanupAndProceed;
+    // 1. Primary Engine: Natural Human-like Neural Voice Stream
+    try {
+      const audioUrl = `/api/tts?text=${encodeURIComponent(cleanText)}&lang=${encodeURIComponent(langCode || "en-US")}`;
+      const audio = new Audio();
+      window.__solLiveAudioPlayer = audio;
+      audio.preload = "auto";
+      audio.src = audioUrl;
+
+      audio.onplay = onAudioStarted;
+      audio.onended = onAudioEnded;
+      audio.onerror = (err) => {
+        console.warn("Natural audio stream failed, falling back to browser SpeechSynthesis:", err);
+        playSpeechSynthesisFallback(cleanText, langCode, onAudioStarted, onAudioEnded);
+      };
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((e) => {
+          console.warn("Audio play promise rejected, using fallback:", e);
+          playSpeechSynthesisFallback(cleanText, langCode, onAudioStarted, onAudioEnded);
+        });
+      }
+      return;
+    } catch (err) {
+      console.warn("Failed to instantiate Audio player:", err);
+    }
+
+    // 2. Secondary Engine: Browser SpeechSynthesis Fallback
+    playSpeechSynthesisFallback(cleanText, langCode, onAudioStarted, onAudioEnded);
+  }
+
+  function playSpeechSynthesisFallback(cleanText, langCode, onStarted, onEnded) {
+    if (!("speechSynthesis" in window)) {
+      if (onEnded) onEnded();
+      return;
+    }
+    try { window.speechSynthesis.resume(); } catch (e) {}
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = langCode || "en-US";
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    const voices = getBrowserVoices();
+    if (voices && voices.length > 0) {
+      const naturalVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Samantha") || v.name.includes("Daniel")));
+      const anyEnVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en"));
+      if (naturalVoice) utterance.voice = naturalVoice;
+      else if (anyEnVoice) utterance.voice = anyEnVoice;
+    }
+
+    window.__solActiveUtterances = window.__solActiveUtterances || [];
+    window.__solActiveUtterances.push(utterance);
+
+    utterance.onstart = () => { if (onStarted) onStarted(); };
+    utterance.onend = () => {
+      const idx = (window.__solActiveUtterances || []).indexOf(utterance);
+      if (idx !== -1) window.__solActiveUtterances.splice(idx, 1);
+      if (onEnded) onEnded();
+    };
     utterance.onerror = (e) => {
       console.warn("SpeechSynthesis utterance error:", e);
-      cleanupAndProceed();
+      const idx = (window.__solActiveUtterances || []).indexOf(utterance);
+      if (idx !== -1) window.__solActiveUtterances.splice(idx, 1);
+      if (onEnded) onEnded();
     };
 
-    // Ensure audio resume right before speak
-    try { window.speechSynthesis.resume(); } catch (e) {}
     window.speechSynthesis.speak(utterance);
   }
 

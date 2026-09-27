@@ -618,6 +618,59 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(payload)
             return
 
+        elif self.path.startswith("/api/tts"):
+            parsed = urllib.parse.urlparse(self.path)
+            qs = urllib.parse.parse_qs(parsed.query)
+            raw_text = (qs.get("text", [""])[0] or "").strip()
+            lang = (qs.get("lang", ["en-US"])[0] or "en-US").strip()
+            if not raw_text:
+                self.send_error(400, "Missing text parameter")
+                return
+
+            clean = re.sub(r'[*_#`~>]', '', raw_text)
+            clean = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', clean)
+            clean = re.sub(r'https?://\S+', '', clean)
+            clean = re.sub(r'\s+', ' ', clean).strip()
+            if not clean:
+                self.send_error(400, "Empty cleaned text")
+                return
+
+            lang_code = lang.split("-")[0].lower() if "-" in lang else lang.lower()
+            chunks = re.findall(r'.{1,160}(?:[.!?,;:\s]+|$)', clean)
+            if not chunks:
+                chunks = [clean[:160]]
+
+            combined_audio = b""
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                "Referer": "https://translate.google.com/"
+            }
+
+            for chunk in chunks[:12]:
+                c_text = chunk.strip()
+                if not c_text:
+                    continue
+                tts_url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl={urllib.parse.quote(lang_code)}&client=tw-ob&q={urllib.parse.quote(c_text)}"
+                try:
+                    req = urllib.request.Request(tts_url, headers=headers)
+                    with urllib.request.urlopen(req, timeout=8) as r:
+                        combined_audio += r.read()
+                except Exception as e:
+                    print(f"Error fetching TTS chunk for '{c_text[:30]}':", e)
+
+            if not combined_audio:
+                self.send_error(502, "Failed to generate TTS audio")
+                return
+
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/mpeg")
+            self.send_header("Content-Length", str(len(combined_audio)))
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.send_header("Accept-Ranges", "bytes")
+            self.end_headers()
+            self.wfile.write(combined_audio)
+            return
+
         super().do_GET()
 
     def do_POST(self):
