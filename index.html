@@ -114,15 +114,6 @@
           <!-- separating horizontal line after 7 -->
           <hr class="sidebar-divider">
 
-          <!-- Category 8: Info / Settings -->
-          <li class="nav-item" data-panel="info" onclick="window.switchPanel('info')" title="Info / Settings">
-            <i class="fa-solid fa-circle-info nav-icon"></i>
-            <span class="nav-label">Info / Settings</span>
-          </li>
-
-          <!-- Separating horizontal line after Info / Settings -->
-          <hr class="sidebar-divider">
-
           <!-- Conversations Section -->
           <div class="sidebar-conversations-section">
             <ul class="conversations-list" id="sidebar-conversations-list">
@@ -603,133 +594,321 @@
         </div>
 
         <div class="workspace-panel" id="panel-community">
-          <div class="circle-layout">
-            <!-- Col 1: Left Navigation Sidebar -->
-            <aside class="circle-left-sidebar">
-              <div class="circle-logo-row">
-                <span class="circle-logo-text">Globally Known</span>
-              </div>
-              
-              <nav class="circle-nav">
-                <!-- Getting Started Category -->
-                <div class="circle-nav-category">
-                  <span class="category-title">Getting Started</span>
-                  <div class="circle-nav-item" data-channel="home">
-                    <i class="fa-solid fa-house"></i> <span>Home</span>
-                  </div>
-                  <div class="circle-nav-item" data-channel="members-tab">
-                    <i class="fa-solid fa-users"></i> <span>Members</span>
-                  </div>
-                </div>
-                
-                <!-- Learning Channels Category -->
-                <div class="circle-nav-category">
-                  <span class="category-title">Learning Channels</span>
-                  <div class="circle-nav-item active" data-channel="announcements">
-                    <i class="fa-solid fa-bullhorn"></i> <span>announcements</span>
-                  </div>
-                  <div class="circle-nav-item" data-channel="english-inputs">
-                    <i class="fa-solid fa-hashtag"></i> <span>english-inputs</span>
-                  </div>
-                  <div class="circle-nav-item" data-channel="metaphors">
-                    <i class="fa-solid fa-hashtag"></i> <span>metaphors-discussion</span>
-                  </div>
-                </div>
+          <div class="discord-community-container">
+            <!-- Mobile Drawer Backdrop for tapping outside drawer to close -->
+            <div class="discord-drawer-backdrop" id="discord-drawer-backdrop"></div>
 
-                <!-- Community Category -->
-                <div class="circle-nav-category">
-                  <span class="category-title">Community Hangouts</span>
-                  <div class="circle-nav-item" data-channel="general-chat">
-                    <i class="fa-solid fa-hashtag"></i> <span>general-chat</span>
-                  </div>
-                  <div class="circle-nav-item" data-channel="featurings">
-                    <i class="fa-solid fa-hashtag"></i> <span>featurings</span>
-                  </div>
-                </div>
-              </nav>
-            </aside>
-
-            <!-- Col 2: Middle Feed Panel -->
-            <section class="circle-middle-feed">
-              <!-- Channel Header -->
-              <div class="circle-channel-header">
-                <div class="header-left-info">
-                  <h2 id="circle-channel-title"># announcements</h2>
-                  <span class="circle-channel-meta" id="circle-channel-desc">Official updates and notices from the SOL Globally Known team.</span>
-                </div>
-                <button class="circle-new-post-btn" id="btn-circle-new-post">
-                  <i class="fa-solid fa-plus"></i> New Post
+            <!-- Col 1: Leftmost Server Rail (72px desktop / slides in mobile drawer) -->
+            <nav class="discord-server-rail" id="discord-server-rail" aria-label="Servers Rail">
+              <!-- Globally Known Hub (Home / DM icon) -->
+              <div class="server-rail-item active" data-server="main" title="Globally Known Official">
+                <div class="server-pill"></div>
+                <button class="server-icon-btn active" id="server-btn-gk" aria-label="Globally Known Server">
+                  <span class="server-icon-text">GK</span>
                 </button>
               </div>
 
-              <!-- Feed Tab switcher -->
-              <div class="circle-feed-tabs">
-                <button class="tab-btn active" id="tab-btn-posts">Posts</button>
-                <button class="tab-btn" id="tab-btn-members">Members</button>
+              <div class="server-rail-divider"></div>
+
+              <!-- English Fluency Lab -->
+              <div class="server-rail-item" data-server="english-lab" title="English Comprehension Lab">
+                <div class="server-pill"></div>
+                <button class="server-icon-btn" aria-label="English Fluency Lab">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </button>
               </div>
 
-              <!-- Dynamic Feed Card List -->
-              <div class="circle-posts-feed" id="circle-posts-feed">
-                <!-- Populated dynamically by app.js -->
+              <!-- Accent & Pronunciation Lab -->
+              <div class="server-rail-item" data-server="accent-lab" title="Accent & Phonetics Guild">
+                <div class="server-pill"></div>
+                <button class="server-icon-btn" aria-label="Accent & Phonetics Guild">
+                  <i class="fa-solid fa-microphone-lines"></i>
+                </button>
               </div>
-            </section>
 
-            <!-- Col 3: Right Widgets Sidebar -->
-            <aside class="circle-right-sidebar">
-              <!-- Checklist widget -->
-              <div class="circle-widget">
-                <h3 class="widget-title">Get Started</h3>
-                <div class="circle-checklist">
-                  <label for="check-nexus" class="checklist-item">
-                    <input type="checkbox" id="check-nexus" name="check-nexus" checked disabled>
-                    <span class="item-text">Explore SOL Nexus</span>
-                  </label>
-                  <label for="check-api-key" class="checklist-item">
-                    <input type="checkbox" id="check-api-key" name="check-api-key">
-                    <span class="item-text">Enter your API Key</span>
-                  </label>
-                  <label for="check-videos" class="checklist-item">
-                    <input type="checkbox" id="check-videos" name="check-videos">
-                    <span class="item-text">Watch 1st video lesson</span>
-                  </label>
-                  <label for="check-pronounce" class="checklist-item">
-                    <input type="checkbox" id="check-pronounce" name="check-pronounce">
-                    <span class="item-text">Analyze word accent</span>
-                  </label>
+              <!-- Comprehensible Input Vault -->
+              <div class="server-rail-item" data-server="vault" title="Comprehensible Input Vault">
+                <div class="server-pill"></div>
+                <button class="server-icon-btn" aria-label="Comprehensible Input Vault">
+                  <i class="fa-solid fa-photo-film"></i>
+                </button>
+              </div>
+
+              <!-- SOL AI Nexus Hub -->
+              <div class="server-rail-item" data-server="nexus" title="SOL AI Engine">
+                <div class="server-pill"></div>
+                <button class="server-icon-btn" aria-label="SOL AI Engine">
+                  <i class="fa-solid fa-brain"></i>
+                </button>
+              </div>
+
+              <div class="server-rail-divider"></div>
+
+              <!-- Add a Server Button -->
+              <div class="server-rail-item" title="Add a Server">
+                <button class="server-icon-btn action-add" id="btn-discord-add-server" aria-label="Add a Server">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+
+              <!-- Explore Public Communities -->
+              <div class="server-rail-item" title="Explore Discoverable Servers">
+                <button class="server-icon-btn action-explore" id="btn-discord-explore" aria-label="Explore Servers">
+                  <i class="fa-solid fa-compass"></i>
+                </button>
+              </div>
+            </nav>
+
+            <!-- Col 2: Channels Sidebar (240px desktop / slides out on mobile) -->
+            <aside class="discord-channels-sidebar" id="discord-channels-sidebar">
+              <!-- Server Header Bar -->
+              <header class="discord-server-header" id="discord-server-header-btn">
+                <div class="server-header-left">
+                  <h2 class="server-name">Globally Known</h2>
+                  <span class="server-verified" title="Verified Cohort Community"><i class="fa-solid fa-circle-check"></i></span>
+                </div>
+                <button class="server-header-dropdown-btn" aria-label="Server options">
+                  <i class="fa-solid fa-chevron-down"></i>
+                </button>
+              </header>
+
+              <!-- Channels Scroller -->
+              <div class="discord-channels-scroll circle-nav">
+                <!-- Guild Mini Banner -->
+                <div class="discord-guild-banner">
+                  <div class="banner-badge"><i class="fa-solid fa-bolt"></i> SOL 2.0 COHORT</div>
+                  <p class="banner-sub">Master comprehensible input & accent mechanics together.</p>
+                </div>
+
+                <!-- Category 1: Welcome & Announcements -->
+                <div class="discord-channel-category">
+                  <div class="category-header">
+                    <i class="fa-solid fa-chevron-down cat-arrow"></i>
+                    <span class="cat-label">INFORMATION & NOTICES</span>
+                  </div>
+                  <div class="category-channels-list">
+                    <div class="circle-nav-item discord-channel-item active" data-channel="announcements">
+                      <i class="fa-solid fa-bullhorn ch-icon"></i>
+                      <span class="ch-name">announcements</span>
+                      <span class="ch-badge">NEW</span>
+                    </div>
+                    <div class="circle-nav-item discord-channel-item" data-channel="rules-faq">
+                      <i class="fa-solid fa-scroll ch-icon"></i>
+                      <span class="ch-name">rules-and-faq</span>
+                    </div>
+                    <div class="circle-nav-item discord-channel-item" data-channel="weekly-schedule">
+                      <i class="fa-solid fa-calendar-days ch-icon"></i>
+                      <span class="ch-name">weekly-schedule</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Category 2: Text Channels -->
+                <div class="discord-channel-category">
+                  <div class="category-header">
+                    <i class="fa-solid fa-chevron-down cat-arrow"></i>
+                    <span class="cat-label">TEXT CHANNELS</span>
+                  </div>
+                  <div class="category-channels-list">
+                    <div class="circle-nav-item discord-channel-item" data-channel="general-chat">
+                      <i class="fa-solid fa-hashtag ch-icon"></i>
+                      <span class="ch-name">general-chat</span>
+                    </div>
+                    <div class="circle-nav-item discord-channel-item" data-channel="english-inputs">
+                      <i class="fa-solid fa-hashtag ch-icon"></i>
+                      <span class="ch-name">english-inputs</span>
+                    </div>
+                    <div class="circle-nav-item discord-channel-item" data-channel="metaphors">
+                      <i class="fa-solid fa-hashtag ch-icon"></i>
+                      <span class="ch-name">metaphors-discussion</span>
+                    </div>
+                    <div class="circle-nav-item discord-channel-item" data-channel="ask-sol-community">
+                      <i class="fa-solid fa-hashtag ch-icon"></i>
+                      <span class="ch-name">ask-sol-community</span>
+                    </div>
+                    <div class="circle-nav-item discord-channel-item" data-channel="featurings">
+                      <i class="fa-solid fa-hashtag ch-icon"></i>
+                      <span class="ch-name">featurings</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Category 3: Voice Channels -->
+                <div class="discord-channel-category">
+                  <div class="category-header">
+                    <i class="fa-solid fa-chevron-down cat-arrow"></i>
+                    <span class="cat-label">VOICE CHANNELS</span>
+                  </div>
+                  <div class="category-channels-list">
+                    <div class="circle-nav-item discord-channel-item is-voice" data-channel="voice-study-lounge">
+                      <i class="fa-solid fa-volume-high ch-icon"></i>
+                      <span class="ch-name">Study Lounge 1</span>
+                      <span class="voice-count-tag"><i class="fa-solid fa-user-group"></i> 2</span>
+                    </div>
+                    <!-- Live Voice Users nested preview -->
+                    <div class="voice-room-attendees">
+                      <div class="attendee-chip"><span class="attendee-voice-pulse live"></span> Gregory Dobbins (Host)</div>
+                      <div class="attendee-chip"><span class="attendee-voice-pulse"></span> Sarah K.</div>
+                    </div>
+                    <div class="circle-nav-item discord-channel-item is-voice" data-channel="voice-accent-lab">
+                      <i class="fa-solid fa-volume-high ch-icon"></i>
+                      <span class="ch-name">Pronunciation Lab</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Online members list widget -->
-              <div class="circle-widget">
-                <h3 class="widget-title">Members</h3>
-                <div class="circle-members-list" id="widget-members-list">
+              <!-- Discord Bottom User Status Card -->
+              <footer class="discord-user-card" id="discord-user-card">
+                <div class="discord-user-profile-meta" id="discord-user-profile-meta">
                   <!-- Populated dynamically -->
                 </div>
+                <div class="discord-user-action-buttons">
+                  <button class="discord-user-icon-btn" id="btn-discord-mic" title="Mute/Unmute Mic" aria-label="Microphone">
+                    <i class="fa-solid fa-microphone"></i>
+                  </button>
+                  <button class="discord-user-icon-btn" id="btn-discord-deafen" title="Deafen/Undeafen Audio" aria-label="Headphones">
+                    <i class="fa-solid fa-headphones"></i>
+                  </button>
+                  <button class="discord-user-icon-btn" id="btn-discord-settings" title="Settings" aria-label="Settings" onclick="window.switchPanel('info')">
+                    <i class="fa-solid fa-gear"></i>
+                  </button>
+                </div>
+              </footer>
+            </aside>
+
+            <!-- Col 3: Main Chat & Message Stream Area -->
+            <section class="discord-chat-main">
+              <!-- Chat Top Header Bar -->
+              <header class="discord-chat-header">
+                <div class="chat-header-left">
+                  <!-- Mobile hamburger trigger to open channels drawer -->
+                  <button class="discord-mobile-hamburger" id="btn-discord-mobile-channels" aria-label="Toggle Channels">
+                    <i class="fa-solid fa-bars"></i>
+                  </button>
+                  <div class="chat-channel-symbol"><i class="fa-solid fa-bullhorn" id="circle-channel-icon"></i></div>
+                  <h2 class="chat-channel-heading" id="circle-channel-title"># announcements</h2>
+                  <div class="chat-header-vseparator"></div>
+                  <span class="chat-channel-subtopic" id="circle-channel-desc">Official updates and notices from the SOL Globally Known team.</span>
+                </div>
+
+                <div class="chat-header-right">
+                  <button class="discord-header-btn" id="btn-circle-new-post" title="New Rich Post">
+                    <i class="fa-solid fa-plus"></i> <span class="d-text">New Post</span>
+                  </button>
+                  <button class="discord-header-btn" id="btn-discord-pinned-posts" title="Pinned Topics">
+                    <i class="fa-solid fa-thumbtack"></i>
+                  </button>
+                  <button class="discord-header-btn active" id="btn-discord-toggle-members" title="Toggle Members List">
+                    <i class="fa-solid fa-user-group"></i>
+                  </button>
+                </div>
+              </header>
+
+              <!-- Scrollable Messages Feed -->
+              <div class="discord-feed-scroll" id="discord-feed-scroll">
+                <!-- Channel Header Welcome Card -->
+                <div class="discord-feed-welcome" id="discord-feed-welcome">
+                  <div class="welcome-circle-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                  <h3 class="welcome-title">Welcome to #announcements!</h3>
+                  <p class="welcome-subtitle">This is the start of the #announcements channel in Globally Known.</p>
+                </div>
+
+                <!-- Dynamic Posts Feed -->
+                <div class="circle-posts-feed" id="circle-posts-feed">
+                  <!-- Populated dynamically by app.js -->
+                </div>
+
+                <!-- Voice Room Live UI (Shown when voice channel is clicked) -->
+                <div class="discord-voice-stage hidden" id="discord-voice-stage">
+                  <div class="voice-stage-card">
+                    <div class="voice-stage-top">
+                      <div class="voice-stage-pill"><span class="voice-pulse-dot"></span> LIVE VOICE ROOM</div>
+                      <h3 id="voice-stage-name">Study Lounge 1</h3>
+                      <p class="voice-stage-meta">Connected to Globally Known Low-Latency Audio Lab</p>
+                    </div>
+                    <div class="voice-stage-avatars" id="voice-stage-avatars">
+                      <div class="voice-participant is-speaking">
+                        <div class="p-avatar">GD</div>
+                        <div class="p-name">Gregory Dobbins <i class="fa-solid fa-microphone"></i></div>
+                        <span class="p-status">Speaking...</span>
+                      </div>
+                      <div class="voice-participant">
+                        <div class="p-avatar">SK</div>
+                        <div class="p-name">Sarah K. <i class="fa-solid fa-microphone"></i></div>
+                        <span class="p-status">Connected</span>
+                      </div>
+                      <div class="voice-participant">
+                        <div class="p-avatar user-you" id="voice-you-avatar">YOU</div>
+                        <div class="p-name" id="voice-you-name">You <i class="fa-solid fa-microphone-slash" style="color:#ef4444;"></i></div>
+                        <span class="p-status">Muted</span>
+                      </div>
+                    </div>
+                    <div class="voice-stage-actions">
+                      <button class="voice-action-pill" id="btn-stage-mute"><i class="fa-solid fa-microphone"></i> <span>Unmute</span></button>
+                      <button class="voice-action-pill" id="btn-stage-deafen"><i class="fa-solid fa-headphones"></i> <span>Deafen</span></button>
+                      <button class="voice-action-pill btn-disconnect" id="btn-stage-disconnect"><i class="fa-solid fa-phone-slash"></i> <span>Disconnect</span></button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <!-- Pinned Resources widget -->
-              <div class="circle-widget">
-                <h3 class="widget-title">Pinned resources</h3>
-                <div class="circle-pinned-posts">
-                  <a href="#info" class="pinned-post-link" data-action="guide">
-                    <i class="fa-solid fa-file-lines"></i> How To Access SOL 2.0 Engine
-                  </a>
-                  <a href="#videos" class="pinned-post-link" data-action="schedule">
-                    <i class="fa-solid fa-calendar-days"></i> Globally Known Weekly Schedule
-                  </a>
-                  <a href="#dictionary" class="pinned-post-link" data-action="rules">
-                    <i class="fa-solid fa-circle-info"></i> Community Rules & Guidelines
-                  </a>
+              <!-- Typing Indicator -->
+              <div class="discord-typing-bar" id="discord-typing-bar" style="display:none;">
+                <div class="typing-wave">
+                  <span class="wave-dot"></span>
+                  <span class="wave-dot"></span>
+                  <span class="wave-dot"></span>
+                </div>
+                <span class="typing-msg" id="discord-typing-text">Sol AI Coach is typing...</span>
+              </div>
+
+              <!-- Discord Bottom Message Composer Bar -->
+              <footer class="discord-chat-composer">
+                <form class="discord-composer-box" id="discord-quick-composer-form">
+                  <button type="button" class="composer-btn attach" id="btn-composer-attach-modal" title="Upload Image or Rich Post">
+                    <i class="fa-solid fa-circle-plus"></i>
+                  </button>
+                  <div class="composer-input-area">
+                    <input 
+                      type="text" 
+                      id="discord-quick-input" 
+                      class="discord-composer-input" 
+                      placeholder="Message #announcements..." 
+                      autocomplete="off"
+                    />
+                  </div>
+                  <div class="composer-extras">
+                    <button type="button" class="composer-btn" id="btn-composer-ask-sol" title="Ask Sol AI for instant reply">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </button>
+                    <button type="button" class="composer-btn" id="btn-composer-quick-emoji" title="Insert Emoji">
+                      <i class="fa-regular fa-face-smile"></i>
+                    </button>
+                    <button type="submit" class="composer-send-circle-btn" id="btn-composer-submit" title="Send (Enter)">
+                      <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </form>
+              </footer>
+            </section>
+
+            <!-- Col 4: Rightmost Members List (240px desktop / drawer mobile) -->
+            <aside class="discord-members-sidebar" id="discord-members-sidebar">
+              <div class="members-sidebar-inner">
+                <!-- Grouped Members List -->
+                <div class="discord-members-groups" id="widget-members-list">
+                  <!-- Populated dynamically -->
                 </div>
               </div>
             </aside>
           </div>
 
-          <!-- Circle Post Composer Modal -->
+          <!-- Circle Post Composer Modal (Keep modal functionality!) -->
           <div class="circle-composer-modal hidden" id="circle-composer-modal">
             <div class="circle-modal-content">
               <div class="modal-header">
-                <h3>Create a New Post</h3>
+                <h3>Create a New Discussion Post</h3>
                 <button class="close-modal-btn" id="btn-close-circle-modal"><i class="fa-solid fa-xmark"></i></button>
               </div>
               <div id="circle-composer-user-badge" class="circle-composer-user-badge" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(197,160,89,0.15);border-radius:8px;margin-bottom:1.2rem;"></div>

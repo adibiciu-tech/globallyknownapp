@@ -2084,4 +2084,172 @@ html, body {
   display: inline-flex;
 }
 
+/* =============================================================
+   Discord Mobile Community Experience
+   Matches Discord on iPhone & Android with Sliding Left Channel Drawer
+   and Sliding Right Members Drawer
+   ============================================================= */
+@media (max-width: 850px) {
+  #panel-community {
+    padding: 0 !important;
+    height: calc(100vh - 60px) !important;
+    overflow: hidden !important;
+  }
+
+  .discord-community-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Show mobile hamburger on phone */
+  .discord-mobile-hamburger {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Server Rail on Mobile: Slides in alongside Channels sidebar */
+  .discord-server-rail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 64px;
+    min-width: 64px;
+    height: 100%;
+    z-index: 120;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Channels Sidebar on Mobile: Positioned adjacent to server rail */
+  .discord-channels-sidebar {
+    position: absolute;
+    top: 0;
+    left: 64px;
+    width: calc(100vw - 64px - 40px);
+    max-width: 290px;
+    height: 100%;
+    z-index: 120;
+    transform: translateX(calc(-100% - 64px));
+    box-shadow: 6px 0 24px rgba(0, 0, 0, 0.5);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* When Left Channels Drawer is Open */
+  .discord-community-container.mobile-channels-open .discord-server-rail {
+    transform: translateX(0);
+  }
+
+  .discord-community-container.mobile-channels-open .discord-channels-sidebar {
+    transform: translateX(0);
+  }
+
+  .discord-community-container.mobile-channels-open .discord-drawer-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Members Sidebar on Mobile: Slides in from the right */
+  .discord-members-sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    max-width: 80vw;
+    height: 100%;
+    z-index: 120;
+    transform: translateX(100%);
+    box-shadow: -6px 0 24px rgba(0, 0, 0, 0.5);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* When Right Members Drawer is Open */
+  .discord-community-container.mobile-members-open .discord-members-sidebar {
+    transform: translateX(0);
+  }
+
+  .discord-community-container.mobile-members-open .discord-drawer-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Main Chat Stream takes 100% full screen */
+  .discord-chat-main {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .discord-chat-header {
+    height: 52px;
+    padding: 0 12px;
+  }
+
+  .chat-channel-subtopic {
+    display: none; /* Hide topic subtitle on small screens */
+  }
+
+  .chat-header-vseparator {
+    display: none;
+  }
+
+  #btn-circle-new-post .d-text {
+    display: none; /* Icon only on mobile */
+  }
+
+  #btn-circle-new-post {
+    padding: 0 8px;
+  }
+
+  .discord-feed-scroll {
+    padding: 12px 10px 4px 10px;
+  }
+
+  .circle-post-card {
+    gap: 10px;
+    padding: 4px 6px;
+  }
+
+  .circle-post-card .author-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+
+  .circle-post-card .post-title-text {
+    font-size: 0.98rem;
+  }
+
+  .circle-post-card .post-body-text {
+    font-size: 0.88rem;
+  }
+
+  .discord-embed-card {
+    max-width: 100%;
+    padding: 10px 12px;
+  }
+
+  .discord-chat-composer {
+    padding: 0 10px 10px 10px;
+  }
+
+  .discord-composer-box {
+    min-height: 40px;
+    padding: 2px 8px;
+    gap: 6px;
+  }
+
+  .discord-composer-input {
+    font-size: 0.88rem;
+  }
+
+  .composer-btn {
+    font-size: 1.05rem;
+    padding: 2px 4px;
+  }
+}
+
+
 

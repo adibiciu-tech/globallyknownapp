@@ -159,23 +159,74 @@ const panels = document.querySelectorAll(".workspace-panel");
 // Panel - Start Here
 const featureCards = document.querySelectorAll(".feature-card");
 
-// Panel - Community (Circle.so style Layout)
+// Panel - Community (Discord Workspace Layout)
 let currentCircleChannel = "announcements";
 let circleChannelsData = {
   announcements: [
     {
       id: "cp1",
-      title: "Globally Known Weekly Schedule - Oct 3-8, 2026 (LINKS INSIDE)",
+      title: "Globally Known Weekly Comprehension Schedule - Oct 2026",
       author: "Gregory Dobbins",
       role: "Program Manager 🎓",
       avatar: "GD",
-      time: "2 days ago",
-      content: "What's Up GLOBALLY KNOWN LEARNERS! Here is the weekly comprehension schedule. Please review your lessons and analyze your pronunciation in the labs.",
+      time: "Today at 9:30 AM",
+      content: "Welcome to the new week, Globally Known cohort! This week we are diving deep into high-density auditory inputs and vowel shadowing. Make sure to log your lab hours and check out the new accent breakdown tool.",
       image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=60",
-      likes: 17,
+      embed: {
+        author: "SOL ACADEMY NOTICES",
+        title: "Weekly Immersion Goals: 4.5 Hours Input",
+        desc: "Watch 3 City Vlogs, complete 2 guided pronunciation sessions, and join the live Study Lounge on Thursday."
+      },
+      reactions: { "👍": 18, "🔥": 12, "🚀": 9 },
+      userReactions: { "🔥": true },
       comments: [
-        { author: "Sarah K.", content: "Super excited for this schedule! Subscribed." }
+        { author: "Sarah K.", content: "Super excited for this schedule! Subscribed and ready." }
       ]
+    },
+    {
+      id: "cp1_2",
+      title: "SOL 2.0 Engine Upgrade Live!",
+      author: "Elena Rostova",
+      role: "Linguist & Phonetics 🌍",
+      avatar: "ER",
+      time: "Yesterday at 4:15 PM",
+      content: "We have rolled out real-time acoustic formant alignment in the Accent Lab. You can now visually compare your pitch trajectory with native speakers in milliseconds!",
+      reactions: { "❤️": 14, "🎉": 11, "🔥": 7 },
+      userReactions: {},
+      comments: []
+    }
+  ],
+  "rules-faq": [
+    {
+      id: "cp_rules",
+      title: "Globally Known Community Standards & Immersion Rules",
+      author: "Sol AI Coach",
+      role: "AI Mentor 🤖",
+      avatar: "SOL",
+      time: "System Notice",
+      content: "1. Respect all learners across every proficiency level.\n2. Prioritize Comprehensible Input before output perfection.\n3. Share your pronunciation waveforms and audio snippets for constructive feedback.\n4. No spam or commercial promotions.",
+      embed: {
+        author: "GLOBALLY KNOWN CODE OF CONDUCT",
+        title: "Guiding Principles of Fluency",
+        desc: "Comprehension comes before speech. We acquire language when we understand messages."
+      },
+      reactions: { "📜": 22, "✅": 19 },
+      userReactions: { "✅": true },
+      comments: []
+    }
+  ],
+  "weekly-schedule": [
+    {
+      id: "cp_sched",
+      title: "Live Discord Study Lounge & Workshop Calendar",
+      author: "Gregory Dobbins",
+      role: "Program Manager 🎓",
+      avatar: "GD",
+      time: "Monday at 11:00 AM",
+      content: "📅 Tuesday: Phonetic Shadowing Workshop (8:00 PM EST)\n📅 Thursday: Live Q&A in Study Lounge 1 (7:00 PM EST)\n📅 Saturday: Community Metaphor Jam & Conversation Exchange (2:00 PM EST)",
+      reactions: { "📅": 15, "🙌": 8 },
+      userReactions: {},
+      comments: []
     }
   ],
   "english-inputs": [
@@ -185,10 +236,18 @@ let circleChannelsData = {
       author: "Sarah K. 🇺🇸",
       role: "Language Coach 🏅",
       avatar: "SK",
-      time: "3 hours ago",
-      content: "I recommend playing the City Vlog lessons at 0.75x speed. Focus on mimicking the vowels and mouth shapes. Listen to the phrase first, pause, and record yourself under the output practicing tab!",
-      likes: 8,
-      comments: []
+      time: "Today at 11:20 AM",
+      content: "I recommend playing the City Vlog lessons at 0.75x speed first. Focus on mimicking the rhythm, mouth shapes, and linking sounds. Listen to the phrase once, pause, and record yourself under the output practicing tab!",
+      embed: {
+        author: "COACH TIP",
+        title: "The 3-Step Shadowing Method",
+        desc: "Step 1: Pure Listening. Step 2: Whispered Shadowing. Step 3: Full Resonance Output."
+      },
+      reactions: { "💡": 14, "👍": 9 },
+      userReactions: { "👍": true },
+      comments: [
+        { author: "Alice F.", content: "This completely changed my rhythm practice, thank you Sarah!" }
+      ]
     }
   ],
   "metaphors": [
@@ -198,23 +257,48 @@ let circleChannelsData = {
       author: "Alice F. 🇫🇷",
       role: "Member 👤",
       avatar: "AF",
-      time: "Yesterday",
-      content: "In Spanish and French, the metaphorical conceptualization of time matches the English system. We talk about time as a resource that can be spent, saved, or wasted. Let's discuss other metaphor grids!",
-      likes: 12,
+      time: "Yesterday at 6:40 PM",
+      content: "In Spanish and French, the metaphorical conceptualization of time matches the English system: 'Time is money / Time is a resource'. We speak of time as something that can be spent, saved, or wasted. What other metaphor structures have you noticed in your target language?",
+      reactions: { "🧠": 16, "❤️": 10 },
+      userReactions: {},
       comments: []
     }
   ],
   "general-chat": [
     {
       id: "cp4",
-      title: "Welcome everyone! Introduce yourself here!",
-      author: "You",
-      role: "Learner 👤",
-      avatar: "Y",
-      time: "Just now",
-      content: "Hey community! I am using SOL to master comprehension input. Excited to learn with you all!",
-      likes: 0,
-      comments: []
+      title: "Welcome everyone! Introduce yourself and your target goals!",
+      author: "Sol AI Coach",
+      role: "AI Mentor 🤖",
+      avatar: "SOL",
+      time: "Today at 8:00 AM",
+      content: "Welcome to Globally Known! Drop a message below with your native language, the accent or language you are focusing on, and your favorite immersion habit!",
+      reactions: { "👋": 25, "✨": 18 },
+      userReactions: { "👋": true },
+      comments: [
+        { author: "Bob D.", content: "Hi everyone! Bob from Berlin, working on conversational American rhythm." }
+      ]
+    }
+  ],
+  "ask-sol-community": [
+    {
+      id: "cp_ask",
+      title: "How do native speakers connect words ending in consonants?",
+      author: "Bob D. 🇩🇪",
+      role: "Member 👤",
+      avatar: "BD",
+      time: "3 hours ago",
+      content: "When listening to native speakers say 'hold on a second', it sounds like 'hol-don-a-second'. Is consonant-to-vowel linking intentional or automatic?",
+      embed: {
+        author: "SOL AI INSIGHT",
+        title: "Resyllabification in Spoken English",
+        desc: "In connected speech, terminal consonants naturally resyllabify onto following vowel onsets to maximize ease of articulation."
+      },
+      reactions: { "🔥": 11, "👍": 7 },
+      userReactions: {},
+      comments: [
+        { author: "Elena Rostova", content: "Spot on! That is termed phonetic resyllabification or liaison." }
+      ]
     }
   ],
   "featurings": [
@@ -226,20 +310,24 @@ let circleChannelsData = {
       avatar: "BD",
       time: "3 days ago",
       content: "The accent detection engine is incredibly accurate now. My Spanish accuracy scores went from 80% to 95% after fixing daily routine vowels.",
-      likes: 5,
+      reactions: { "🚀": 19, "🎉": 14 },
+      userReactions: { "🚀": true },
       comments: []
     }
   ]
 };
 
 const CIRCLE_CHANNELS_META = {
-  home: { title: "Community Dashboard", desc: "Welcome to the Globally Known student hub." },
-  "members-tab": { title: "Community Members", desc: "Meet other active language learners in the SOL cohort." },
-  announcements: { title: "# Announcements", desc: "Official updates and notices from the SOL Globally Known team." },
-  "english-inputs": { title: "# english-inputs", desc: "Discuss vocabulary, structures, and notes from City Vlog lessons." },
-  metaphors: { title: "# metaphors-discussion", desc: "Explore semantic networks, idioms, and target language metaphors." },
-  "general-chat": { title: "# general-chat", desc: "Informal conversations and greetings with study partners." },
-  "featurings": { title: "# featurings", desc: "Share your accuracy metrics, speech recordings, and feature suggestions." }
+  announcements: { title: "announcements", desc: "Official updates, schedules, and notices from the Globally Known team.", icon: "fa-bullhorn" },
+  "rules-faq": { title: "rules-and-faq", desc: "Community code of conduct, immersion principles, and cohort etiquette.", icon: "fa-scroll" },
+  "weekly-schedule": { title: "weekly-schedule", desc: "Live masterclasses, study lounge sessions, and group clinics.", icon: "fa-calendar-days" },
+  "general-chat": { title: "general-chat", desc: "Informal conversations, greetings, and daily check-ins with fellow learners.", icon: "fa-hashtag" },
+  "english-inputs": { title: "english-inputs", desc: "Discuss vocabulary, structures, and notes from City Vlog lessons.", icon: "fa-hashtag" },
+  metaphors: { title: "metaphors-discussion", desc: "Explore semantic networks, cognitive metaphors, and cultural idioms.", icon: "fa-hashtag" },
+  "ask-sol-community": { title: "ask-sol-community", desc: "Get real-time explanations from Sol AI Coach and community linguists.", icon: "fa-hashtag" },
+  featurings: { title: "featurings", desc: "Share your accuracy metrics, speech recordings, and feature suggestions.", icon: "fa-hashtag" },
+  "voice-study-lounge": { title: "Study Lounge 1", desc: "Low-latency voice room for group listening, shadowing, and discussion.", icon: "fa-volume-high", isVoice: true },
+  "voice-accent-lab": { title: "Pronunciation Lab", desc: "Live acoustic feedback and interactive phonetic drills with coaches.", icon: "fa-volume-high", isVoice: true }
 };
 
 // Panel - Random Word
@@ -396,9 +484,11 @@ function init() {
     });
   }
 
-  // Explicitly activate activePanel or sol-chat on startup
+  // Explicitly activate URL hash panel or activePanel on startup
+  const initialHash = window.location.hash ? window.location.hash.replace('#', '') : '';
+  const initialPanel = (initialHash && document.getElementById('panel-' + initialHash)) ? initialHash : (activePanel || "sol-chat");
   if (typeof window.switchPanel === "function") {
-    window.switchPanel(activePanel || "sol-chat");
+    window.switchPanel(initialPanel);
   }
 }
 
@@ -2288,6 +2378,7 @@ window.switchPanel = function(panelId) {
   }
   // 5. Special Panel Trigger Callbacks
   if (panelId === "community") {
+    if (typeof renderDiscordUserBar === "function") renderDiscordUserBar();
     if (typeof renderCircleFeed === "function") renderCircleFeed();
     if (typeof renderCircleMembersWidget === "function") renderCircleMembersWidget();
   } else if (panelId === "videos") {
@@ -2335,113 +2426,275 @@ function getUserInitials(name) {
   return name.slice(0, 2).toUpperCase();
 }
 
+function renderDiscordUserBar() {
+  const metaContainer = document.getElementById("discord-user-profile-meta");
+  if (!metaContainer) return;
+
+  const currentUser = getActiveUserProfile();
+  let avatarHtml = "";
+  let userName = "Guest Learner";
+  let userTag = "#0001";
+
+  if (currentUser) {
+    userName = currentUser.name || "Learner";
+    userTag = "#2026";
+    if (currentUser.picture) {
+      avatarHtml = `<img src="${escapeHtml(currentUser.picture)}" alt="${escapeHtml(userName)}">`;
+    } else {
+      avatarHtml = getUserInitials(userName);
+    }
+  } else {
+    avatarHtml = `<i class="fa-solid fa-user" style="font-size: 0.9rem;"></i>`;
+  }
+
+  metaContainer.innerHTML = `
+    <div class="discord-card-avatar">
+      ${avatarHtml}
+      <span class="discord-status-dot" title="Online"></span>
+    </div>
+    <div class="discord-card-text">
+      <div class="discord-card-name">${escapeHtml(userName)}</div>
+      <div class="discord-card-sub">${escapeHtml(userTag)} • Online</div>
+    </div>
+  `;
+}
+
 function initCommunityPanel() {
+  renderDiscordUserBar();
   renderCircleFeed();
   renderCircleMembersWidget();
 
-  // Navigation Items switching channels
-  const navItemsContainer = document.querySelector(".circle-nav");
-  if (navItemsContainer) {
-    navItemsContainer.addEventListener("click", (e) => {
-      const item = e.target.closest(".circle-nav-item");
+  const container = document.querySelector(".discord-community-container");
+  const backdrop = document.getElementById("discord-drawer-backdrop");
+
+  // 1. Channel Switching
+  const navContainer = document.querySelector(".discord-channels-scroll");
+  if (navContainer) {
+    navContainer.addEventListener("click", (e) => {
+      const item = e.target.closest(".discord-channel-item");
       if (!item) return;
 
-      // Toggle Active navigation item
-      const allItems = navItemsContainer.querySelectorAll(".circle-nav-item");
+      const allItems = navContainer.querySelectorAll(".discord-channel-item");
       allItems.forEach(c => c.classList.remove("active"));
       item.classList.add("active");
 
       const channelId = item.getAttribute("data-channel");
       currentCircleChannel = channelId;
 
-      // Update Middle Column header information
       const titleEl = document.getElementById("circle-channel-title");
       const descEl = document.getElementById("circle-channel-desc");
-      const meta = CIRCLE_CHANNELS_META[channelId];
-      if (meta) {
-        if (titleEl) titleEl.textContent = meta.title;
-        if (descEl) descEl.textContent = meta.desc;
-      }
+      const iconEl = document.getElementById("circle-channel-icon");
+      const quickInput = document.getElementById("discord-quick-input");
 
-      // Hide/Show New Post button for Home/Members tabs
-      const btnNewPost = document.getElementById("btn-circle-new-post");
-      if (btnNewPost) {
-        if (channelId === "home" || channelId === "members-tab") {
-          btnNewPost.style.display = "none";
+      const meta = CIRCLE_CHANNELS_META[channelId] || { title: channelId, desc: "Discussion channel", icon: "fa-hashtag" };
+      if (titleEl) titleEl.textContent = meta.isVoice ? `🔊 ${meta.title}` : `# ${meta.title}`;
+      if (descEl) descEl.textContent = meta.desc;
+      if (iconEl) iconEl.className = `fa-solid ${meta.icon || 'fa-hashtag'}`;
+      if (quickInput) quickInput.placeholder = `Message #${meta.title}...`;
+
+      // Close mobile drawer on channel select
+      if (container) container.classList.remove("mobile-channels-open", "mobile-members-open");
+      if (backdrop) backdrop.classList.remove("active");
+
+      renderCircleFeed();
+    });
+  }
+
+  // 2. Server Rail Selection
+  const serverRail = document.getElementById("discord-server-rail");
+  if (serverRail) {
+    serverRail.addEventListener("click", (e) => {
+      const item = e.target.closest(".server-rail-item");
+      if (!item) return;
+
+      const allRailItems = serverRail.querySelectorAll(".server-rail-item");
+      allRailItems.forEach(r => {
+        r.classList.remove("active");
+        const btn = r.querySelector(".server-icon-btn");
+        if (btn) btn.classList.remove("active");
+        const pill = r.querySelector(".server-pill");
+        if (pill) pill.classList.remove("active");
+      });
+
+      item.classList.add("active");
+      const iconBtn = item.querySelector(".server-icon-btn");
+      if (iconBtn) iconBtn.classList.add("active");
+      const pill = item.querySelector(".server-pill");
+      if (pill) pill.classList.add("active");
+
+      const serverType = item.getAttribute("data-server");
+      if (serverType === "english-lab") {
+        const ch = document.querySelector('.discord-channel-item[data-channel="english-inputs"]');
+        if (ch) ch.click();
+      } else if (serverType === "accent-lab") {
+        const ch = document.querySelector('.discord-channel-item[data-channel="voice-accent-lab"]');
+        if (ch) ch.click();
+      } else if (serverType === "nexus") {
+        const ch = document.querySelector('.discord-channel-item[data-channel="ask-sol-community"]');
+        if (ch) ch.click();
+      } else {
+        const ch = document.querySelector('.discord-channel-item[data-channel="announcements"]');
+        if (ch) ch.click();
+      }
+    });
+  }
+
+  // 3. Mobile Hamburger & Members Drawers
+  const btnMobileChannels = document.getElementById("btn-discord-mobile-channels");
+  const btnToggleMembers = document.getElementById("btn-discord-toggle-members");
+  const membersSidebar = document.getElementById("discord-members-sidebar");
+
+  if (btnMobileChannels && container) {
+    btnMobileChannels.addEventListener("click", () => {
+      const isOpen = container.classList.contains("mobile-channels-open");
+      container.classList.remove("mobile-members-open");
+      if (isOpen) {
+        container.classList.remove("mobile-channels-open");
+        if (backdrop) backdrop.classList.remove("active");
+      } else {
+        container.classList.add("mobile-channels-open");
+        if (backdrop) backdrop.classList.add("active");
+      }
+    });
+  }
+
+  if (btnToggleMembers) {
+    btnToggleMembers.addEventListener("click", () => {
+      const isMobile = window.innerWidth <= 850;
+      if (isMobile && container) {
+        const isOpen = container.classList.contains("mobile-members-open");
+        container.classList.remove("mobile-channels-open");
+        if (isOpen) {
+          container.classList.remove("mobile-members-open");
+          if (backdrop) backdrop.classList.remove("active");
         } else {
-          btnNewPost.style.display = "flex";
+          container.classList.add("mobile-members-open");
+          if (backdrop) backdrop.classList.add("active");
         }
+      } else if (membersSidebar) {
+        membersSidebar.classList.toggle("hidden-desktop");
+        btnToggleMembers.classList.toggle("active", !membersSidebar.classList.contains("hidden-desktop"));
+      }
+    });
+  }
+
+  if (backdrop && container) {
+    backdrop.addEventListener("click", () => {
+      container.classList.remove("mobile-channels-open", "mobile-members-open");
+      backdrop.classList.remove("active");
+    });
+  }
+
+  // 4. Real-Time Chat Composer (Enter to send instantly!)
+  const quickComposerForm = document.getElementById("discord-quick-composer-form");
+  const quickInput = document.getElementById("discord-quick-input");
+  const btnAttachModal = document.getElementById("btn-composer-attach-modal");
+  const btnAskSol = document.getElementById("btn-composer-ask-sol");
+  const btnQuickEmoji = document.getElementById("btn-composer-quick-emoji");
+
+  if (quickComposerForm && quickInput) {
+    quickComposerForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const content = quickInput.value.trim();
+      if (!content) return;
+
+      const currentUser = getActiveUserProfile();
+      const authorName = currentUser ? currentUser.name : "You";
+      const authorAvatar = currentUser ? (currentUser.picture || getUserInitials(currentUser.name)) : "YOU";
+      const authorRole = currentUser ? "Learner 👤" : "Guest 👤";
+
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const formattedTime = `Today at ${hours % 12 || 12}:${minutes} ${ampm}`;
+
+      const newMsg = {
+        id: "msg_" + Date.now(),
+        author: authorName,
+        role: authorRole,
+        avatar: authorAvatar,
+        time: formattedTime,
+        content: content,
+        isCurrentUser: true,
+        reactions: { "👍": 1 },
+        userReactions: { "👍": true },
+        comments: []
+      };
+
+      if (!circleChannelsData[currentCircleChannel]) {
+        circleChannelsData[currentCircleChannel] = [];
+      }
+      circleChannelsData[currentCircleChannel].push(newMsg);
+      quickInput.value = "";
+
+      renderCircleFeed();
+
+      // Smooth scroll to bottom
+      const scroller = document.getElementById("discord-feed-scroll");
+      if (scroller) {
+        setTimeout(() => {
+          scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+        }, 50);
       }
 
-      // Default tab view
-      activeFeedTab = "posts";
-      const tabPosts = document.getElementById("tab-btn-posts");
-      const tabMembers = document.getElementById("tab-btn-members");
-      if (tabPosts) tabPosts.classList.add("active");
-      if (tabMembers) tabMembers.classList.remove("active");
+      // Trigger automatic AI Mentor response if asked or in general channels
+      const shouldReply = content.toLowerCase().includes("@sol") || 
+                          currentCircleChannel === "ask-sol-community" || 
+                          currentCircleChannel === "general-chat" || 
+                          currentCircleChannel === "english-inputs";
 
-      renderCircleFeed();
+      if (shouldReply) {
+        const typingBar = document.getElementById("discord-typing-bar");
+        if (typingBar) typingBar.style.display = "flex";
+
+        setTimeout(() => {
+          if (typingBar) typingBar.style.display = "none";
+          simulateDiscordCoachReply(newMsg.id, content);
+        }, 1600);
+      }
     });
   }
 
-  // Feed Tab Buttons (Posts vs Members tab inside Middle Column)
-  const tabPosts = document.getElementById("tab-btn-posts");
-  const tabMembers = document.getElementById("tab-btn-members");
-  
-  if (tabPosts && tabMembers) {
-    tabPosts.addEventListener("click", () => {
-      tabPosts.classList.add("active");
-      tabMembers.classList.remove("active");
-      activeFeedTab = "posts";
-      renderCircleFeed();
-    });
-
-    tabMembers.addEventListener("click", () => {
-      tabMembers.classList.add("active");
-      tabPosts.classList.remove("active");
-      activeFeedTab = "members";
-      renderCircleFeed();
+  if (btnAttachModal) {
+    btnAttachModal.addEventListener("click", () => {
+      const modal = document.getElementById("circle-composer-modal");
+      if (modal) {
+        const userBadge = document.getElementById("circle-composer-user-badge");
+        const currentUser = getActiveUserProfile();
+        if (userBadge) {
+          const name = currentUser ? currentUser.name : "Guest Learner";
+          userBadge.innerHTML = `<div style="font-size:0.85rem;color:#dbdee1;">Publishing rich post to <strong>#${escapeHtml(currentCircleChannel)}</strong> as <strong>${escapeHtml(name)}</strong></div>`;
+        }
+        modal.classList.remove("hidden");
+      }
     });
   }
 
-  // New Post Modal toggle controls
+  if (btnAskSol && quickInput) {
+    btnAskSol.addEventListener("click", () => {
+      quickInput.value = "@Sol AI Coach: ";
+      quickInput.focus();
+    });
+  }
+
+  if (btnQuickEmoji && quickInput) {
+    btnQuickEmoji.addEventListener("click", () => {
+      const emojis = ["🔥 ", "🚀 ", "💡 ", "👏 ", "❤️ "];
+      const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+      quickInput.value += randomEmoji;
+      quickInput.focus();
+    });
+  }
+
+  // 5. Rich Post Modal Controls
   const btnNewPost = document.getElementById("btn-circle-new-post");
   const modal = document.getElementById("circle-composer-modal");
   const btnCloseModal = document.getElementById("btn-close-circle-modal");
+  const postForm = document.getElementById("circle-post-form");
 
   if (btnNewPost && modal) {
     btnNewPost.addEventListener("click", () => {
-      const userBadge = document.getElementById("circle-composer-user-badge");
-      const currentUser = getActiveUserProfile();
-      if (userBadge) {
-        if (currentUser) {
-          let avatarImg = "";
-          if (currentUser.picture) {
-            avatarImg = `<img src="${escapeHtml(currentUser.picture)}" alt="${escapeHtml(currentUser.name)}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;">`;
-          } else {
-            avatarImg = `<div style="width:36px;height:36px;border-radius:8px;background:var(--accent-color,#c5a059);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">${getUserInitials(currentUser.name)}</div>`;
-          }
-          userBadge.innerHTML = `
-            ${avatarImg}
-            <div style="flex-grow:1;">
-              <div style="font-weight:700;font-size:0.9rem;color:#ffffff;">Posting as ${escapeHtml(currentUser.name)}</div>
-              <div style="font-size:0.75rem;color:#94a3b8;"><i class="fa-brands fa-google" style="color:#4285F4;margin-right:4px;"></i>${escapeHtml(currentUser.email || 'Google Account Linked')}</div>
-            </div>
-            <span style="font-size:0.75rem;padding:2px 8px;border-radius:12px;background:rgba(36,205,152,0.15);color:#24cd98;font-weight:600;">Connected</span>
-          `;
-          userBadge.style.display = "flex";
-        } else {
-          userBadge.innerHTML = `
-            <div style="display:flex;align-items:center;gap:0.6rem;width:100%;">
-              <i class="fa-solid fa-circle-user" style="font-size:1.8rem;color:#64748b;"></i>
-              <div style="font-size:0.82rem;color:#94a3b8;flex-grow:1;">
-                Posting as <strong>Guest</strong>. <a href="javascript:void(0)" onclick="document.getElementById('btn-google-login')?.click();" style="color:var(--accent-color,#c5a059);text-decoration:underline;font-weight:600;">Sign in with Google</a> to display your verified name & avatar.
-              </div>
-            </div>
-          `;
-          userBadge.style.display = "flex";
-        }
-      }
       modal.classList.remove("hidden");
     });
   }
@@ -2452,8 +2705,6 @@ function initCommunityPanel() {
     });
   }
 
-  // Handle New Post form submissions
-  const postForm = document.getElementById("circle-post-form");
   if (postForm && modal) {
     postForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -2469,8 +2720,14 @@ function initCommunityPanel() {
 
       const currentUser = getActiveUserProfile();
       const authorName = currentUser ? currentUser.name : "You";
-      const authorAvatar = currentUser ? (currentUser.picture || getUserInitials(currentUser.name)) : "Y";
+      const authorAvatar = currentUser ? (currentUser.picture || getUserInitials(currentUser.name)) : "YOU";
       const authorRole = currentUser ? "Learner 👤" : "Guest 👤";
+
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const formattedTime = `Today at ${hours % 12 || 12}:${minutes} ${ampm}`;
 
       const newPost = {
         id: "cp_" + Date.now(),
@@ -2478,10 +2735,11 @@ function initCommunityPanel() {
         author: authorName,
         role: authorRole,
         avatar: authorAvatar,
-        time: "Just now",
+        time: formattedTime,
         content: body,
         image: imgUrl || null,
-        likes: 0,
+        reactions: { "👍": 1, "🔥": 1 },
+        userReactions: { "👍": true },
         isCurrentUser: true,
         comments: []
       };
@@ -2489,10 +2747,8 @@ function initCommunityPanel() {
       if (!circleChannelsData[currentCircleChannel]) {
         circleChannelsData[currentCircleChannel] = [];
       }
+      circleChannelsData[currentCircleChannel].push(newPost);
 
-      circleChannelsData[currentCircleChannel].unshift(newPost);
-      
-      // Reset inputs & hide modal
       titleInput.value = "";
       bodyInput.value = "";
       if (imgInput) imgInput.value = "";
@@ -2500,126 +2756,110 @@ function initCommunityPanel() {
 
       renderCircleFeed();
 
-      // Trigger automatic smart community AI reply
-      setTimeout(() => {
-        simulateCircleReply(newPost.id, title, body);
-      }, 1500);
+      const scroller = document.getElementById("discord-feed-scroll");
+      if (scroller) {
+        setTimeout(() => {
+          scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+        }, 50);
+      }
+    });
+  }
+
+  // 6. Voice Stage Controls
+  const btnStageMute = document.getElementById("btn-stage-mute");
+  const btnStageDeafen = document.getElementById("btn-stage-deafen");
+  const btnStageDisconnect = document.getElementById("btn-stage-disconnect");
+
+  if (btnStageMute) {
+    btnStageMute.addEventListener("click", () => {
+      const isMuted = btnStageMute.classList.toggle("is-muted");
+      btnStageMute.innerHTML = isMuted ? `<i class="fa-solid fa-microphone-slash" style="color:#ef4444;"></i> <span>Muted</span>` : `<i class="fa-solid fa-microphone"></i> <span>Unmute</span>`;
+    });
+  }
+
+  if (btnStageDeafen) {
+    btnStageDeafen.addEventListener("click", () => {
+      const isDeaf = btnStageDeafen.classList.toggle("is-deaf");
+      btnStageDeafen.innerHTML = isDeaf ? `<i class="fa-solid fa-headphones-simple" style="color:#ef4444;"></i> <span>Deafened</span>` : `<i class="fa-solid fa-headphones"></i> <span>Deafen</span>`;
+    });
+  }
+
+  if (btnStageDisconnect) {
+    btnStageDisconnect.addEventListener("click", () => {
+      const defaultCh = document.querySelector('.discord-channel-item[data-channel="announcements"]');
+      if (defaultCh) defaultCh.click();
+    });
+  }
+
+  // 7. Bottom User Card Controls (Mic / Deafen / Settings)
+  const btnUserMic = document.getElementById("btn-discord-mic");
+  const btnUserDeafen = document.getElementById("btn-discord-deafen");
+
+  if (btnUserMic) {
+    btnUserMic.addEventListener("click", () => {
+      const isMuted = btnUserMic.classList.toggle("muted");
+      btnUserMic.innerHTML = isMuted ? `<i class="fa-solid fa-microphone-slash" style="color:#ef4444;"></i>` : `<i class="fa-solid fa-microphone"></i>`;
+      btnUserMic.title = isMuted ? "Unmute Microphone" : "Mute Microphone";
+    });
+  }
+
+  if (btnUserDeafen) {
+    btnUserDeafen.addEventListener("click", () => {
+      const isDeaf = btnUserDeafen.classList.toggle("deaf");
+      btnUserDeafen.innerHTML = isDeaf ? `<i class="fa-solid fa-headphones-simple" style="color:#ef4444;"></i>` : `<i class="fa-solid fa-headphones"></i>`;
+      btnUserDeafen.title = isDeaf ? "Undeafen Audio" : "Deafen Audio";
     });
   }
 }
 
 function renderCircleFeed() {
   const feedContainer = document.getElementById("circle-posts-feed");
+  const welcomeHero = document.getElementById("discord-feed-welcome");
+  const voiceStage = document.getElementById("discord-voice-stage");
   if (!feedContainer) return;
+
+  const isVoiceChannel = currentCircleChannel.startsWith("voice-");
+
+  if (isVoiceChannel) {
+    if (welcomeHero) welcomeHero.style.display = "none";
+    feedContainer.style.display = "none";
+    if (voiceStage) {
+      voiceStage.classList.remove("hidden");
+      const stageNameEl = document.getElementById("voice-stage-name");
+      if (stageNameEl) {
+        stageNameEl.textContent = currentCircleChannel === "voice-accent-lab" ? "Pronunciation Lab" : "Study Lounge 1";
+      }
+      const currentUser = getActiveUserProfile();
+      const youNameEl = document.getElementById("voice-you-name");
+      const youAvatarEl = document.getElementById("voice-you-avatar");
+      if (youNameEl && currentUser) youNameEl.innerHTML = `${escapeHtml(currentUser.name)} <i class="fa-solid fa-microphone-slash" style="color:#ef4444;"></i>`;
+      if (youAvatarEl && currentUser) youAvatarEl.textContent = getUserInitials(currentUser.name);
+    }
+    return;
+  }
+
+  // Text Channel Mode
+  if (voiceStage) voiceStage.classList.add("hidden");
+  if (welcomeHero) {
+    welcomeHero.style.display = "block";
+    const meta = CIRCLE_CHANNELS_META[currentCircleChannel] || { title: currentCircleChannel, desc: "" };
+    const h3 = welcomeHero.querySelector(".welcome-title");
+    const p = welcomeHero.querySelector(".welcome-subtitle");
+    if (h3) h3.textContent = `Welcome to #${meta.title}!`;
+    if (p) p.textContent = `This is the start of the #${meta.title} channel in Globally Known.`;
+  }
+  feedContainer.style.display = "flex";
   feedContainer.innerHTML = "";
 
   const currentUser = getActiveUserProfile();
-
-  if (activeFeedTab === "members" || currentCircleChannel === "members-tab") {
-    // Render list of members in the middle column grid
-    const members = [];
-    if (currentUser) {
-      members.push({
-        name: `${currentUser.name} (You)`,
-        status: "online",
-        role: "Learner 👤",
-        avatar: currentUser.picture || getUserInitials(currentUser.name),
-        details: `Your active SOL study account (${currentUser.email || 'Google Connected'}).`,
-        isUser: true
-      });
-    } else {
-      members.push({
-        name: "Guest Learner (You)",
-        status: "online",
-        role: "Learner 👤",
-        avatar: "👤",
-        details: "Sign in with Google in the top header to connect your profile.",
-        isUser: true
-      });
-    }
-
-    members.push(
-      { name: "Gregory Dobbins", status: "online", role: "Program Manager 🎓", avatar: "GD", details: "Funnel Builder expert since 2018." },
-      { name: "Sarah K.", status: "online", role: "Language Coach 🏅", avatar: "SK", details: "Native English linguist focused on comprehensible inputs." },
-      { name: "Elena Rostova", status: "online", role: "Linguist & Phonetics 🌍", avatar: "ER", details: "Targeting IPA transcription and accent mechanics." },
-      { name: "Alice F.", status: "online", role: "Member 👤", avatar: "AF", details: "French native acquiring conversational Spanish syntax." },
-      { name: "Bob D.", status: "offline", role: "Member 👤", avatar: "BD", details: "Tech lead exploring Metaphor Schema integrations." },
-      { name: "Marcus Vance", status: "offline", role: "Community Moderator 🛡️", avatar: "MV", details: "Supporting forum discussions and safe exchanges." }
-    );
-
-    const grid = document.createElement("div");
-    grid.className = "circle-members-grid";
-    
-    members.forEach(m => {
-      const card = document.createElement("div");
-      card.className = "circle-member-card";
-      if (m.isUser) {
-        card.style.borderColor = "var(--accent-color, #c5a059)";
-        card.style.boxShadow = "0 0 12px rgba(197, 160, 89, 0.15)";
-      }
-      let avatarHtml = "";
-      if (m.avatar && (m.avatar.startsWith("http") || m.avatar.startsWith("data:"))) {
-        avatarHtml = `<img src="${escapeHtml(m.avatar)}" alt="${escapeHtml(m.name)}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;display:block;">`;
-      } else {
-        avatarHtml = escapeHtml(m.avatar || "👤");
-      }
-
-      card.innerHTML = `
-        <div class="member-avatar" style="overflow:hidden;flex-shrink:0;">${avatarHtml}</div>
-        <div class="member-info" style="flex-grow:1;min-width:0;">
-          <div class="member-name-row" style="display:flex;align-items:center;justify-content:space-between;gap:0.4rem;">
-            <h4 style="margin:0;font-size:0.92rem;color:#ffffff;display:flex;align-items:center;gap:0.4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              ${escapeHtml(m.name)}
-            </h4>
-            <span class="status-indicator ${m.status}" title="${m.status}"></span>
-          </div>
-          <p class="member-role" style="margin:0.25rem 0;font-size:0.75rem;color:var(--accent-color,#c5a059);font-weight:600;">${escapeHtml(m.role)}</p>
-          <p class="member-details" style="margin:0;font-size:0.75rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.details)}</p>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-    feedContainer.appendChild(grid);
-    return;
-  }
-
-  // Handle Home Welcome View
-  if (currentCircleChannel === "home") {
-    const heroGreeting = currentUser ? `Welcome back, ${escapeHtml(currentUser.name)}!` : "Welcome to Globally Known!";
-    const heroSub = currentUser
-      ? `Connected as <strong>${escapeHtml(currentUser.email || currentUser.name)}</strong>. You are part of the active cohort!`
-      : `Connect with language learners worldwide, share study notes, and master comprehensible inputs together.`;
-    
-    feedContainer.innerHTML = `
-      <div class="circle-home-welcome">
-        <div class="welcome-hero">
-          <div class="welcome-cap"><i class="fa-solid fa-graduation-cap"></i></div>
-          <h3>${heroGreeting}</h3>
-          <p>${heroSub}</p>
-        </div>
-        <div class="channels-brief">
-          <h4>Featured Learning Spaces</h4>
-          <ul>
-            <li><strong>📢 #announcements:</strong> Official schedules, updates, and releases from the team.</li>
-            <li><strong>💬 #english-inputs:</strong> Discuss vocabulary, shadowing notes, and City Vlog takeaways.</li>
-            <li><strong>🧠 #metaphors-discussion:</strong> Unpack conceptual metaphors, idioms, and target language syntax.</li>
-            <li><strong>☕ #general-chat:</strong> Say hello, share your daily study streak, and exchange tips.</li>
-          </ul>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  // Render posts feed for current channel
   const posts = (typeof circleChannelsData !== "undefined" && circleChannelsData[currentCircleChannel]) ? circleChannelsData[currentCircleChannel] : [];
-  
+
   if (posts.length === 0) {
     feedContainer.innerHTML = `
-      <div style="text-align:center;padding:3.5rem 1rem;color:#64748b;">
-        <i class="fa-regular fa-comment-dots" style="font-size:2.5rem;margin-bottom:0.75rem;display:block;opacity:0.6;"></i>
-        <p style="font-size:0.95rem;margin-bottom:0.5rem;color:#94a3b8;">No posts yet in #${escapeHtml(currentCircleChannel)}</p>
-        <p style="font-size:0.82rem;">Click <strong>+ New Post</strong> in the top right to start the discussion!</p>
+      <div style="text-align:center;padding:2.5rem 1rem;color:#80848e;">
+        <i class="fa-regular fa-comment-dots" style="font-size:2.2rem;margin-bottom:0.75rem;display:block;opacity:0.5;"></i>
+        <p style="font-size:0.95rem;margin-bottom:0.4rem;color:#dbdee1;">No messages yet in #${escapeHtml(currentCircleChannel)}</p>
+        <p style="font-size:0.82rem;color:#949ba4;">Type below and press <strong>Enter</strong> to send the first message!</p>
       </div>
     `;
     return;
@@ -2628,93 +2868,158 @@ function renderCircleFeed() {
   posts.forEach(post => {
     const card = document.createElement("div");
     card.className = "circle-post-card";
+    card.setAttribute("data-msg-id", post.id);
 
-    // Determine author identity
     const isCurrentUserPost = post.isCurrentUser || (currentUser && post.author === currentUser.name) || post.author === "You";
     const displayAuthor = (isCurrentUserPost && currentUser) ? currentUser.name : (post.author === "You" ? "Guest Learner" : post.author);
     const displayAvatar = (isCurrentUserPost && currentUser) ? (currentUser.picture || getUserInitials(currentUser.name)) : (post.avatar || "👤");
-    const displayRole = (isCurrentUserPost && currentUser) ? "Learner 👤" : (post.role || "Member 👤");
+
+    let roleBadge = "MEMBER";
+    let badgeClass = "badge-member";
+    let authorColor = "#dbdee1";
+
+    if (post.role && post.role.includes("Program Manager")) {
+      roleBadge = "STAFF";
+      badgeClass = "badge-staff";
+      authorColor = "var(--accent-color, #c5a059)";
+    } else if (post.role && (post.role.includes("Coach") || post.role.includes("Mentor"))) {
+      roleBadge = "COACH";
+      badgeClass = "badge-coach";
+      authorColor = "#5865f2";
+    } else if (post.role && post.role.includes("Linguist")) {
+      roleBadge = "LINGUIST";
+      badgeClass = "badge-coach";
+      authorColor = "#a855f7";
+    }
 
     let avatarHtml = "";
     if (displayAvatar && (displayAvatar.startsWith("http") || displayAvatar.startsWith("data:"))) {
-      avatarHtml = `<img src="${escapeHtml(displayAvatar)}" alt="${escapeHtml(displayAuthor)}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;display:block;">`;
+      avatarHtml = `<img src="${escapeHtml(displayAvatar)}" alt="${escapeHtml(displayAuthor)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">`;
     } else {
       avatarHtml = escapeHtml(displayAvatar);
     }
 
-    card.innerHTML = `
-      <div class="post-header">
-        <div class="author-avatar" style="overflow:hidden;flex-shrink:0;">${avatarHtml}</div>
-        <div class="author-details">
-          <h4>
-            <span>${escapeHtml(displayAuthor)}</span>
-            <span class="author-role">${escapeHtml(displayRole)}</span>
-          </h4>
-          <span class="post-time">${escapeHtml(post.time)}</span>
+    // Embed formatting
+    let embedHtml = "";
+    if (post.embed) {
+      embedHtml = `
+        <div class="discord-embed-card">
+          ${post.embed.author ? `<div class="embed-author">${escapeHtml(post.embed.author)}</div>` : ""}
+          <div class="embed-title">${escapeHtml(post.embed.title)}</div>
+          <p class="embed-desc">${escapeHtml(post.embed.desc)}</p>
         </div>
-      </div>
-      <div class="post-content">
-        <h3 class="post-title">${escapeHtml(post.title)}</h3>
-        <p class="post-body-text">${escapeHtml(post.content)}</p>
-      </div>
-      ${post.image ? `<div class="post-media"><img src="${escapeHtml(post.image)}" alt="Post Media" onerror="this.parentElement.style.display='none';"></div>` : ""}
-      <div class="post-actions-row">
-        <button class="action-btn like-btn ${post.userLiked ? 'liked' : ''}" data-id="${post.id}" style="${post.userLiked ? 'color: #e11d48;' : ''}">
-          <i class="${post.userLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i> <span>${post.likes || 0}</span>
+      `;
+    }
+
+    // Reactions formatting
+    post.reactions = post.reactions || {};
+    post.userReactions = post.userReactions || {};
+    const reactionKeys = Object.keys(post.reactions);
+
+    const reactionsHtml = reactionKeys.map(emoji => {
+      const count = post.reactions[emoji];
+      const isReacted = post.userReactions[emoji];
+      return `
+        <button class="discord-reaction-pill ${isReacted ? 'reacted' : ''}" data-emoji="${emoji}" data-msg-id="${post.id}">
+          <span>${emoji}</span>
+          <span class="emoji-count">${count}</span>
         </button>
-        <span class="action-btn" style="cursor:default;">
-          <i class="fa-regular fa-comment"></i> <span>${post.comments ? post.comments.length : 0} Comments</span>
-        </span>
-      </div>
-      <div class="post-comments-container" style="${post.comments && post.comments.length > 0 ? '' : 'display:none;'}">
-        ${(post.comments || []).map(c => `
-          <div class="circle-comment-card">
-            <span class="comment-author">${escapeHtml(c.author)}:</span>
-            <span class="comment-text">${escapeHtml(c.content)}</span>
-          </div>
-        `).join("")}
-      </div>
-      <div class="comment-composer-box">
-        <form class="comment-submit-form" data-post-id="${post.id}">
-          <input type="text" class="comment-input" placeholder="Write a comment as ${escapeHtml(currentUser ? currentUser.name : 'Learner')}..." required autocomplete="off">
-          <button type="submit" class="comment-submit-btn">Reply</button>
-        </form>
+      `;
+    }).join("");
+
+    // Comments / Replies formatting
+    let repliesHtml = "";
+    if (post.comments && post.comments.length > 0) {
+      repliesHtml = `
+        <div class="discord-replies-list">
+          ${post.comments.map(c => `
+            <div class="discord-reply-row">
+              <strong>${escapeHtml(c.author)}:</strong> ${escapeHtml(c.content)}
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="author-avatar">${avatarHtml}</div>
+      <div class="post-content-wrap">
+        <div class="post-meta-row">
+          <span class="author-username" style="color: ${authorColor};">${escapeHtml(displayAuthor)}</span>
+          <span class="author-badge ${badgeClass}">${roleBadge}</span>
+          <span class="post-timestamp">${escapeHtml(post.time || 'Today')}</span>
+        </div>
+        ${post.title ? `<h4 class="post-title-text">${escapeHtml(post.title)}</h4>` : ""}
+        <p class="post-body-text">${escapeHtml(post.content).replace(/\n/g, '<br>')}</p>
+        ${post.image ? `<div class="discord-embed-card" style="border-left-color: #5865f2; margin-top:8px;"><div class="embed-image"><img src="${escapeHtml(post.image)}" alt="Attachment" onerror="this.parentElement.style.display='none';"></div></div>` : ""}
+        ${embedHtml}
+        <div class="discord-reactions-row">
+          ${reactionsHtml}
+        </div>
+        ${repliesHtml}
       </div>
     `;
 
-    // Bind Like Button
-    const likeBtn = card.querySelector(".like-btn");
-    if (likeBtn) {
-      likeBtn.addEventListener("click", () => {
-        if (!post.userLiked) {
-          post.likes = (post.likes || 0) + 1;
-          post.userLiked = true;
+    // Bind Reaction Pill Clicks
+    const reactionPills = card.querySelectorAll(".discord-reaction-pill");
+    reactionPills.forEach(pill => {
+      pill.addEventListener("click", () => {
+        const emoji = pill.getAttribute("data-emoji");
+        if (post.userReactions[emoji]) {
+          post.reactions[emoji] = Math.max(0, (post.reactions[emoji] || 1) - 1);
+          delete post.userReactions[emoji];
+          if (post.reactions[emoji] === 0) delete post.reactions[emoji];
         } else {
-          post.likes = Math.max(0, (post.likes || 1) - 1);
-          post.userLiked = false;
+          post.reactions[emoji] = (post.reactions[emoji] || 0) + 1;
+          post.userReactions[emoji] = true;
         }
         renderCircleFeed();
       });
-    }
-
-    // Bind Comment Submit
-    const commentForm = card.querySelector(".comment-submit-form");
-    if (commentForm) {
-      commentForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const input = commentForm.querySelector(".comment-input");
-        const val = input ? input.value.trim() : "";
-        if (!val) return;
-
-        const author = currentUser ? currentUser.name : "Learner";
-        post.comments = post.comments || [];
-        post.comments.push({ author: author, content: val });
-        renderCircleFeed();
-      });
-    }
+    });
 
     feedContainer.appendChild(card);
   });
+}
+
+function simulateDiscordCoachReply(postId, originalText) {
+  const responses = [
+    "Great point! Shadowing at conversational speed helps solidify phonetic liaison and consonant-vowel linking.",
+    "Comprehensible input is working its magic! Notice how auditory familiarity precedes spoken confidence.",
+    "Spot on observation. Keep immersing and listening to high-resonance native audio.",
+    "Love seeing this in the cohort! Keep up your daily input rhythm!"
+  ];
+  const replyText = responses[Math.floor(Math.random() * responses.length)];
+
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const formattedTime = `Today at ${hours % 12 || 12}:${minutes} ${ampm}`;
+
+  const coachMsg = {
+    id: "msg_coach_" + Date.now(),
+    author: "Sol AI Coach",
+    role: "AI Mentor 🤖",
+    avatar: "SOL",
+    time: formattedTime,
+    content: replyText,
+    reactions: { "❤️": 2, "🔥": 1 },
+    userReactions: {},
+    comments: []
+  };
+
+  if (!circleChannelsData[currentCircleChannel]) {
+    circleChannelsData[currentCircleChannel] = [];
+  }
+  circleChannelsData[currentCircleChannel].push(coachMsg);
+  renderCircleFeed();
+
+  const scroller = document.getElementById("discord-feed-scroll");
+  if (scroller) {
+    setTimeout(() => {
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+    }, 50);
+  }
 }
 
 function openPlaylistViewer(video) {
@@ -5928,6 +6233,7 @@ function checkActiveSession() {
         if (authModal) authModal.classList.add("hidden");
         renderUserProfile(user);
         renderCircleMembersWidget();
+        if (typeof renderDiscordUserBar === "function") renderDiscordUserBar();
         if (typeof triggerSolGrandEntrance === "function") {
           triggerSolGrandEntrance();
           hasPlayedFirstLoginEntrance = true;
@@ -5967,7 +6273,12 @@ function renderGuestProfile() {
         <i class="fa-solid fa-circle-user" style="color:var(--accent-color, #4f46e5); font-size:1.15rem;"></i>
         <span style="font-weight:700; font-size:0.84rem; color:#18181b;">Guest User</span>
       </div>
-      <button type="button" class="header-login-prompt-btn" id="btn-guest-sign-in" title="Sign In or Create Account">Sign In</button>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button type="button" class="profile-gear-btn" id="btn-guest-settings" title="Info / Settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+        <button type="button" class="header-login-prompt-btn" id="btn-guest-sign-in" title="Sign In or Create Account">Sign In</button>
+      </div>
     </div>
   `;
 
@@ -5977,6 +6288,16 @@ function renderGuestProfile() {
       window.solGuestMode = false;
       const authModal = document.getElementById("auth-modal");
       if (authModal) authModal.classList.remove("hidden");
+    });
+  }
+
+  const btnSettings = document.getElementById("btn-guest-settings");
+  if (btnSettings) {
+    btnSettings.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (typeof window.switchPanel === "function") window.switchPanel("info");
+      const backdrop = document.getElementById("sidebar-backdrop");
+      if (backdrop && window.innerWidth <= 900) backdrop.click();
     });
   }
 }
@@ -5998,6 +6319,7 @@ function loginUserSuccess(user, token, isNew = false) {
   loadUserSpecificData();
   renderCircleMembersWidget();
   renderCircleFeed();
+  if (typeof renderDiscordUserBar === "function") renderDiscordUserBar();
 
   if (typeof window.switchPanel === "function") {
     window.switchPanel("sol-chat");
@@ -6076,6 +6398,9 @@ function renderUserProfile(user) {
         <span class="google-user-name">${firstName}</span>
         <span class="user-profile-badge">${roleLabel}</span>
       </div>
+      <button type="button" class="profile-gear-btn" id="btn-quick-settings" title="Info / Settings">
+        <i class="fa-solid fa-gear"></i>
+      </button>
       <i class="fa-solid fa-ellipsis-vertical profile-menu-dots"></i>
 
       <!-- Profile Dropdown Menu -->
@@ -6087,6 +6412,10 @@ function renderUserProfile(user) {
         <button type="button" class="dropdown-item" id="dropdown-status-btn">
           <i class="fa-solid fa-crown" style="color:#eab308;"></i>
           <span>Plan: <strong>${roleLabel}</strong></span>
+        </button>
+        <button type="button" class="dropdown-item" id="dropdown-settings-btn">
+          <i class="fa-solid fa-gear" style="color:#94a3b8;"></i>
+          <span>Info / Settings</span>
         </button>
         <button type="button" class="dropdown-item danger" id="btn-user-logout">
           <i class="fa-solid fa-right-from-bracket"></i>
@@ -6101,6 +6430,19 @@ function renderUserProfile(user) {
   const chip = document.getElementById("user-profile-chip");
   const dropdown = document.getElementById("user-profile-dropdown");
   const logoutBtn = document.getElementById("btn-user-logout");
+  const quickSettingsBtn = document.getElementById("btn-quick-settings");
+  const dropdownSettingsBtn = document.getElementById("dropdown-settings-btn");
+
+  const openSettings = (e) => {
+    e.stopPropagation();
+    if (dropdown) dropdown.classList.add("hidden");
+    if (typeof window.switchPanel === "function") window.switchPanel("info");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    if (backdrop && window.innerWidth <= 900) backdrop.click();
+  };
+
+  if (quickSettingsBtn) quickSettingsBtn.addEventListener("click", openSettings);
+  if (dropdownSettingsBtn) dropdownSettingsBtn.addEventListener("click", openSettings);
 
   if (chip && dropdown) {
     chip.addEventListener("click", (e) => {
@@ -6128,6 +6470,7 @@ function renderUserProfile(user) {
         loadUserSpecificData();
         renderCircleMembersWidget();
         renderCircleFeed();
+        if (typeof renderDiscordUserBar === "function") renderDiscordUserBar();
       }
     });
   }
@@ -9587,52 +9930,78 @@ function renderCircleMembersWidget() {
 
   const currentUser = getActiveUserProfile();
 
-  const baseMembers = [
-    { name: "Gregory Dobbins", role: "Program Manager", status: "online", avatar: "GD" },
-    { name: "Sarah K.", role: "Language Coach", status: "online", avatar: "SK" },
-    { name: "Elena Rostova", role: "Linguist & Phonetics", status: "online", avatar: "ER" },
-    { name: "Alice F.", role: "Member", status: "online", avatar: "AF" },
-    { name: "Bob D.", role: "Member", status: "offline", avatar: "BD" },
-    { name: "Marcus Vance", role: "Moderator", status: "offline", avatar: "MV" }
+  const coaches = [
+    { name: "Gregory Dobbins", role: "Program Manager 🎓", status: "online", avatar: "GD", roleType: "staff" },
+    { name: "Sarah K.", role: "Language Coach 🏅", status: "online", avatar: "SK", roleType: "coach" },
+    { name: "Elena Rostova", role: "Linguist & Phonetics 🌍", status: "online", avatar: "ER", roleType: "coach" }
   ];
 
-  let displayList = [];
+  const onlineMembers = [];
   if (currentUser) {
-    displayList.push({
+    onlineMembers.push({
       name: `${currentUser.name} (You)`,
       role: "Learner 👤",
       status: "online",
       avatar: currentUser.picture || getUserInitials(currentUser.name),
-      isUser: true
+      isUser: true,
+      roleType: "member"
     });
   } else {
-    displayList.push({
+    onlineMembers.push({
       name: "Guest Learner (You)",
-      role: "Guest",
+      role: "Guest 👤",
       status: "online",
       avatar: "👤",
-      isUser: true
+      isUser: true,
+      roleType: "member"
     });
   }
 
-  displayList = displayList.concat(baseMembers);
+  onlineMembers.push(
+    { name: "Alice F.", role: "Member 👤", status: "online", avatar: "AF", roleType: "member" },
+    { name: "Carlos M.", role: "Member 👤", status: "online", avatar: "CM", roleType: "member" },
+    { name: "Li Wei", role: "Member 👤", status: "online", avatar: "LW", roleType: "member" }
+  );
 
-  container.innerHTML = displayList.map(m => {
+  const offlineMembers = [
+    { name: "Bob D.", role: "Member 👤", status: "offline", avatar: "BD", roleType: "member" },
+    { name: "Marcus Vance", role: "Moderator 🛡️", status: "offline", avatar: "MV", roleType: "member" }
+  ];
+
+  const renderMemberRow = (m) => {
     let avatarHtml = "";
     if (m.avatar && (m.avatar.startsWith("http") || m.avatar.startsWith("data:"))) {
-      avatarHtml = `<img src="${escapeHtml(m.avatar)}" alt="${escapeHtml(m.name)}" style="width:100%;height:100%;border-radius:6px;object-fit:cover;display:block;">`;
+      avatarHtml = `<img src="${escapeHtml(m.avatar)}" alt="${escapeHtml(m.name)}">`;
     } else {
       avatarHtml = escapeHtml(m.avatar || "👤");
     }
 
+    const roleClass = m.roleType === "staff" ? "role-staff" : (m.roleType === "coach" ? "role-coach" : "");
+
     return `
-      <div class="member-widget-item ${m.isUser ? 'is-current-user' : ''}" style="${m.isUser ? 'background: rgba(197, 160, 89, 0.12); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(197, 160, 89, 0.25);' : ''}">
-        <div class="widget-avatar" style="overflow:hidden;flex-shrink:0;">${avatarHtml}</div>
-        <span class="widget-name" style="${m.isUser ? 'color: var(--accent-color, #c5a059); font-weight: 700;' : ''} overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(m.name)}</span>
-        <span class="widget-status-dot ${m.status}" title="${m.status}"></span>
+      <div class="discord-member-row ${m.isUser ? 'is-current-user' : ''}">
+        <div class="discord-member-avatar-wrap">
+          ${avatarHtml}
+          <span class="member-status-circle ${m.status}"></span>
+        </div>
+        <div class="discord-member-info">
+          <div class="discord-member-name ${roleClass}">${escapeHtml(m.name)}</div>
+          <div class="discord-member-sub">${escapeHtml(m.role)}</div>
+        </div>
       </div>
     `;
-  }).join("");
+  };
+
+  container.innerHTML = `
+    <div class="member-group-header">COACHES & LEADERS — ${coaches.length}</div>
+    ${coaches.map(renderMemberRow).join("")}
+
+    <div class="member-group-header">ONLINE LEARNERS — ${onlineMembers.length}</div>
+    ${onlineMembers.map(renderMemberRow).join("")}
+
+    <div class="member-group-header">OFFLINE — ${offlineMembers.length}</div>
+    ${offlineMembers.map(renderMemberRow).join("")}
+  `;
 }
 
 function simulateCircleReply(postId, title, body) {
