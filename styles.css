@@ -4747,20 +4747,23 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 /* Position each anchor at its corresponding column zone (16.6%, 50%, 83.3% width) */
 .zoom-anchor-btn.anchor-left {
   top: 1rem;
-  left: 16.6%;
+  left: 16.666%;
+  right: auto;
   transform: translateX(-50%);
 }
 
 .zoom-anchor-btn.anchor-center {
   top: 1rem;
   left: 50%;
+  right: auto;
   transform: translateX(-50%);
 }
 
 .zoom-anchor-btn.anchor-right {
   top: 1rem;
-  right: 16.6%;
-  transform: translateX(50%);
+  left: 83.333%;
+  right: auto;
+  transform: translateX(-50%);
 }
 
 /* Hover styles for anchors */
@@ -4772,16 +4775,10 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   box-shadow: 0 0 8px rgba(250, 204, 21, 0.4);
 }
 
-.zoom-anchor-btn.anchor-left:hover {
-  transform: translateX(-50%) scale(1.15);
-}
-
-.zoom-anchor-btn.anchor-center:hover {
-  transform: translateX(-50%) scale(1.15);
-}
-
+.zoom-anchor-btn.anchor-left:hover,
+.zoom-anchor-btn.anchor-center:hover,
 .zoom-anchor-btn.anchor-right:hover {
-  transform: translateX(50%) scale(1.15);
+  transform: translateX(-50%) scale(1.15);
 }
 
 /* Floating Zoom Reset Button (Show Full Slide) */

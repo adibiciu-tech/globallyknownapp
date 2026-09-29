@@ -3330,6 +3330,9 @@ function initDictionaryPanel() {
     const snapToAnchor = (column) => {
       const isMobile = window.innerWidth <= 900;
       if (isMobile) {
+        if (slideshowView && slideshowView.classList.contains("mobile-fullscreen-wide")) {
+          exitMobileWideMode();
+        }
         isZoomed = true;
         currentZoomedColumn = column;
         if (slideImageWrapper) {

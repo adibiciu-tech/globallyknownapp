@@ -413,9 +413,12 @@ html, body {
 /* Mobile Column Zoom Mode */
 .slide-image-wrapper.mobile-column-zoomed {
   aspect-ratio: 16 / 27 !important;
-  max-height: clamp(520px, 76dvh, 720px) !important;
-  width: 100% !important;
-  height: auto !important;
+  height: clamp(480px, 70dvh, 680px) !important;
+  width: auto !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
   border-radius: 16px !important;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7) !important;
 }
@@ -600,11 +603,11 @@ html, body {
 }
 
 .dict-slideshow-container.mobile-fullscreen-wide .slide-image-wrapper {
-  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
   height: 100% !important;
-  max-height: 100% !important;
+  width: auto !important;
   max-width: 100% !important;
-  aspect-ratio: auto !important;
+  max-height: 100% !important;
   border: none !important;
   border-radius: 8px !important;
   background: transparent !important;
@@ -612,10 +615,11 @@ html, body {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  position: relative !important;
 }
 
 .dict-slideshow-container.mobile-fullscreen-wide .slide-image-wrapper img {
-  width: auto !important;
+  width: 100% !important;
   height: 100% !important;
   max-width: 100% !important;
   max-height: 100% !important;
@@ -652,31 +656,31 @@ html, body {
    which maps to vy = 16.6%/50%/83.3% of screen height — exactly at
    left-column / center-column / right-column vertical positions on screen. */
 .dict-slideshow-container.mobile-fullscreen-wide .zoom-anchor-btn {
-  width: 18px !important;
-  height: 18px !important;
-  font-size: 0.55rem !important;
-  top: 12px !important;
-  opacity: 0.55 !important;
+  width: 20px !important;
+  height: 20px !important;
+  font-size: 0.58rem !important;
+  top: 10px !important;
+  opacity: 0.65 !important;
 }
 
 /* Keep horizontal (column) positions the same — they map correctly after rotation */
 .dict-slideshow-container.mobile-fullscreen-wide .zoom-anchor-btn.anchor-left {
-  top: 12px !important;
-  left: 16.6% !important;
+  top: 10px !important;
+  left: 16.666% !important;
   right: auto !important;
   transform: translateX(-50%) !important;
 }
 
 .dict-slideshow-container.mobile-fullscreen-wide .zoom-anchor-btn.anchor-center {
-  top: 12px !important;
+  top: 10px !important;
   left: 50% !important;
   right: auto !important;
   transform: translateX(-50%) !important;
 }
 
 .dict-slideshow-container.mobile-fullscreen-wide .zoom-anchor-btn.anchor-right {
-  top: 12px !important;
-  left: 83.4% !important;
+  top: 10px !important;
+  left: 83.333% !important;
   right: auto !important;
   transform: translateX(-50%) !important;
 }
