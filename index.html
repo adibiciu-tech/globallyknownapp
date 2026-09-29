@@ -598,68 +598,7 @@
             <!-- Mobile Drawer Backdrop for tapping outside drawer to close -->
             <div class="discord-drawer-backdrop" id="discord-drawer-backdrop"></div>
 
-            <!-- Col 1: Leftmost Server Rail (72px desktop / slides in mobile drawer) -->
-            <nav class="discord-server-rail" id="discord-server-rail" aria-label="Servers Rail">
-              <!-- Globally Known Hub (Home / DM icon) -->
-              <div class="server-rail-item active" data-server="main" title="Globally Known Official">
-                <div class="server-pill"></div>
-                <button class="server-icon-btn active" id="server-btn-gk" aria-label="Globally Known Server">
-                  <span class="server-icon-text">GK</span>
-                </button>
-              </div>
-
-              <div class="server-rail-divider"></div>
-
-              <!-- English Fluency Lab -->
-              <div class="server-rail-item" data-server="english-lab" title="English Comprehension Lab">
-                <div class="server-pill"></div>
-                <button class="server-icon-btn" aria-label="English Fluency Lab">
-                  <i class="fa-solid fa-graduation-cap"></i>
-                </button>
-              </div>
-
-              <!-- Accent & Pronunciation Lab -->
-              <div class="server-rail-item" data-server="accent-lab" title="Accent & Phonetics Guild">
-                <div class="server-pill"></div>
-                <button class="server-icon-btn" aria-label="Accent & Phonetics Guild">
-                  <i class="fa-solid fa-microphone-lines"></i>
-                </button>
-              </div>
-
-              <!-- Comprehensible Input Vault -->
-              <div class="server-rail-item" data-server="vault" title="Comprehensible Input Vault">
-                <div class="server-pill"></div>
-                <button class="server-icon-btn" aria-label="Comprehensible Input Vault">
-                  <i class="fa-solid fa-photo-film"></i>
-                </button>
-              </div>
-
-              <!-- SOL AI Nexus Hub -->
-              <div class="server-rail-item" data-server="nexus" title="SOL AI Engine">
-                <div class="server-pill"></div>
-                <button class="server-icon-btn" aria-label="SOL AI Engine">
-                  <i class="fa-solid fa-brain"></i>
-                </button>
-              </div>
-
-              <div class="server-rail-divider"></div>
-
-              <!-- Add a Server Button -->
-              <div class="server-rail-item" title="Add a Server">
-                <button class="server-icon-btn action-add" id="btn-discord-add-server" aria-label="Add a Server">
-                  <i class="fa-solid fa-plus"></i>
-                </button>
-              </div>
-
-              <!-- Explore Public Communities -->
-              <div class="server-rail-item" title="Explore Discoverable Servers">
-                <button class="server-icon-btn action-explore" id="btn-discord-explore" aria-label="Explore Servers">
-                  <i class="fa-solid fa-compass"></i>
-                </button>
-              </div>
-            </nav>
-
-            <!-- Col 2: Channels Sidebar (240px desktop / slides out on mobile) -->
+            <!-- Channels Sidebar (240px desktop / slides out on mobile) -->
             <aside class="discord-channels-sidebar" id="discord-channels-sidebar">
               <!-- Server Header Bar -->
               <header class="discord-server-header" id="discord-server-header-btn">
@@ -770,24 +709,25 @@
                   <button class="discord-user-icon-btn" id="btn-discord-deafen" title="Deafen/Undeafen Audio" aria-label="Headphones">
                     <i class="fa-solid fa-headphones"></i>
                   </button>
-                  <button class="discord-user-icon-btn" id="btn-discord-settings" title="Settings" aria-label="Settings" onclick="window.switchPanel('info')">
-                    <i class="fa-solid fa-gear"></i>
-                  </button>
                 </div>
               </footer>
             </aside>
 
-            <!-- Col 3: Main Chat & Message Stream Area -->
+            <!-- Col 2: Main Chat & Message Stream Area -->
             <section class="discord-chat-main">
               <!-- Chat Top Header Bar -->
               <header class="discord-chat-header">
                 <div class="chat-header-left">
-                  <!-- Mobile hamburger trigger to open channels drawer -->
-                  <button class="discord-mobile-hamburger" id="btn-discord-mobile-channels" aria-label="Toggle Channels">
+                  <!-- Mobile button to open OUR bar (sidebar with Sol, Globally Known, etc.) -->
+                  <button class="discord-mobile-hamburger" id="btn-discord-mobile-sidebar" aria-label="Open Navigation Bar" title="Open App Navigation">
                     <i class="fa-solid fa-bars"></i>
                   </button>
-                  <div class="chat-channel-symbol"><i class="fa-solid fa-bullhorn" id="circle-channel-icon"></i></div>
-                  <h2 class="chat-channel-heading" id="circle-channel-title"># announcements</h2>
+                  <!-- Channel title & mobile picker button -->
+                  <div class="chat-channel-title-wrap" id="btn-discord-mobile-channels" role="button" tabindex="0" title="Switch Channel">
+                    <div class="chat-channel-symbol"><i class="fa-solid fa-bullhorn" id="circle-channel-icon"></i></div>
+                    <h2 class="chat-channel-heading" id="circle-channel-title"># announcements</h2>
+                    <i class="fa-solid fa-chevron-down channel-picker-chevron"></i>
+                  </div>
                   <div class="chat-header-vseparator"></div>
                   <span class="chat-channel-subtopic" id="circle-channel-desc">Official updates and notices from the SOL Globally Known team.</span>
                 </div>

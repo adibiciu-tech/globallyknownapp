@@ -6651,125 +6651,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 }
 
 /* -------------------------------------------------------------
-   Column 1: Discord Left Server Rail (72px desktop)
-   ------------------------------------------------------------- */
-.discord-server-rail {
-  width: 72px;
-  min-width: 72px;
-  height: 100%;
-  background-color: #1e1f22; /* Discord server rail deepest dark */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 0;
-  gap: 8px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  z-index: 95;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.discord-server-rail::-webkit-scrollbar {
-  display: none;
-}
-
-.server-rail-item {
-  position: relative;
-  width: 72px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Discord Signature White Left Pill Indicator */
-.server-pill {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 0;
-  background-color: #ffffff;
-  border-radius: 0 4px 4px 0;
-  transition: height 0.18s ease;
-}
-
-.server-rail-item:hover .server-pill {
-  height: 20px;
-}
-
-.server-rail-item.active .server-pill {
-  height: 40px;
-}
-
-.server-icon-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 24px; /* Circle by default */
-  background-color: #313338;
-  color: #dbdee1;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 1.15rem;
-  font-weight: 700;
-  transition: border-radius 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-  position: relative;
-}
-
-.server-rail-item:hover .server-icon-btn {
-  border-radius: 16px; /* Discord Squircle on hover */
-  background-color: #c5a059;
-  color: #000000;
-}
-
-.server-rail-item.active .server-icon-btn {
-  border-radius: 16px;
-  background-color: #c5a059;
-  color: #000000;
-  box-shadow: 0 4px 14px rgba(197, 160, 89, 0.35);
-}
-
-.server-icon-text {
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.server-rail-divider {
-  width: 32px;
-  height: 2px;
-  background-color: #35363c;
-  border-radius: 1px;
-  margin: 4px 0;
-}
-
-.server-icon-btn.action-add {
-  color: #23a55a;
-  background-color: #313338;
-}
-
-.server-rail-item:hover .server-icon-btn.action-add {
-  background-color: #23a55a;
-  color: #ffffff;
-}
-
-.server-icon-btn.action-explore {
-  color: #23a55a;
-  background-color: #313338;
-}
-
-.server-rail-item:hover .server-icon-btn.action-explore {
-  background-color: #23a55a;
-  color: #ffffff;
-}
-
-/* -------------------------------------------------------------
-   Column 2: Discord Channels Sidebar (240px desktop)
+   Discord Channels Sidebar (240px desktop)
    ------------------------------------------------------------- */
 .discord-channels-sidebar {
   width: 240px;
@@ -7148,6 +7030,28 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   padding: 6px;
   margin-right: 4px;
   cursor: pointer;
+}
+
+.chat-channel-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 6px;
+  padding: 4px 6px;
+  transition: background-color 0.15s ease;
+}
+
+.chat-channel-title-wrap:hover {
+  background-color: #35373c;
+}
+
+.channel-picker-chevron {
+  font-size: 0.75rem;
+  color: #949ba4;
+  margin-left: 2px;
+  transition: transform 0.15s ease;
 }
 
 .chat-channel-symbol {

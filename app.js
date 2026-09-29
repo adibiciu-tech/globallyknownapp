@@ -2500,41 +2500,15 @@ function initCommunityPanel() {
     });
   }
 
-  // 2. Server Rail Selection
-  const serverRail = document.getElementById("discord-server-rail");
-  if (serverRail) {
-    serverRail.addEventListener("click", (e) => {
-      const item = e.target.closest(".server-rail-item");
-      if (!item) return;
-
-      const allRailItems = serverRail.querySelectorAll(".server-rail-item");
-      allRailItems.forEach(r => {
-        r.classList.remove("active");
-        const btn = r.querySelector(".server-icon-btn");
-        if (btn) btn.classList.remove("active");
-        const pill = r.querySelector(".server-pill");
-        if (pill) pill.classList.remove("active");
-      });
-
-      item.classList.add("active");
-      const iconBtn = item.querySelector(".server-icon-btn");
-      if (iconBtn) iconBtn.classList.add("active");
-      const pill = item.querySelector(".server-pill");
-      if (pill) pill.classList.add("active");
-
-      const serverType = item.getAttribute("data-server");
-      if (serverType === "english-lab") {
-        const ch = document.querySelector('.discord-channel-item[data-channel="english-inputs"]');
-        if (ch) ch.click();
-      } else if (serverType === "accent-lab") {
-        const ch = document.querySelector('.discord-channel-item[data-channel="voice-accent-lab"]');
-        if (ch) ch.click();
-      } else if (serverType === "nexus") {
-        const ch = document.querySelector('.discord-channel-item[data-channel="ask-sol-community"]');
-        if (ch) ch.click();
-      } else {
-        const ch = document.querySelector('.discord-channel-item[data-channel="announcements"]');
-        if (ch) ch.click();
+  // 2. Mobile Navigation to OUR App Sidebar
+  const btnMobileSidebar = document.getElementById("btn-discord-mobile-sidebar");
+  if (btnMobileSidebar) {
+    btnMobileSidebar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (container) container.classList.remove("mobile-channels-open", "mobile-members-open");
+      if (backdrop) backdrop.classList.remove("active");
+      if (typeof window.toggleMobileDrawer === "function") {
+        window.toggleMobileDrawer(true);
       }
     });
   }
@@ -2545,7 +2519,8 @@ function initCommunityPanel() {
   const membersSidebar = document.getElementById("discord-members-sidebar");
 
   if (btnMobileChannels && container) {
-    btnMobileChannels.addEventListener("click", () => {
+    btnMobileChannels.addEventListener("click", (e) => {
+      e.stopPropagation();
       const isOpen = container.classList.contains("mobile-channels-open");
       container.classList.remove("mobile-members-open");
       if (isOpen) {
