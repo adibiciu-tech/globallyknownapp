@@ -2432,12 +2432,10 @@ function renderDiscordUserBar() {
 
   const currentUser = getActiveUserProfile();
   let avatarHtml = "";
-  let userName = "Guest Learner";
-  let userTag = "#0001";
+  let userName = "Adrian M";
 
   if (currentUser) {
-    userName = currentUser.name || "Learner";
-    userTag = "#2026";
+    userName = currentUser.name || "Adrian M";
     if (currentUser.picture) {
       avatarHtml = `<img src="${escapeHtml(currentUser.picture)}" alt="${escapeHtml(userName)}">`;
     } else {
@@ -2448,13 +2446,15 @@ function renderDiscordUserBar() {
   }
 
   metaContainer.innerHTML = `
-    <div class="discord-card-avatar">
+    <div class="discord-card-avatar" style="width: 36px; height: 36px; border-radius: 50%; position: relative; background: #313338; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #c5a059; flex-shrink: 0;">
       ${avatarHtml}
-      <span class="discord-status-dot" title="Online"></span>
+      <span class="discord-status-dot" style="position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px; border-radius: 50%; background-color: #23a55a; border: 2px solid #ffffff;" title="Online"></span>
     </div>
-    <div class="discord-card-text">
-      <div class="discord-card-name">${escapeHtml(userName)}</div>
-      <div class="discord-card-sub">${escapeHtml(userTag)} • Online</div>
+    <div class="discord-card-text" style="overflow: hidden; min-width: 0; line-height: 1.25;">
+      <div class="discord-card-name" style="color: #1e1f22; font-size: 0.88rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px;">
+        ${escapeHtml(userName)} <span style="font-size: 0.7rem; color: #f59e0b; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); padding: 1px 4px; border-radius: 4px; font-weight: 700;">SAIL</span> <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; color: #5c5e66;"></i>
+      </div>
+      <div class="discord-card-sub" style="color: #5c5e66; font-size: 0.72rem; font-weight: 500;">Online</div>
     </div>
   `;
 }
@@ -2500,26 +2500,7 @@ function initCommunityPanel() {
     });
   }
 
-  // 2. Platform Navigation via White Discord Rail
-  const serverRail = document.getElementById("discord-server-rail");
-  if (serverRail) {
-    serverRail.addEventListener("click", (e) => {
-      const item = e.target.closest(".server-rail-item");
-      if (!item) return;
-
-      const panelId = item.getAttribute("data-panel");
-      if (panelId && typeof window.switchPanel === "function") {
-        if (panelId === "community") {
-          if (container) container.classList.remove("mobile-channels-open", "mobile-members-open");
-          if (backdrop) backdrop.classList.remove("active");
-          return;
-        }
-        window.switchPanel(panelId);
-      }
-    });
-  }
-
-  // 3. Mobile Hamburger & Channels Drawer
+  // 2. Mobile Hamburger & Channels Drawer
   const toggleChannelsDrawer = (e) => {
     if (e) e.stopPropagation();
     if (!container) return;
