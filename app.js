@@ -2534,6 +2534,9 @@ function initCommunityPanel() {
     });
   }
 
+  const btnToggleMembers = document.getElementById("btn-discord-toggle-members");
+  const membersSidebar = document.getElementById("discord-members-sidebar");
+
   if (btnToggleMembers) {
     btnToggleMembers.addEventListener("click", () => {
       const isMobile = window.innerWidth <= 850;
@@ -6239,6 +6242,9 @@ function checkActiveSession() {
   }
   renderSignInButton();
 }
+window.checkActiveSession = checkActiveSession;
+window.renderUserProfile = renderUserProfile;
+window.renderGuestProfile = renderGuestProfile;
 
 function renderGuestProfile() {
   const authContainer = document.getElementById("user-auth-container");
