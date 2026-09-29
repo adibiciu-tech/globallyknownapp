@@ -2110,52 +2110,21 @@ html, body {
     justify-content: center;
   }
 
-  /* White Platform Rail on Mobile: Slides in alongside Channels sidebar */
-  .discord-server-rail {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 64px;
-    min-width: 64px;
-    height: 100%;
-    z-index: 125;
-    transform: translateX(-100%);
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.35);
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-    background-color: #ffffff;
-    border-right: 1px solid #e2e8f0;
-  }
-
-  .discord-server-rail .server-rail-item {
-    width: 64px;
-    height: 46px;
-  }
-
-  .discord-server-rail .server-icon-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 1.05rem;
-  }
-
-  /* Channels Sidebar on Mobile: Positioned adjacent to server rail */
+  /* Channels Sidebar on Mobile: Slides in cleanly from left edge */
   .discord-channels-sidebar {
     position: absolute;
     top: 0;
-    left: 64px;
-    width: calc(100vw - 64px - 40px);
-    max-width: 280px;
+    left: 0;
+    width: 290px;
+    max-width: 85vw;
     height: 100%;
     z-index: 120;
-    transform: translateX(calc(-100% - 64px));
-    box-shadow: 6px 0 24px rgba(0, 0, 0, 0.5);
+    transform: translateX(-100%);
+    box-shadow: 6px 0 24px rgba(0, 0, 0, 0.6);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   /* When Left Channels Drawer is Open */
-  .discord-community-container.mobile-channels-open .discord-server-rail {
-    transform: translateX(0);
-  }
-
   .discord-community-container.mobile-channels-open .discord-channels-sidebar {
     transform: translateX(0);
   }

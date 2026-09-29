@@ -2500,48 +2500,37 @@ function initCommunityPanel() {
     });
   }
 
-  // 2. Platform Navigation via White Discord Rail
-  const serverRail = document.getElementById("discord-server-rail");
-  if (serverRail) {
-    serverRail.addEventListener("click", (e) => {
-      const item = e.target.closest(".server-rail-item");
-      if (!item) return;
-
-      const panelId = item.getAttribute("data-panel");
-      if (panelId && typeof window.switchPanel === "function") {
-        if (panelId === "community") {
-          if (container) container.classList.remove("mobile-channels-open", "mobile-members-open");
-          if (backdrop) backdrop.classList.remove("active");
-          return;
-        }
-        window.switchPanel(panelId);
+  // 2. Mobile Navigation to OUR App Sidebar
+  const btnMobileSidebar = document.getElementById("btn-discord-mobile-sidebar");
+  if (btnMobileSidebar) {
+    btnMobileSidebar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (container) container.classList.remove("mobile-channels-open", "mobile-members-open");
+      if (backdrop) backdrop.classList.remove("active");
+      if (typeof window.toggleMobileDrawer === "function") {
+        window.toggleMobileDrawer(true);
       }
     });
   }
 
-  // 3. Mobile Hamburger & Channels Drawer
-  const toggleChannelsDrawer = (e) => {
-    if (e) e.stopPropagation();
-    if (!container) return;
-    const isOpen = container.classList.contains("mobile-channels-open");
-    container.classList.remove("mobile-members-open");
-    if (isOpen) {
-      container.classList.remove("mobile-channels-open");
-      if (backdrop) backdrop.classList.remove("active");
-    } else {
-      container.classList.add("mobile-channels-open");
-      if (backdrop) backdrop.classList.add("active");
-    }
-  };
-
-  const btnMobileSidebar = document.getElementById("btn-discord-mobile-sidebar");
-  if (btnMobileSidebar) {
-    btnMobileSidebar.addEventListener("click", toggleChannelsDrawer);
-  }
-
+  // 3. Mobile Hamburger & Members Drawers
   const btnMobileChannels = document.getElementById("btn-discord-mobile-channels");
-  if (btnMobileChannels) {
-    btnMobileChannels.addEventListener("click", toggleChannelsDrawer);
+  const btnToggleMembers = document.getElementById("btn-discord-toggle-members");
+  const membersSidebar = document.getElementById("discord-members-sidebar");
+
+  if (btnMobileChannels && container) {
+    btnMobileChannels.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = container.classList.contains("mobile-channels-open");
+      container.classList.remove("mobile-members-open");
+      if (isOpen) {
+        container.classList.remove("mobile-channels-open");
+        if (backdrop) backdrop.classList.remove("active");
+      } else {
+        container.classList.add("mobile-channels-open");
+        if (backdrop) backdrop.classList.add("active");
+      }
+    });
   }
 
   if (btnToggleMembers) {
