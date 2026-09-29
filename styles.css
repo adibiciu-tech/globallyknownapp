@@ -1155,9 +1155,11 @@ body {
   background: transparent;
   border: none;
   color: #64748b;
-  font-size: 0.95rem;
-  padding: 5px 6px;
-  border-radius: 6px;
+  font-size: 1.05rem;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1170,14 +1172,7 @@ body {
 .sidebar-footer .profile-gear-btn:hover {
   background: rgba(0, 0, 0, 0.08);
   color: #18181b;
-  transform: rotate(25deg);
-}
-
-.sidebar-footer .profile-menu-dots {
-  font-size: 0.85rem;
-  color: #64748b;
-  flex-shrink: 0;
-  padding: 2px;
+  transform: rotate(30deg);
 }
 
 .sidebar.collapsed .sidebar-footer .profile-gear-btn {
@@ -1234,7 +1229,6 @@ body {
 }
 
 .sidebar.collapsed .sidebar-footer .user-profile-text-group,
-.sidebar.collapsed .sidebar-footer .profile-menu-dots,
 .sidebar.collapsed .sidebar-footer .user-profile-badge,
 .sidebar.collapsed .sidebar-footer .google-login-btn span,
 .sidebar.collapsed .sidebar-footer .guest-user-chip span,

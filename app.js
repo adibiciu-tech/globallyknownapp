@@ -6447,10 +6447,9 @@ function renderUserProfile(user) {
         <span class="google-user-name">${firstName}</span>
         <span class="user-profile-badge">${roleLabel}</span>
       </div>
-      <button type="button" class="profile-gear-btn" id="btn-quick-settings" title="Info / Settings">
+      <button type="button" class="profile-gear-btn" id="btn-quick-settings" title="Settings & Options">
         <i class="fa-solid fa-gear"></i>
       </button>
-      <i class="fa-solid fa-ellipsis-vertical profile-menu-dots"></i>
 
       <!-- Profile Dropdown Menu -->
       <div class="user-profile-dropdown hidden" id="user-profile-dropdown">
@@ -6490,7 +6489,13 @@ function renderUserProfile(user) {
     if (backdrop && window.innerWidth <= 900) backdrop.click();
   };
 
-  if (quickSettingsBtn) quickSettingsBtn.addEventListener("click", openSettings);
+  // Clicking the gear on the profile chip toggles the user dropdown menu
+  if (quickSettingsBtn) {
+    quickSettingsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (dropdown) dropdown.classList.toggle("hidden");
+    });
+  }
   if (dropdownSettingsBtn) dropdownSettingsBtn.addEventListener("click", openSettings);
 
   if (chip && dropdown) {

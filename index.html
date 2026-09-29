@@ -160,43 +160,6 @@
           <div class="model-badge" id="header-model-badge">
             <i class="fa-solid fa-brain"></i> SOL Engine
           </div>
-          <div class="theme-picker-wrapper">
-            <button class="header-btn" id="theme-toggle-btn" onclick="window.toggleThemeDropdown(event)" title="Select Color Theme">
-              <i class="fa-solid fa-palette"></i>
-            </button>
-            
-            <div class="theme-dropdown-menu hidden" id="theme-dropdown-menu">
-              <div class="theme-menu-title">Select Color Theme</div>
-              <button class="theme-option-btn active" data-theme-val="dark">
-                <span class="theme-color-dot" style="background: #f6ca21;"></span>
-                <span>Sol Amber</span>
-              </button>
-              <button class="theme-option-btn" data-theme-val="cyan">
-                <span class="theme-color-dot" style="background: #06b6d4;"></span>
-                <span>Cyber Cyan</span>
-              </button>
-              <button class="theme-option-btn" data-theme-val="emerald">
-                <span class="theme-color-dot" style="background: #10b981;"></span>
-                <span>Emerald Mint</span>
-              </button>
-              <button class="theme-option-btn" data-theme-val="purple">
-                <span class="theme-color-dot" style="background: #c084fc;"></span>
-                <span>Amethyst Violet</span>
-              </button>
-              <button class="theme-option-btn" data-theme-val="crimson">
-                <span class="theme-color-dot" style="background: #f43f5e;"></span>
-                <span>Crimson Sunset</span>
-              </button>
-              <button class="theme-option-btn" data-theme-val="rainbow">
-                <span class="theme-color-dot" style="background: linear-gradient(135deg, #ff007f, #ffeb00, #00e5ff);"></span>
-                <span>Spectrum Rainbow</span>
-              </button>
-              <button class="theme-option-btn" data-theme-val="light">
-                <span class="theme-color-dot" style="background: #e2e8f0; border: 1px solid #94a3b8;"></span>
-                <span>Minimal Light</span>
-              </button>
-            </div>
-          </div>
         </div>
       </header>
 
@@ -1765,46 +1728,16 @@
             <!-- Dynamic Inline Spoken Conversation Feed -->
             <div class="gemini-home-conversation" id="output-home-conversation"></div>
           </div>
-
-          </div>
         </div>
 
         <!-- 8. Panel: Info / Settings -->
         <div class="workspace-panel" id="panel-info">
           <div class="panel-section">
             <h2>⚙️ SOL Configurations & Settings</h2>
-            <p class="section-subtitle">Manage your local storage API Key credentials and clear workspaces.</p>
+            <p class="section-subtitle">Manage your appearance themes, Gemini AI Key credentials, and workspace settings.</p>
 
-            <div class="settings-card">
-              <div class="setting-group">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
-                  <label for="api-key-input" class="setting-label" style="margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-brain" style="color: #10b981;"></i> Google Gemini AI Engine Key
-                    <span id="top-ai-badge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600;">Checking...</span>
-                  </label>
-                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="font-size: 0.8rem; color: #38bdf8; text-decoration: none;">
-                    Get Free Google Key <i class="fa-solid fa-external-link-alt"></i>
-                  </a>
-                </div>
-                <div class="api-input-wrapper">
-                  <input type="password" id="api-key-input" name="api-key-input" placeholder="Paste Gemini API Key (AIzaSy... or AQ...)" autocomplete="off">
-                  <button type="button" class="toggle-password-btn" id="toggle-password-btn">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </div>
-                <p class="setting-help">
-                  Paste your Google Gemini API Key here. Saving this activates live <strong>Gemini 3.6 Flash</strong> conversational intelligence across <strong>all your devices, mobile phones, and guest sessions</strong> with 0 setup required on mobile.
-                </p>
-              </div>
-
-              <div class="settings-actions-footer">
-                <button class="primary-btn" id="save-settings-btn" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
-                  <i class="fa-solid fa-bolt"></i> Save & Activate Platform AI
-                </button>
-              </div>
-            </div>
-
-            <div class="settings-card">
+            <!-- 1. Appearance & Color Themes -->
+            <div class="settings-card" id="settings-appearance-card">
               <h3>🎨 Appearance & Color Themes</h3>
               <p class="setting-desc">Customize your SOL workspace color palette, glowing aura, and interface accent colors.</p>
               
@@ -1850,6 +1783,36 @@
                     <span class="swatch-dot" style="background: #ca9e0d;"></span>
                   </div>
                   <span>Minimal Light</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Google Gemini AI Engine Key -->
+            <div class="settings-card">
+              <div class="setting-group">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
+                  <label for="api-key-input" class="setting-label" style="margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-brain" style="color: #10b981;"></i> Google Gemini AI Engine Key
+                    <span id="top-ai-badge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600;">Checking...</span>
+                  </label>
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="font-size: 0.8rem; color: #38bdf8; text-decoration: none;">
+                    Get Free Google Key <i class="fa-solid fa-external-link-alt"></i>
+                  </a>
+                </div>
+                <div class="api-input-wrapper">
+                  <input type="password" id="api-key-input" name="api-key-input" placeholder="Paste Gemini API Key (AIzaSy... or AQ...)" autocomplete="off">
+                  <button type="button" class="toggle-password-btn" id="toggle-password-btn">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+                <p class="setting-help">
+                  Paste your Google Gemini API Key here. Saving this activates live <strong>Gemini 3.6 Flash</strong> conversational intelligence across <strong>all your devices, mobile phones, and guest sessions</strong> with 0 setup required on mobile.
+                </p>
+              </div>
+
+              <div class="settings-actions-footer">
+                <button class="primary-btn" id="save-settings-btn" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
+                  <i class="fa-solid fa-bolt"></i> Save & Activate Platform AI
                 </button>
               </div>
             </div>
