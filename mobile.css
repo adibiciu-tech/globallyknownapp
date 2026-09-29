@@ -155,11 +155,6 @@ html, body {
   display: flex !important;
 }
 
-.sidebar.collapsed .status-text,
-.sidebar .status-text {
-  display: inline !important;
-}
-
 .sidebar-backdrop {
   display: none;
   position: fixed;
@@ -261,7 +256,7 @@ html, body {
 }
 
 /* Compact header buttons on mobile */
-.install-app-btn .install-text,
+.chat-header .install-app-btn .install-text,
 .train-agent-btn .train-btn-text,
 #admin-toggle-text {
   display: none !important;

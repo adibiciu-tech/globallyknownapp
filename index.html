@@ -133,12 +133,9 @@
         </ul>
       </nav>
 
-      <!-- Sidebar Footer API Status -->
+      <!-- Sidebar Footer User Account Area -->
       <div class="sidebar-footer">
-        <div class="api-status-badge" id="api-status-badge">
-          <span class="status-dot warning"></span>
-          <span class="status-text">Demo Mode</span>
-        </div>
+        <div class="user-auth-container" id="user-auth-container"></div>
       </div>
     </aside>
 
@@ -159,18 +156,10 @@
         </div>
 
         <div class="header-actions">
-          <!-- PWA Install App Button -->
-          <button class="header-btn install-app-btn" id="btn-install-pwa" title="Install App on Desktop or Mobile">
-            <i class="fa-solid fa-download"></i> <span class="install-text">Install App</span>
-          </button>
-
           <!-- Admin Access Control Button -->
           <button class="header-btn admin-toggle-btn" id="btn-admin-toggle" title="Admin Edit Access Control">
             <i class="fa-solid fa-lock" id="admin-lock-icon"></i> <span id="admin-toggle-text">Viewer Mode</span>
           </button>
-
-          <!-- Google Auth Container -->
-          <div class="user-auth-container" id="user-auth-container"></div>
 
           <!-- Train Sol Agent Button -->
           <button class="header-btn train-agent-btn" id="btn-open-training" title="Train Sol AI Agent">
@@ -1740,6 +1729,31 @@
                     </button>
                     <span style="font-size: 0.78rem; color: #94a3b8; align-self: center;">Scan QR code with your phone camera</span>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Install App (PWA) Card -->
+            <div class="settings-card install-pwa-card" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.05);">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <i class="fa-solid fa-download" style="font-size: 1.35rem; color: #818cf8;"></i>
+                  <h3 style="margin: 0; font-size: 1.15rem; color: #ffffff;">Install Globally Known App</h3>
+                </div>
+                <span id="pwa-install-status" style="font-size: 0.76rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px; background: rgba(129, 140, 248, 0.15); border: 1px solid rgba(129, 140, 248, 0.3); color: #818cf8;">
+                  Standalone App
+                </span>
+              </div>
+              <p class="setting-desc" style="color: #cbd5e1; margin-bottom: 1rem;">
+                Install Globally Known directly onto your device (iPhone, iPad, Android, Windows, or Mac) for a fast, standalone fullscreen experience without browser toolbars.
+              </p>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; background: rgba(0, 0, 0, 0.35); padding: 1.25rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <button type="button" class="primary-btn pwa-settings-btn" id="btn-install-pwa" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; padding: 0.72rem 1.4rem; font-size: 0.92rem; font-weight: 700; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: #ffffff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4); white-space: nowrap;">
+                  <i class="fa-solid fa-download"></i> <span>Install App Now</span>
+                </button>
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4; flex: 1; min-width: 220px;">
+                  <strong>Mobile tip:</strong> On iPhone/Safari, tap Share (<i class="fa-solid fa-arrow-up-from-bracket"></i>) → <em>Add to Home Screen</em>. On Android/Chrome, tap menu (⋮) → <em>Install app</em>.
                 </div>
               </div>
             </div>

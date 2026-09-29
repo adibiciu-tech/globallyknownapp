@@ -1076,60 +1076,158 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Sidebar Footer */
+/* Sidebar Footer - User Account Area */
 .sidebar-footer {
-  padding: 1.25rem 1rem;
+  padding: 0.75rem 0.85rem;
   border-top: 1px solid #c7c7cc;
   background-color: #d8d8dd;          /* Apple-style footer gray */
-}
-
-.sidebar.collapsed .sidebar-footer {
-  padding: 1rem 0.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.sidebar.collapsed .api-status-badge {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  justify-content: center;
-  border-radius: 50%;
-}
-
-.sidebar.collapsed .status-text {
-  display: none;
-}
-
-.api-status-badge {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  background-color: #000000;          /* Black badge */
-  border: 1px solid #c7c7cc;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #ffffff;
-  white-space: nowrap;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
+.sidebar-footer .user-auth-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-footer .google-user-profile {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #ffffff;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-footer .google-user-profile:hover {
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.16);
+}
+
+.sidebar-footer .google-user-avatar {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  object-fit: cover;
   flex-shrink: 0;
 }
 
-.status-dot.success {
-  background-color: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+.sidebar-footer .user-profile-text-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
 }
 
-.status-dot.warning {
-  background-color: var(--accent-yellow);
-  box-shadow: 0 0 8px rgba(250, 204, 21, 0.8);
+.sidebar-footer .google-user-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-footer .user-profile-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.12);
+  color: #4f46e5;
+  border: 1px solid rgba(79, 70, 229, 0.25);
+  text-transform: uppercase;
+  width: fit-content;
+  margin-left: 0;
+}
+
+.sidebar-footer .profile-menu-dots {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* User profile dropdown inside sidebar opens UPWARD */
+.sidebar-footer .user-profile-dropdown {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  top: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-width: 220px;
+  box-sizing: border-box;
+  background: #181c26;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.5);
+  padding: 0.5rem;
+  z-index: 999999;
+}
+
+.sidebar-footer .guest-user-chip {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  padding: 0.45rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.sidebar-footer .google-login-btn {
+  width: 100% !important;
+  justify-content: center;
+  height: 38px !important;
+  border-radius: 10px !important;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Collapsed sidebar adjustments on desktop */
+.sidebar.collapsed .sidebar-footer {
+  padding: 0.75rem 0.4rem;
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-footer .user-profile-text-group,
+.sidebar.collapsed .sidebar-footer .profile-menu-dots,
+.sidebar.collapsed .sidebar-footer .user-profile-badge,
+.sidebar.collapsed .sidebar-footer .google-login-btn span,
+.sidebar.collapsed .sidebar-footer .guest-user-chip span,
+.sidebar.collapsed .sidebar-footer .guest-user-chip .header-login-prompt-btn {
+  display: none !important;
+}
+
+.sidebar.collapsed .sidebar-footer .google-user-profile {
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+}
+
+.sidebar.collapsed .sidebar-footer .user-profile-dropdown {
+  left: 10px;
+  right: auto;
+  width: 210px;
 }
 
 /* -------------------------------------------------------------

@@ -5679,9 +5679,8 @@ function initPwaInstall() {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPwaPrompt = e;
-    if (installBtn) {
-      installBtn.style.display = "flex";
-    }
+    const statusText = document.getElementById("pwa-install-status");
+    if (statusText) statusText.textContent = "Ready to Install";
   });
 
   if (installBtn) {
@@ -5690,11 +5689,13 @@ function initPwaInstall() {
         deferredPwaPrompt.prompt();
         const { outcome } = await deferredPwaPrompt.userChoice;
         if (outcome === "accepted") {
-          installBtn.style.display = "none";
+          if (typeof showToast === "function") showToast("🎉 App installed successfully!");
+          const statusText = document.getElementById("pwa-install-status");
+          if (statusText) statusText.textContent = "Installed";
         }
         deferredPwaPrompt = null;
       } else {
-        alert("📲 How to Install SOL App:\n\n1. On Desktop (Chrome/Edge): Click the ⊕ / Install App button in your top header or address bar.\n2. On Mobile (Chrome/Safari): Tap browser menu (⋮ or Share) and select 'Add to Home Screen'.");
+        alert("📲 How to Install Globally Known App:\n\n1. On Desktop (Chrome/Edge): Look for the ⊕ / Install App icon in your browser address bar.\n2. On Android (Chrome): Tap browser menu (⋮) and select 'Install app' or 'Add to Home Screen'.\n3. On iPhone/iPad (Safari): Tap the Share button at the bottom (or top) and select 'Add to Home Screen'.");
       }
     });
   }
@@ -5962,8 +5963,10 @@ function renderGuestProfile() {
   if (!authContainer) return;
   authContainer.innerHTML = `
     <div class="guest-user-chip" id="guest-profile-chip" title="Browsing in Guest Preview Mode">
-      <i class="fa-solid fa-compass" style="color:var(--accent-color, #4f46e5);"></i>
-      <span>Guest</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <i class="fa-solid fa-circle-user" style="color:var(--accent-color, #4f46e5); font-size:1.15rem;"></i>
+        <span style="font-weight:700; font-size:0.84rem; color:#18181b;">Guest User</span>
+      </div>
       <button type="button" class="header-login-prompt-btn" id="btn-guest-sign-in" title="Sign In or Create Account">Sign In</button>
     </div>
   `;
@@ -6069,9 +6072,11 @@ function renderUserProfile(user) {
   authContainer.innerHTML = `
     <div class="google-user-profile" id="user-profile-chip" title="Account: ${escapeHtml(user.email || "")}">
       <img src="${avatarUrl}" alt="${escapeHtml(user.name || "")}" class="google-user-avatar">
-      <span class="google-user-name">${firstName}</span>
-      <span class="user-profile-badge">${roleLabel}</span>
-      <i class="fa-solid fa-chevron-down" style="font-size:0.65rem; color:#94a3b8; margin-left:2px;"></i>
+      <div class="user-profile-text-group">
+        <span class="google-user-name">${firstName}</span>
+        <span class="user-profile-badge">${roleLabel}</span>
+      </div>
+      <i class="fa-solid fa-ellipsis-vertical profile-menu-dots"></i>
 
       <!-- Profile Dropdown Menu -->
       <div class="user-profile-dropdown hidden" id="user-profile-dropdown">
