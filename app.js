@@ -3164,30 +3164,54 @@ function initDictionaryPanel() {
       if (rightIcon) rightIcon.className = "fa-solid fa-chevron-right";
 
       if (currentZoomedColumn === "left") {
-        if (btnAnchorLeft) btnAnchorLeft.style.display = "none";
+        if (btnAnchorLeft) {
+          // On Left column: show left arrow to go to previous slide if available
+          if (currentSlideIdx > 1) {
+            btnAnchorLeft.style.display = "flex";
+            btnAnchorLeft.style.opacity = "";
+            btnAnchorLeft.style.pointerEvents = "auto";
+            btnAnchorLeft.title = "Previous Slide";
+          } else {
+            btnAnchorLeft.style.display = "none";
+          }
+        }
         if (btnAnchorRight) {
           btnAnchorRight.style.display = "flex";
           btnAnchorRight.style.opacity = "";
           btnAnchorRight.style.pointerEvents = "auto";
+          btnAnchorRight.title = "Next Column";
         }
       } else if (currentZoomedColumn === "center") {
         if (btnAnchorLeft) {
           btnAnchorLeft.style.display = "flex";
           btnAnchorLeft.style.opacity = "";
           btnAnchorLeft.style.pointerEvents = "auto";
+          btnAnchorLeft.title = "Previous Column";
         }
         if (btnAnchorRight) {
           btnAnchorRight.style.display = "flex";
           btnAnchorRight.style.opacity = "";
           btnAnchorRight.style.pointerEvents = "auto";
+          btnAnchorRight.title = "Next Column";
         }
       } else if (currentZoomedColumn === "right") {
         if (btnAnchorLeft) {
           btnAnchorLeft.style.display = "flex";
           btnAnchorLeft.style.opacity = "";
           btnAnchorLeft.style.pointerEvents = "auto";
+          btnAnchorLeft.title = "Previous Column";
         }
-        if (btnAnchorRight) btnAnchorRight.style.display = "none";
+        if (btnAnchorRight) {
+          // On Right column: show right arrow to go to next slide if available
+          if (currentSlideIdx < maxSlides) {
+            btnAnchorRight.style.display = "flex";
+            btnAnchorRight.style.opacity = "";
+            btnAnchorRight.style.pointerEvents = "auto";
+            btnAnchorRight.title = "Next Slide";
+          } else {
+            btnAnchorRight.style.display = "none";
+          }
+        }
       }
       return;
     }
@@ -3216,20 +3240,32 @@ function initDictionaryPanel() {
       // Always hide Center button when zoomed in
       if (btnAnchorCenter) { btnAnchorCenter.style.opacity = "0"; btnAnchorCenter.style.pointerEvents = "none"; }
 
-      // Centered on Left Column: hide Left button, show Right button
+      // Centered on Left Column: show Left button (for prev slide) if currentSlideIdx > 1, show Right button
       if (activeX > limitX * 0.35) {
-        if (btnAnchorLeft) { btnAnchorLeft.style.opacity = "0"; btnAnchorLeft.style.pointerEvents = "none"; }
-        if (btnAnchorRight) { btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; }
+        if (btnAnchorLeft) {
+          if (currentSlideIdx > 1) {
+            btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; btnAnchorLeft.title = "Previous Slide";
+          } else {
+            btnAnchorLeft.style.opacity = "0"; btnAnchorLeft.style.pointerEvents = "none";
+          }
+        }
+        if (btnAnchorRight) { btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; btnAnchorRight.title = "Next Column"; }
       } 
-      // Centered on Right Column: hide Right button, show Left button
+      // Centered on Right Column: show Right button (for next slide) if currentSlideIdx < maxSlides, show Left button
       else if (activeX < -limitX * 0.35) {
-        if (btnAnchorRight) { btnAnchorRight.style.opacity = "0"; btnAnchorRight.style.pointerEvents = "none"; }
-        if (btnAnchorLeft) { btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; }
+        if (btnAnchorRight) {
+          if (currentSlideIdx < maxSlides) {
+            btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; btnAnchorRight.title = "Next Slide";
+          } else {
+            btnAnchorRight.style.opacity = "0"; btnAnchorRight.style.pointerEvents = "none";
+          }
+        }
+        if (btnAnchorLeft) { btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; btnAnchorLeft.title = "Previous Column"; }
       } 
       // Centered on Center Column: show both Left and Right buttons
       else {
-        if (btnAnchorLeft) { btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; }
-        if (btnAnchorRight) { btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; }
+        if (btnAnchorLeft) { btnAnchorLeft.style.opacity = ""; btnAnchorLeft.style.pointerEvents = ""; btnAnchorLeft.title = "Previous Column"; }
+        if (btnAnchorRight) { btnAnchorRight.style.opacity = ""; btnAnchorRight.style.pointerEvents = ""; btnAnchorRight.title = "Next Column"; }
       }
     } else {
       if (btnAnchorLeft) { btnAnchorLeft.style.opacity = "0"; btnAnchorLeft.style.pointerEvents = "none"; }
@@ -3662,8 +3698,16 @@ function initDictionaryPanel() {
         if (isMobile && isZoomed) {
           if (currentZoomedColumn === "right") {
             snapToAnchor("center");
-          } else {
+          } else if (currentZoomedColumn === "center") {
             snapToAnchor("left");
+          } else if (currentZoomedColumn === "left") {
+            // On Left Column -> go to PREVIOUS slide viewed normally (not zoomed in)
+            if (currentSlideIdx > 1) {
+              currentSlideIdx--;
+              updateSlideDisplay(); // Automatically calls resetZoom() so viewed normally
+              scrollPanelToTop();
+              return;
+            }
           }
         } else if (!isZoomed) {
           snapToAnchor("left");
@@ -3672,8 +3716,16 @@ function initDictionaryPanel() {
           const limitX = (width * currentScale - width) / 2;
           if (currentTranslateX < -limitX * 0.35) {
             snapToAnchor("center");
-          } else {
+          } else if (currentTranslateX < limitX * 0.35) {
             snapToAnchor("left");
+          } else {
+            // Already at leftmost on desktop -> go to PREVIOUS slide normally
+            if (currentSlideIdx > 1) {
+              currentSlideIdx--;
+              updateSlideDisplay();
+              scrollPanelToTop();
+              return;
+            }
           }
         }
         scrollPanelToTop();
@@ -3695,8 +3747,16 @@ function initDictionaryPanel() {
         if (isMobile && isZoomed) {
           if (currentZoomedColumn === "left") {
             snapToAnchor("center");
-          } else {
+          } else if (currentZoomedColumn === "center") {
             snapToAnchor("right");
+          } else if (currentZoomedColumn === "right") {
+            // On Right Column -> go to NEXT slide viewed normally (not zoomed in)
+            if (currentSlideIdx < maxSlides) {
+              currentSlideIdx++;
+              updateSlideDisplay(); // Automatically calls resetZoom() so viewed normally
+              scrollPanelToTop();
+              return;
+            }
           }
         } else if (!isZoomed) {
           snapToAnchor("right");
@@ -3705,8 +3765,16 @@ function initDictionaryPanel() {
           const limitX = (width * currentScale - width) / 2;
           if (currentTranslateX > limitX * 0.35) {
             snapToAnchor("center");
-          } else {
+          } else if (currentTranslateX > -limitX * 0.35) {
             snapToAnchor("right");
+          } else {
+            // Already at rightmost on desktop -> go to NEXT slide normally
+            if (currentSlideIdx < maxSlides) {
+              currentSlideIdx++;
+              updateSlideDisplay();
+              scrollPanelToTop();
+              return;
+            }
           }
         }
         scrollPanelToTop();
@@ -3737,17 +3805,27 @@ function initDictionaryPanel() {
         const diffX = e.changedTouches[0].clientX - touchStartX;
         const diffY = e.changedTouches[0].clientY - touchStartY;
 
-        // In Zoomed mode: swipe across columns
+        // In Zoomed mode: swipe across columns or flip slide at edges
         if (isZoomed) {
           if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
             if (diffX < 0) {
-              // Swipe left -> next column
+              // Swipe left -> next column or next slide normally if on right column
               if (currentZoomedColumn === "left") snapToAnchor("center");
               else if (currentZoomedColumn === "center") snapToAnchor("right");
+              else if (currentZoomedColumn === "right" && currentSlideIdx < maxSlides) {
+                currentSlideIdx++;
+                updateSlideDisplay();
+                scrollPanelToTop();
+              }
             } else {
-              // Swipe right -> prev column
+              // Swipe right -> prev column or prev slide normally if on left column
               if (currentZoomedColumn === "right") snapToAnchor("center");
               else if (currentZoomedColumn === "center") snapToAnchor("left");
+              else if (currentZoomedColumn === "left" && currentSlideIdx > 1) {
+                currentSlideIdx--;
+                updateSlideDisplay();
+                scrollPanelToTop();
+              }
             }
           }
           return;
