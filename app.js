@@ -2378,6 +2378,14 @@ window.switchPanel = function(panelId) {
   }
   // 5. Special Panel Trigger Callbacks
   if (panelId === "community") {
+    // When switching to Community on mobile, ensure we always land on Screen 1 (Channels screen)
+    const communityContainer = document.querySelector(".discord-community-container");
+    if (communityContainer) {
+      communityContainer.classList.remove("mobile-chat-open", "mobile-channels-open", "mobile-members-open");
+    }
+    const discordBackdrop = document.getElementById("discord-drawer-backdrop");
+    if (discordBackdrop) discordBackdrop.classList.remove("active");
+
     if (typeof renderDiscordUserBar === "function") renderDiscordUserBar();
     if (typeof renderCircleFeed === "function") renderCircleFeed();
     if (typeof renderCircleMembersWidget === "function") renderCircleMembersWidget();
@@ -2492,37 +2500,38 @@ function initCommunityPanel() {
       if (iconEl) iconEl.className = `fa-solid ${meta.icon || 'fa-hashtag'}`;
       if (quickInput) quickInput.placeholder = `Message #${meta.title}...`;
 
-      // Close mobile drawer on channel select
-      if (container) container.classList.remove("mobile-channels-open", "mobile-members-open");
+      // Open Chat Screen on Mobile (Screen 2)
+      if (container) {
+        container.classList.add("mobile-chat-open");
+        container.classList.remove("mobile-channels-open", "mobile-members-open");
+      }
       if (backdrop) backdrop.classList.remove("active");
 
       renderCircleFeed();
     });
   }
 
-  // 2. Mobile Hamburger & Channels Drawer
-  const toggleChannelsDrawer = (e) => {
-    if (e) e.stopPropagation();
-    if (!container) return;
-    const isOpen = container.classList.contains("mobile-channels-open");
-    container.classList.remove("mobile-members-open");
-    if (isOpen) {
-      container.classList.remove("mobile-channels-open");
+  // 2. Mobile Back Button (Arrow): Return to Screen 1 (Channels screen)
+  const btnMobileBack = document.getElementById("btn-discord-mobile-back");
+  if (btnMobileBack) {
+    btnMobileBack.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (container) {
+        container.classList.remove("mobile-chat-open", "mobile-members-open");
+      }
       if (backdrop) backdrop.classList.remove("active");
-    } else {
-      container.classList.add("mobile-channels-open");
-      if (backdrop) backdrop.classList.add("active");
-    }
-  };
-
-  const btnMobileSidebar = document.getElementById("btn-discord-mobile-sidebar");
-  if (btnMobileSidebar) {
-    btnMobileSidebar.addEventListener("click", toggleChannelsDrawer);
+    });
   }
 
   const btnMobileChannels = document.getElementById("btn-discord-mobile-channels");
   if (btnMobileChannels) {
-    btnMobileChannels.addEventListener("click", toggleChannelsDrawer);
+    btnMobileChannels.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (container && window.innerWidth <= 850) {
+        container.classList.remove("mobile-chat-open", "mobile-members-open");
+        if (backdrop) backdrop.classList.remove("active");
+      }
+    });
   }
 
   if (btnToggleMembers) {

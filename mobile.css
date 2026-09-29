@@ -2103,35 +2103,50 @@ html, body {
     overflow: hidden;
   }
 
-  /* Show mobile hamburger on phone */
+  /* Show mobile back button in chat header on phone */
+  .discord-mobile-back-btn,
   .discord-mobile-hamburger {
     display: flex !important;
     align-items: center;
     justify-content: center;
   }
 
-  /* Channels Sidebar on Mobile: Slides in cleanly from left edge (left: 0) */
+  /* Screen 1 on Mobile: Channels Screen (First screen displayed when Community tab is clicked) */
   .discord-channels-sidebar {
     position: absolute;
     top: 0;
     left: 0;
-    width: 320px;
-    max-width: 86vw;
+    width: 100% !important;
+    max-width: 100% !important;
     height: 100%;
-    z-index: 120;
-    transform: translateX(-100%);
-    box-shadow: 6px 0 24px rgba(0, 0, 0, 0.35);
+    z-index: 10;
+    transform: translateX(0);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    box-shadow: none;
+    border-right: none;
+  }
+
+  /* Screen 2 on Mobile: Chat Screen (Off-screen by default; slides in when channel tapped) */
+  .discord-chat-main {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100%;
+    z-index: 20;
+    transform: translateX(100%);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* When Left Channels Drawer is Open */
-  .discord-community-container.mobile-channels-open .discord-channels-sidebar {
+  /* When inside Chat on Mobile */
+  .discord-community-container.mobile-chat-open .discord-chat-main {
     transform: translateX(0);
   }
 
-  .discord-community-container.mobile-channels-open .discord-drawer-backdrop {
-    opacity: 1;
-    pointer-events: auto;
+  .discord-community-container.mobile-chat-open .discord-channels-sidebar {
+    transform: translateX(-20%);
+    opacity: 0.6;
+    pointer-events: none;
   }
 
   /* Members Sidebar on Mobile: Slides in from the right */

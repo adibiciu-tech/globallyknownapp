@@ -7387,15 +7387,27 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   min-width: 0;
 }
 
-.discord-mobile-hamburger {
+.discord-mobile-hamburger,
+.discord-mobile-back-btn {
   display: none; /* Desktop hidden */
   background: none;
   border: none;
   color: #dbdee1;
   font-size: 1.15rem;
   padding: 6px;
-  margin-right: 4px;
+  margin-right: 6px;
   cursor: pointer;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.discord-mobile-back-btn:hover {
+  background-color: #35373c;
+  color: #ffffff;
 }
 
 .chat-channel-title-wrap {
