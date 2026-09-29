@@ -5938,11 +5938,21 @@ function applyTheme(themeName) {
   document.documentElement.setAttribute("data-theme", currentTheme);
   localStorage.setItem("sol_theme", currentTheme);
 
-  // Update active state in header dropdown
-  const headerOptions = document.querySelectorAll(".theme-option-btn");
-  headerOptions.forEach(opt => {
-    opt.classList.toggle("active", opt.getAttribute("data-theme-val") === currentTheme);
-  });
+  // Sync mobile browser / system status bar color
+  const themeColors = {
+    dark: "#000000",
+    cyan: "#030712",
+    emerald: "#022c22",
+    purple: "#090514",
+    crimson: "#110507",
+    rainbow: "#000000",
+    light: "#ffffff"
+  };
+  const statusColor = themeColors[currentTheme] || "#000000";
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) {
+    metaTheme.setAttribute("content", statusColor);
+  }
 
   // Update active state in settings swatches grid
   const swatchCards = document.querySelectorAll(".theme-swatch-card");

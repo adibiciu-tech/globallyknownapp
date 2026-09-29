@@ -10,9 +10,29 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="app-icon.png">
   <link rel="apple-touch-icon" href="app-icon.png">
-  <meta name="theme-color" content="#4f46e5">
+  <meta name="theme-color" id="app-theme-color-meta" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('sol_theme') || 'dark';
+        var themeColors = {
+          dark: '#000000',
+          cyan: '#030712',
+          emerald: '#022c22',
+          purple: '#090514',
+          crimson: '#110507',
+          rainbow: '#000000',
+          light: '#ffffff'
+        };
+        var color = themeColors[t] || '#000000';
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.setAttribute('content', color);
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
