@@ -2344,15 +2344,14 @@ window.switchPanel = function(panelId) {
 
   // 3. Reset slideshow view if routing away from the dictionary
   if (panelId !== "dictionary") {
+    document.body.classList.remove("dict-slideshow-active");
     const slideshowView = document.getElementById("dict-slideshow-view");
     const coverView = document.getElementById("dict-cover-view");
     const headerIntro = document.getElementById("dict-header-intro");
-    const btnToggleDictRotate = document.getElementById("btn-toggle-dict-rotate");
     if (slideshowView) {
       slideshowView.classList.remove("mobile-fullscreen-wide");
       slideshowView.classList.add("hidden");
     }
-    if (btnToggleDictRotate) btnToggleDictRotate.classList.remove("active");
     if (coverView) coverView.classList.remove("hidden");
     if (headerIntro) headerIntro.classList.remove("hidden");
   }
@@ -3168,24 +3167,24 @@ function initDictionaryPanel() {
         if (btnAnchorLeft) btnAnchorLeft.style.display = "none";
         if (btnAnchorRight) {
           btnAnchorRight.style.display = "flex";
-          btnAnchorRight.style.opacity = "1";
+          btnAnchorRight.style.opacity = "";
           btnAnchorRight.style.pointerEvents = "auto";
         }
       } else if (currentZoomedColumn === "center") {
         if (btnAnchorLeft) {
           btnAnchorLeft.style.display = "flex";
-          btnAnchorLeft.style.opacity = "1";
+          btnAnchorLeft.style.opacity = "";
           btnAnchorLeft.style.pointerEvents = "auto";
         }
         if (btnAnchorRight) {
           btnAnchorRight.style.display = "flex";
-          btnAnchorRight.style.opacity = "1";
+          btnAnchorRight.style.opacity = "";
           btnAnchorRight.style.pointerEvents = "auto";
         }
       } else if (currentZoomedColumn === "right") {
         if (btnAnchorLeft) {
           btnAnchorLeft.style.display = "flex";
-          btnAnchorLeft.style.opacity = "1";
+          btnAnchorLeft.style.opacity = "";
           btnAnchorLeft.style.pointerEvents = "auto";
         }
         if (btnAnchorRight) btnAnchorRight.style.display = "none";
@@ -3326,11 +3325,15 @@ function initDictionaryPanel() {
       btnFloatingNext.style.pointerEvents = currentSlideIdx === maxSlides ? "none" : "auto";
     }
 
-    // Highlight active dot
+    // Highlight active dot and ensure it is visible on mobile
     if (dotsContainer) {
       const dots = dotsContainer.querySelectorAll(".slide-dot");
       dots.forEach((dot, index) => {
-        dot.classList.toggle("active", index + 1 === currentSlideIdx);
+        const isActive = index + 1 === currentSlideIdx;
+        dot.classList.toggle("active", isActive);
+        if (isActive && typeof dot.scrollIntoView === "function") {
+          dot.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        }
       });
     }
 
@@ -3343,7 +3346,7 @@ function initDictionaryPanel() {
       coverView.classList.add("hidden");
       if (headerIntro) headerIntro.classList.add("hidden");
       slideshowView.classList.remove("hidden");
-      enterMobileWideMode();
+      document.body.classList.add("dict-slideshow-active");
       currentDeck = "body";
       maxSlides = 17;
       currentSlideIdx = 1;
@@ -3359,7 +3362,7 @@ function initDictionaryPanel() {
       coverView.classList.add("hidden");
       if (headerIntro) headerIntro.classList.add("hidden");
       slideshowView.classList.remove("hidden");
-      enterMobileWideMode();
+      document.body.classList.add("dict-slideshow-active");
       currentDeck = "bathroom";
       maxSlides = 18;
       currentSlideIdx = 1;
@@ -3375,7 +3378,7 @@ function initDictionaryPanel() {
       coverView.classList.add("hidden");
       if (headerIntro) headerIntro.classList.add("hidden");
       slideshowView.classList.remove("hidden");
-      enterMobileWideMode();
+      document.body.classList.add("dict-slideshow-active");
       currentDeck = "seaside";
       maxSlides = 21;
       currentSlideIdx = 1;
@@ -3385,25 +3388,11 @@ function initDictionaryPanel() {
     });
   }
 
-  // Orientation Toggle Button (Mobile Landscape <-> Portrait)
-  if (btnToggleDictRotate) {
-    btnToggleDictRotate.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (!slideshowView) return;
-      const isWide = slideshowView.classList.contains("mobile-fullscreen-wide");
-      if (isWide) {
-        exitMobileWideMode();
-      } else {
-        enterMobileWideMode();
-      }
-      resetZoom();
-    });
-  }
-
   // 2. Back / Close Button Click
   if (btnCloseSlides) {
     btnCloseSlides.addEventListener("click", () => {
       exitMobileWideMode();
+      document.body.classList.remove("dict-slideshow-active");
       slideshowView.classList.add("hidden");
       coverView.classList.remove("hidden");
       if (headerIntro) headerIntro.classList.remove("hidden");
