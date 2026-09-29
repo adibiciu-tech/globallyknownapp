@@ -551,6 +551,16 @@ header.chat-header button {
   pointer-events: none !important;
 }
 
+html {
+  background-color: var(--bg-primary);
+  color-scheme: dark;
+  transition: background-color 0.25s ease;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -2301,7 +2311,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 /* Floating Gemini Search / Input Bar Dock at Bottom of Viewport */
 .gemini-bottom-dock {
   position: sticky;
-  bottom: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   width: 100%;
   max-width: 720px;
   z-index: 100;
