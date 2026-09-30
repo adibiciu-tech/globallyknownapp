@@ -458,7 +458,7 @@ html, body {
   height: 100% !important;
   object-fit: fill !important;
   transform-origin: top left !important;
-  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1) !important;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 /* In-Zoom Column Navigation Buttons on Mobile - Transparent */

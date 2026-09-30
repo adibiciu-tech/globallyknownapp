@@ -3921,6 +3921,17 @@ function initDictionaryPanel() {
     });
   };
 
+  const preloadAdjacentSlides = (deck, idx, total) => {
+    const getSrc = (i) => {
+      if (deck === "body") return `assets/dict/page_${i}.png`;
+      if (deck === "bathroom") return `assets/dict/bathroom_page_${i}.png`;
+      return `assets/dict/seaside_page_${i}.png`;
+    };
+    if (idx + 1 <= total) preloadSlideImage(getSrc(idx + 1));
+    if (idx + 2 <= total) preloadSlideImage(getSrc(idx + 2));
+    if (idx - 1 >= 1) preloadSlideImage(getSrc(idx - 1));
+  };
+
   // Floating anchor buttons
   const btnAnchorLeft = document.getElementById("btn-anchor-left");
   const btnAnchorCenter = document.getElementById("btn-anchor-center");
@@ -4014,7 +4025,7 @@ function initDictionaryPanel() {
   };
 
   const applyManualScale = (scale, focalX = null, focalY = null) => {
-    currentScale = Math.min(4.0, Math.max(1.0, scale));
+    currentScale = Math.min(8.0, Math.max(1.0, scale));
 
     if (currentScale <= 1.02) {
       resetZoom();
@@ -4203,7 +4214,7 @@ function initDictionaryPanel() {
         if (!isZoomed && slideImageWrapper) {
           slideImageWrapper.classList.remove("mobile-column-zoomed");
         }
-      }, 350);
+      }, 390);
     }
     if (btnZoomReset) {
       btnZoomReset.classList.add("hidden");
@@ -4232,7 +4243,7 @@ function initDictionaryPanel() {
   const headerIntro = document.getElementById("dict-header-intro");
   const deckTitleEl = document.getElementById("slideshow-deck-title");
 
-  const updateSlideDisplay = async (preserveZoom = true, direction = null) => {
+  const updateSlideDisplay = (preserveZoom = true, direction = null) => {
     if (!slideImage || !counterLabel) return;
 
     const isDeckChange = (lastRenderedDeck !== null && lastRenderedDeck !== currentDeck);
@@ -4279,10 +4290,8 @@ function initDictionaryPanel() {
       maxSlides = 21;
     }
 
-    // First load the slide image before starting transition
-    if (isSlideIndexChange) {
-      await preloadSlideImage(targetSrc);
-    }
+    // Proactively preload surrounding slides in the background so all transitions have zero latency
+    preloadAdjacentSlides(currentDeck, currentSlideIdx, maxSlides);
 
     // Grab or create slideScreenFrame for screen swipe
     let activeScreenFrame = document.getElementById("slide-screen-frame-element");
@@ -4417,7 +4426,7 @@ function initDictionaryPanel() {
       void activeScreenFrame.offsetWidth;
       void outgoingFrame.offsetWidth;
 
-      const swipeTransition = "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)";
+      const swipeTransition = "transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)";
       activeScreenFrame.style.transition = swipeTransition;
       outgoingFrame.style.transition = swipeTransition;
 
@@ -4555,8 +4564,8 @@ function initDictionaryPanel() {
   if (btnManualZoomIn) {
     btnManualZoomIn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const steps = [1.25, 1.5, 2.0, 2.5, 3.0, 4.0];
-      const target = steps.find(s => s > currentScale + 0.05) || 4.0;
+      const steps = [1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.5, 7.0, 8.0];
+      const target = steps.find(s => s > currentScale + 0.05) || 8.0;
       applyManualScale(target);
     });
   }
@@ -4564,7 +4573,7 @@ function initDictionaryPanel() {
   if (btnManualZoomOut) {
     btnManualZoomOut.addEventListener("click", (e) => {
       e.stopPropagation();
-      const steps = [3.0, 2.5, 2.0, 1.5, 1.25, 1.0];
+      const steps = [7.0, 5.5, 4.0, 3.0, 2.5, 2.0, 1.5, 1.25, 1.0];
       const target = steps.find(s => s < currentScale - 0.05) || 1.0;
       if (target <= 1.02) {
         resetZoom();
@@ -4691,7 +4700,7 @@ function initDictionaryPanel() {
       if (e.ctrlKey || e.metaKey) {
         // Trackpad pinch or Ctrl + Wheel -> Smooth zoom in/out centered at mouse cursor
         const zoomDelta = e.deltaY < 0 ? 0.2 : -0.2;
-        const targetScale = Math.min(4.0, Math.max(1.0, currentScale + zoomDelta));
+        const targetScale = Math.min(8.0, Math.max(1.0, currentScale + zoomDelta));
         applyManualScale(targetScale, e.clientX, e.clientY);
         return;
       }
@@ -4885,7 +4894,21 @@ function initDictionaryPanel() {
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          initialPinchScale = currentScale || 1;
+          if (currentZoomedColumn !== null) {
+            const width = slideImage ? slideImage.clientWidth : window.innerWidth;
+            const height = slideImage ? slideImage.clientHeight : 500;
+            const limitX = (width * 3 - width) / 2;
+            const limitY = (height * 3 - height) / 2;
+            if (currentZoomedColumn === "left") translateX = limitX;
+            else if (currentZoomedColumn === "right") translateX = -limitX;
+            else translateX = 0;
+            translateY = limitY;
+            currentTranslateX = translateX;
+            currentTranslateY = translateY;
+            initialPinchScale = 3.0;
+          } else {
+            initialPinchScale = currentScale || 1;
+          }
         } else if (e.touches.length === 1) {
           touchStartX = e.touches[0].clientX;
           touchStartY = e.touches[0].clientY;
@@ -4917,7 +4940,7 @@ function initDictionaryPanel() {
             e.touches[0].clientY - e.touches[1].clientY
           );
           const factor = dist / initialPinchDist;
-          const targetScale = Math.min(4.0, Math.max(1.0, initialPinchScale * factor));
+          const targetScale = Math.min(8.0, Math.max(1.0, initialPinchScale * factor));
           const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
           const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
           applyManualScale(targetScale, midX, midY);
