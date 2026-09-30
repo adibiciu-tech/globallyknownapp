@@ -521,11 +521,19 @@ function isGuestUser() {
   return !getActiveUserProfile();
 }
 
+const MASTER_ADMIN_EMAILS = ["sinsecontactmilla@gmail.com", "adrian.milla@gmail.com"];
+
 function isPlatformAdmin() {
   const p = getActiveUserProfile();
   if (!p || !p.email) return false;
   const em = p.email.trim().toLowerCase();
-  return em === "adrian.milla@gmail.com" || p.role === "admin";
+  if (MASTER_ADMIN_EMAILS.includes(em)) return true;
+  if (p.role === "admin") return true;
+  try {
+    const list = JSON.parse(localStorage.getItem("sol_admin_emails") || "[]");
+    if (Array.isArray(list) && list.map(x => String(x).toLowerCase().trim()).includes(em)) return true;
+  } catch(e) {}
+  return false;
 }
 window.isPlatformAdmin = isPlatformAdmin;
 
@@ -541,6 +549,24 @@ function updateAdminVisibility() {
       card.style.setProperty("display", "none", "important");
     }
   });
+
+  // Comprehensible Input Library Admin controls
+  const deskAddPl = document.getElementById("btn-desktop-add-playlist");
+  if (deskAddPl) deskAddPl.style.display = isAdmin ? "flex" : "none";
+  const mobAddPl = document.getElementById("btn-mob-add-playlist");
+  if (mobAddPl) mobAddPl.style.display = isAdmin ? "flex" : "none";
+  const btnSidebarAddVid = document.getElementById("btn-sidebar-add-video");
+  if (btnSidebarAddVid) btnSidebarAddVid.style.display = isAdmin ? "flex" : "none";
+  const btnDeskDelPl = document.getElementById("btn-desktop-delete-current-playlist");
+  if (btnDeskDelPl) btnDeskDelPl.style.display = isAdmin ? "flex" : "none";
+
+  // Re-render community widgets if community is initialized
+  if (typeof renderCommunityChannels === "function") {
+    renderCommunityChannels();
+  }
+  if (typeof renderCircleMembersWidget === "function") {
+    renderCircleMembersWidget();
+  }
 
   if (isAdmin) {
     if (typeof refreshAdminUsersDirectory === "function") {
@@ -2674,10 +2700,314 @@ function renderDiscordUserBar() {
   `;
 }
 
+let communityChannelsList = [];
+let communityMembersList = [];
+
+async function loadCommunityData() {
+  try {
+    const res = await fetch("/api/community/data");
+    const json = await res.json();
+    if (json.success) {
+      if (Array.isArray(json.channels) && json.channels.length > 0) {
+        communityChannelsList = json.channels;
+        communityChannelsList.forEach(ch => {
+          CIRCLE_CHANNELS_META[ch.id] = {
+            title: ch.name,
+            desc: ch.desc || "",
+            icon: ch.icon || (ch.type === "voice" ? "fa-volume-high" : "fa-hashtag"),
+            isVoice: ch.type === "voice"
+          };
+        });
+      }
+      if (Array.isArray(json.members) && json.members.length > 0) {
+        communityMembersList = json.members;
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load community data:", e);
+  }
+}
+
+function renderCommunityChannels() {
+  const container = document.getElementById("discord-channels-list");
+  if (!container) return;
+
+  const isAdmin = isPlatformAdmin();
+
+  if (!communityChannelsList || communityChannelsList.length === 0) {
+    communityChannelsList = [
+      { id: "rules-faq", name: "rules", type: "highlight", icon: "fa-clipboard-check red-icon", desc: "Community code of conduct, immersion principles, and cohort etiquette." },
+      { id: "announcements", name: "welcome-and-announcements", type: "highlight", icon: "fa-bullhorn", desc: "Official updates, schedules, and notices from the Globally Known team.", badge: "NEW", unread: true },
+      { id: "general-chat", name: "general-chat", type: "text", icon: "fa-hashtag", desc: "Informal conversations, greetings, and daily check-ins with fellow learners." },
+      { id: "english-inputs", name: "english-inputs", type: "text", icon: "fa-hashtag", desc: "Discuss vocabulary, structures, and notes from City Vlog lessons." },
+      { id: "metaphors", name: "metaphors-discussion", type: "text", icon: "fa-hashtag", desc: "Explore semantic networks, cognitive metaphors, and cultural idioms." },
+      { id: "ask-sol-community", name: "ask-sol-community", type: "text", icon: "fa-hashtag", desc: "Get real-time explanations from Sol AI Coach and community linguists." },
+      { id: "featurings", name: "featurings", type: "text", icon: "fa-hashtag", desc: "Share your accuracy metrics, speech recordings, and feature suggestions." },
+      { id: "voice-study-lounge", name: "Study Lounge 1", type: "voice", icon: "fa-volume-high", desc: "Low-latency voice room for group listening, shadowing, and discussion.", countTag: "2", attendees: ["Gregory Dobbins (Host)", "Sarah K."] },
+      { id: "voice-accent-lab", name: "Pronunciation Lab", type: "voice", icon: "fa-volume-high", desc: "Live acoustic feedback and interactive phonetic drills with coaches." }
+    ];
+  }
+
+  const highlights = communityChannelsList.filter(c => c.type === "highlight");
+  const textChannels = communityChannelsList.filter(c => c.type === "text" || (!c.type && !c.isVoice));
+  const voiceChannels = communityChannelsList.filter(c => c.type === "voice" || c.isVoice);
+
+  const renderChannelItem = (c) => {
+    const isActive = c.id === currentCircleChannel;
+    const isVoice = c.type === "voice" || c.isVoice;
+    const adminActions = isAdmin ? `
+      <div class="discord-channel-admin-actions">
+        <button type="button" class="btn-ch-action edit" data-chid="${escapeHtml(c.id)}" title="Edit channel #${escapeHtml(c.name)}"><i class="fa-solid fa-gear"></i></button>
+        <button type="button" class="btn-ch-action delete" data-chid="${escapeHtml(c.id)}" title="Delete channel #${escapeHtml(c.name)}"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    ` : "";
+
+    return `
+      <div class="circle-nav-item discord-channel-item ${isVoice ? 'is-voice' : ''} ${isActive ? 'active' : ''}" data-channel="${escapeHtml(c.id)}">
+        ${c.unread ? '<span class="ch-unread-marker"></span>' : ''}
+        <i class="fa-solid ${escapeHtml(c.icon || (isVoice ? 'fa-volume-high' : 'fa-hashtag'))} ch-icon"></i>
+        <span class="ch-name">${escapeHtml(c.name)}</span>
+        ${c.badge ? `<span class="ch-badge-new">${escapeHtml(c.badge)}</span>` : ''}
+        ${c.countTag ? `<span class="voice-count-tag"><i class="fa-solid fa-user-group"></i> ${escapeHtml(c.countTag)}</span>` : ''}
+        ${adminActions}
+      </div>
+      ${isVoice && Array.isArray(c.attendees) && c.attendees.length > 0 ? `
+        <div class="voice-room-attendees">
+          ${c.attendees.map((att, i) => `
+            <div class="attendee-chip"><span class="attendee-voice-pulse ${i === 0 ? 'live' : ''}"></span> ${escapeHtml(att)}</div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+  };
+
+  let html = `
+    <!-- Standalone Highlight Channels -->
+    <div class="channel-group-section">
+      ${highlights.map(renderChannelItem).join("")}
+    </div>
+
+    <!-- Category 2: Text Channels -->
+    <div class="discord-channel-category">
+      <div class="category-header">
+        <i class="fa-solid fa-chevron-down cat-arrow"></i>
+        <span class="cat-label">TEXT CHANNELS</span>
+        ${isAdmin ? `
+          <button type="button" class="discord-add-channel-header-btn" data-type="text" title="Create Text Channel">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        ` : ""}
+      </div>
+      <div class="category-channels-list">
+        ${textChannels.map(renderChannelItem).join("")}
+      </div>
+    </div>
+
+    <!-- Category 3: Voice Channels -->
+    <div class="discord-channel-category">
+      <div class="category-header">
+        <i class="fa-solid fa-chevron-down cat-arrow"></i>
+        <span class="cat-label">VOICE CHANNELS</span>
+        ${isAdmin ? `
+          <button type="button" class="discord-add-channel-header-btn" data-type="voice" title="Create Voice Channel">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        ` : ""}
+      </div>
+      <div class="category-channels-list">
+        ${voiceChannels.map(renderChannelItem).join("")}
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+
+  if (isAdmin) {
+    container.querySelectorAll(".discord-add-channel-header-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const type = btn.getAttribute("data-type") || "text";
+        promptAddCommunityChannel(type);
+      });
+    });
+
+    container.querySelectorAll(".btn-ch-action.edit").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const chId = btn.getAttribute("data-chid");
+        promptEditCommunityChannel(chId);
+      });
+    });
+
+    container.querySelectorAll(".btn-ch-action.delete").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const chId = btn.getAttribute("data-chid");
+        promptDeleteCommunityChannel(chId);
+      });
+    });
+  }
+}
+
+async function promptAddCommunityChannel(defaultType = "text") {
+  if (!isPlatformAdmin()) {
+    showToast("🔒 Only administrator has permission to add channels.");
+    return;
+  }
+
+  const chNameRaw = prompt(`Enter channel name (e.g. daily-journal or accent-lounge):`);
+  if (!chNameRaw) return;
+  const chName = chNameRaw.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "");
+  if (!chName) {
+    showToast("Channel name cannot be empty.");
+    return;
+  }
+
+  const chId = (defaultType === "voice" && !chName.startsWith("voice-") ? "voice-" : "") + chName;
+  const descRaw = prompt(`Enter short channel description:`, `Channel for ${chName}`) || "";
+
+  const newChannel = {
+    id: chId,
+    name: chName,
+    type: defaultType,
+    icon: defaultType === "voice" ? "fa-volume-high" : "fa-hashtag",
+    desc: descRaw.trim()
+  };
+
+  const curUser = getActiveUserProfile();
+  const adminEmail = (curUser && curUser.email) ? curUser.email : "sinsecontactmilla@gmail.com";
+
+  try {
+    const res = await fetch("/api/community/channels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-User-Email": adminEmail },
+      body: JSON.stringify({ adminEmail, action: "add", channel: newChannel })
+    });
+    const data = await res.json();
+    if (data.success) {
+      communityChannelsList = data.channels;
+      CIRCLE_CHANNELS_META[newChannel.id] = {
+        title: newChannel.name,
+        desc: newChannel.desc,
+        icon: newChannel.icon,
+        isVoice: defaultType === "voice"
+      };
+      if (!circleChannelsData[newChannel.id]) {
+        circleChannelsData[newChannel.id] = [];
+      }
+      renderCommunityChannels();
+      showToast(`✅ Channel #${newChannel.name} created!`);
+    } else {
+      showToast(`❌ Error: ${data.error || "Failed to create channel"}`);
+    }
+  } catch (err) {
+    showToast("❌ Network error creating channel");
+  }
+}
+
+async function promptEditCommunityChannel(chId) {
+  if (!isPlatformAdmin()) {
+    showToast("🔒 Only administrator has permission to edit channels.");
+    return;
+  }
+  const channel = communityChannelsList.find(c => c.id === chId);
+  if (!channel) return;
+
+  const newNameRaw = prompt(`Edit channel name:`, channel.name);
+  if (newNameRaw === null) return;
+  const newName = newNameRaw.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "");
+  if (!newName) {
+    showToast("Channel name cannot be empty.");
+    return;
+  }
+
+  const newDesc = prompt(`Edit channel description:`, channel.desc || "") || "";
+
+  const curUser = getActiveUserProfile();
+  const adminEmail = (curUser && curUser.email) ? curUser.email : "sinsecontactmilla@gmail.com";
+
+  try {
+    const res = await fetch("/api/community/channels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-User-Email": adminEmail },
+      body: JSON.stringify({
+        adminEmail,
+        action: "edit",
+        channelId: chId,
+        channel: { name: newName, desc: newDesc.trim() }
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      communityChannelsList = data.channels;
+      if (CIRCLE_CHANNELS_META[chId]) {
+        CIRCLE_CHANNELS_META[chId].title = newName;
+        CIRCLE_CHANNELS_META[chId].desc = newDesc.trim();
+      }
+      renderCommunityChannels();
+      if (currentCircleChannel === chId) {
+        const titleEl = document.getElementById("circle-channel-title");
+        const descEl = document.getElementById("circle-channel-desc");
+        if (titleEl) titleEl.textContent = channel.type === "voice" ? `🔊 ${newName}` : `# ${newName}`;
+        if (descEl) descEl.textContent = newDesc.trim();
+      }
+      showToast(`✏️ Channel #${newName} updated!`);
+    } else {
+      showToast(`❌ Error: ${data.error || "Failed to edit channel"}`);
+    }
+  } catch (err) {
+    showToast("❌ Network error editing channel");
+  }
+}
+
+async function promptDeleteCommunityChannel(chId) {
+  if (!isPlatformAdmin()) {
+    showToast("🔒 Only administrator has permission to delete channels.");
+    return;
+  }
+  const channel = communityChannelsList.find(c => c.id === chId);
+  const chName = channel ? channel.name : chId;
+
+  if (!confirm(`Are you sure you want to delete channel #${chName}?`)) return;
+
+  const curUser = getActiveUserProfile();
+  const adminEmail = (curUser && curUser.email) ? curUser.email : "sinsecontactmilla@gmail.com";
+
+  try {
+    const res = await fetch("/api/community/channels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-User-Email": adminEmail },
+      body: JSON.stringify({ adminEmail, action: "delete", channelId: chId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      communityChannelsList = data.channels;
+      delete CIRCLE_CHANNELS_META[chId];
+      if (currentCircleChannel === chId) {
+        currentCircleChannel = "announcements";
+        const defCh = document.querySelector('.discord-channel-item[data-channel="announcements"]');
+        if (defCh) defCh.click();
+      }
+      renderCommunityChannels();
+      showToast(`🗑️ Channel #${chName} deleted.`);
+    } else {
+      showToast(`❌ Error: ${data.error || "Failed to delete channel"}`);
+    }
+  } catch (err) {
+    showToast("❌ Network error deleting channel");
+  }
+}
+
 function initCommunityPanel() {
   renderDiscordUserBar();
   renderCircleFeed();
   renderCircleMembersWidget();
+  renderCommunityChannels();
+
+  loadCommunityData().then(() => {
+    renderCommunityChannels();
+    renderCircleMembersWidget();
+  });
 
   const container = document.querySelector(".discord-community-container");
   const backdrop = document.getElementById("discord-drawer-backdrop");
@@ -2686,6 +3016,9 @@ function initCommunityPanel() {
   const navContainer = document.querySelector(".discord-channels-scroll");
   if (navContainer) {
     navContainer.addEventListener("click", (e) => {
+      if (e.target.closest(".btn-ch-action") || e.target.closest(".discord-add-channel-header-btn")) {
+        return;
+      }
       const item = e.target.closest(".discord-channel-item");
       if (!item) return;
 
@@ -6128,6 +6461,7 @@ function renderAdminUsersTable(users) {
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8; background: rgba(255,255,255,0.03);">
           <th style="padding: 0.75rem 1rem;">User</th>
           <th style="padding: 0.75rem 1rem;">Verified Email</th>
+          <th style="padding: 0.75rem 1rem;">Role / Access</th>
           <th style="padding: 0.75rem 1rem;">Provider</th>
           <th style="padding: 0.75rem 1rem;">Joined</th>
         </tr>
@@ -6139,7 +6473,27 @@ function renderAdminUsersTable(users) {
     const isGoogle = u.authProvider === "google";
     const joinedStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "-";
     const pic = u.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=4f46e5&color=fff&bold=true`;
-    
+    const userEmail = (u.email || "").toLowerCase().trim();
+    const isOwner = MASTER_ADMIN_EMAILS.includes(userEmail);
+    const isAdmin = u.role === "admin" || isOwner;
+
+    let roleHtml = "";
+    if (isOwner) {
+      roleHtml = `<span class="role-owner-badge" title="Permanent Platform Owner"><i class="fa-solid fa-crown"></i> Platform Owner</span>`;
+    } else if (isAdmin) {
+      roleHtml = `
+        <button type="button" class="role-badge-btn is-admin" data-email="${escapeHtml(u.email || "")}" data-action="revoke" title="Click to Revoke Admin Access">
+          <i class="fa-solid fa-shield-halved"></i> Admin (Revoke)
+        </button>
+      `;
+    } else {
+      roleHtml = `
+        <button type="button" class="role-badge-btn is-member" data-email="${escapeHtml(u.email || "")}" data-action="grant" title="Click to Grant Admin Access">
+          <i class="fa-solid fa-user-plus"></i> Grant Admin
+        </button>
+      `;
+    }
+
     html += `
       <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.2s;">
         <td style="padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.6rem;">
@@ -6151,6 +6505,9 @@ function renderAdminUsersTable(users) {
           <button type="button" class="copy-email-mini-btn" data-email="${escapeHtml(u.email || "")}" style="background: none; border: none; color: #38bdf8; cursor: pointer; margin-left: 6px; padding: 2px 4px;" title="Copy email">
             <i class="fa-solid fa-copy"></i>
           </button>
+        </td>
+        <td style="padding: 0.65rem 1rem;">
+          ${roleHtml}
         </td>
         <td style="padding: 0.65rem 1rem;">
           <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 600; ${isGoogle ? 'background: rgba(66, 133, 244, 0.15); color: #93c5fd; border: 1px solid rgba(66, 133, 244, 0.35);' : 'background: rgba(99, 102, 241, 0.15); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.35);'}">
@@ -6173,6 +6530,54 @@ function renderAdminUsersTable(users) {
       if (em) {
         navigator.clipboard.writeText(em);
         showToast(`📋 Copied: ${em}`);
+      }
+    });
+  });
+
+  container.querySelectorAll(".role-badge-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const targetEmail = btn.getAttribute("data-email");
+      const action = btn.getAttribute("data-action");
+      if (!targetEmail) return;
+
+      const newRole = action === "grant" ? "admin" : "member";
+      const confirmMsg = action === "grant" 
+        ? `Grant full administrator permissions to "${targetEmail}"? They will have access to manage channels, members, playlists, and settings.`
+        : `Revoke administrator permissions for "${targetEmail}"?`;
+      if (!confirm(confirmMsg)) return;
+
+      const curUser = getActiveUserProfile();
+      const adminEmail = (curUser && curUser.email) ? curUser.email : "sinsecontactmilla@gmail.com";
+
+      try {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        const resp = await fetch("/api/admin/users/set-role", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-Email": adminEmail
+          },
+          body: JSON.stringify({ adminEmail, targetEmail, role: newRole })
+        });
+        const res = await resp.json();
+        if (res.success) {
+          if (res.admin_emails) {
+            localStorage.setItem("sol_admin_emails", JSON.stringify(res.admin_emails));
+          }
+          showToast(newRole === "admin" ? `👑 Admin access granted to ${targetEmail}` : `🛡️ Admin access revoked for ${targetEmail}`);
+          if (typeof refreshAdminUsersDirectory === "function") {
+            refreshAdminUsersDirectory();
+          }
+        } else {
+          showToast(`❌ Error: ${res.error || "Failed to update role"}`);
+          btn.disabled = false;
+          btn.style.opacity = "1";
+        }
+      } catch (e) {
+        showToast("❌ Network error updating role");
+        btn.disabled = false;
+        btn.style.opacity = "1";
       }
     });
   });
@@ -6611,6 +7016,9 @@ function loginUserSuccess(user, token, isNew = false) {
   try {
     sessionStorage.removeItem("sol_guest_mode");
   } catch (e) {}
+  if (user && user.email && MASTER_ADMIN_EMAILS.includes(user.email.trim().toLowerCase())) {
+    user.role = "admin";
+  }
   if (token) localStorage.setItem("sol_auth_token", token);
   localStorage.setItem("sol_user_profile", JSON.stringify(user));
 
@@ -6620,6 +7028,7 @@ function loginUserSuccess(user, token, isNew = false) {
   }
 
   renderUserProfile(user);
+  if (typeof updateAdminVisibility === "function") updateAdminVisibility();
   loadUserSpecificData();
   renderCircleMembersWidget();
   renderCircleFeed();
@@ -7846,6 +8255,7 @@ function renderDesktopPlaylistGallery(allCategories) {
       <div class="yt-card-bottom-info">
         <div class="yt-card-header-row">
           <h3 class="yt-card-clean-title">${cat.flag} ${escapeHtml(cat.title)}</h3>
+          ${isPlatformAdmin() ? `
           <div style="display: inline-flex; align-items: center; gap: 4px;">
             <button type="button" class="yt-card-delete-btn" title="Delete playlist ${escapeHtml(cat.title)}">
               <i class="fa-regular fa-trash-can"></i>
@@ -7853,7 +8263,7 @@ function renderDesktopPlaylistGallery(allCategories) {
             <button type="button" class="yt-card-options-btn" title="Add video to ${escapeHtml(cat.title)}">
               <i class="fa-solid fa-ellipsis-vertical"></i>
             </button>
-          </div>
+          </div>` : ''}
         </div>
         <div class="yt-card-sub-meta">
           <span>${count} Videos</span> • <span class="meta-highlight">Level ${levelStr}</span> • <span>Globally Known</span>
@@ -7892,6 +8302,10 @@ function renderDesktopPlaylistGallery(allCategories) {
     if (deleteBtn) {
       deleteBtn.addEventListener("click", (e) => {
         e.stopPropagation();
+        if (!isPlatformAdmin()) {
+          showToast("🔒 Only administrator has permission to delete playlists.");
+          return;
+        }
         deletePlaylistCategory(cat.id, cat.title);
       });
     }
@@ -7901,6 +8315,10 @@ function renderDesktopPlaylistGallery(allCategories) {
     if (optionsBtn) {
       optionsBtn.addEventListener("click", (e) => {
         e.stopPropagation();
+        if (!isPlatformAdmin()) {
+          showToast("🔒 Only administrator has permission to add videos.");
+          return;
+        }
         openAddVideoModal(cat.id);
       });
     }
@@ -7918,40 +8336,42 @@ function renderDesktopPlaylistGallery(allCategories) {
     desktopGrid.appendChild(emptyNotice);
   }
 
-  // Append "+ Add New Playlist" frame at the end of the desktop categories grid
-  const desktopAddCard = document.createElement("div");
-  desktopAddCard.className = "yt-clean-playlist-card yt-add-playlist-card";
-  desktopAddCard.id = "btn-desktop-add-playlist";
-  const deskLabelType = currentVideoCategoryType === "shorts" ? "Shorts Playlist" : "Video Playlist";
-  desktopAddCard.innerHTML = `
-    <div class="yt-hero-preview-box yt-add-hero-box">
-      <div class="yt-add-large-circle">
-        <i class="fa-solid fa-plus"></i>
+  // Append "+ Add New Playlist" frame at the end of the desktop categories grid (Admin only)
+  if (isPlatformAdmin()) {
+    const desktopAddCard = document.createElement("div");
+    desktopAddCard.className = "yt-clean-playlist-card yt-add-playlist-card";
+    desktopAddCard.id = "btn-desktop-add-playlist";
+    const deskLabelType = currentVideoCategoryType === "shorts" ? "Shorts Playlist" : "Video Playlist";
+    desktopAddCard.innerHTML = `
+      <div class="yt-hero-preview-box yt-add-hero-box">
+        <div class="yt-add-large-circle">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <span class="yt-add-card-label">Add New ${deskLabelType}</span>
+        <span class="yt-add-card-sub">Paste YouTube Playlist Link</span>
       </div>
-      <span class="yt-add-card-label">Add New ${deskLabelType}</span>
-      <span class="yt-add-card-sub">Paste YouTube Playlist Link</span>
-    </div>
-    <div class="yt-card-bottom-info">
-      <div class="yt-card-header-row">
-        <h3 class="yt-card-clean-title" style="color: var(--accent-yellow, #c084fc);"><i class="fa-solid fa-folder-plus"></i> Import Playlist</h3>
+      <div class="yt-card-bottom-info">
+        <div class="yt-card-header-row">
+          <h3 class="yt-card-clean-title" style="color: var(--accent-yellow, #c084fc);"><i class="fa-solid fa-folder-plus"></i> Import Playlist</h3>
+        </div>
+        <div class="yt-card-sub-meta">
+          <span>Auto-embeds all videos in order</span>
+        </div>
+        <div class="yt-card-action-bar">
+          <span class="yt-card-action-link" style="color: var(--accent-yellow, #c084fc);">
+            <i class="fa-solid fa-file-import"></i> Click to Add
+          </span>
+          <span class="yt-card-arrow-pill" style="background: var(--glow-color-1, rgba(192, 132, 252, 0.2)); color: var(--accent-yellow, #c084fc);">
+            <i class="fa-solid fa-arrow-right"></i>
+          </span>
+        </div>
       </div>
-      <div class="yt-card-sub-meta">
-        <span>Auto-embeds all videos in order</span>
-      </div>
-      <div class="yt-card-action-bar">
-        <span class="yt-card-action-link" style="color: var(--accent-yellow, #c084fc);">
-          <i class="fa-solid fa-file-import"></i> Click to Add
-        </span>
-        <span class="yt-card-arrow-pill" style="background: var(--glow-color-1, rgba(192, 132, 252, 0.2)); color: var(--accent-yellow, #c084fc);">
-          <i class="fa-solid fa-arrow-right"></i>
-        </span>
-      </div>
-    </div>
-  `;
-  desktopAddCard.addEventListener("click", () => {
-    openAddPlaylistModal(currentVideoCategoryType);
-  });
-  desktopGrid.appendChild(desktopAddCard);
+    `;
+    desktopAddCard.addEventListener("click", () => {
+      openAddPlaylistModal(currentVideoCategoryType);
+    });
+    desktopGrid.appendChild(desktopAddCard);
+  }
 }
 
 function openDesktopPlaylistPage(cat, videoToPlay = null) {
@@ -7981,7 +8401,12 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
   }
 
   if (btnAddVideo) {
+    btnAddVideo.style.display = isPlatformAdmin() ? "flex" : "none";
     btnAddVideo.onclick = () => {
+      if (!isPlatformAdmin()) {
+        showToast("🔒 Only administrator has permission to add videos.");
+        return;
+      }
       openAddVideoModal(cat.id);
     };
   }
@@ -7996,8 +8421,13 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
 
   const btnDeskDeleteCurrentPl = document.getElementById("btn-desktop-delete-current-playlist");
   if (btnDeskDeleteCurrentPl) {
+    btnDeskDeleteCurrentPl.style.display = isPlatformAdmin() ? "flex" : "none";
     btnDeskDeleteCurrentPl.onclick = (e) => {
       e.stopPropagation();
+      if (!isPlatformAdmin()) {
+        showToast("🔒 Only administrator has permission to delete playlists.");
+        return;
+      }
       deletePlaylistCategory(cat.id, cat.title);
     };
   }
@@ -8315,7 +8745,9 @@ function renderMobilePlaylistGallery(allCategories) {
           </div>
         `;
       }
-      mobList.appendChild(mobAddCard);
+      if (isPlatformAdmin()) {
+        mobList.appendChild(mobAddCard);
+      }
       return;
     }
 
@@ -8330,6 +8762,12 @@ function renderMobilePlaylistGallery(allCategories) {
       card.className = "mob-playlist-card";
       card.setAttribute("data-category-id", cat.id);
 
+      const delBtnHtml = isPlatformAdmin() ? `
+        <button type="button" class="mob-card-delete-btn" title="Delete playlist ${escapeHtml(cat.title)}">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      ` : "";
+
       card.innerHTML = `
         <div class="mob-card-thumb-wrap">
           <img src="${thumbUrl}" alt="${escapeHtml(cat.title)}" class="mob-card-thumb-img" loading="lazy" />
@@ -8342,9 +8780,7 @@ function renderMobilePlaylistGallery(allCategories) {
           <span class="mob-card-curator">By Globally Known • Level ${levelStr}</span>
         </div>
         <div class="mob-card-side-actions">
-          <button type="button" class="mob-card-delete-btn" title="Delete playlist ${escapeHtml(cat.title)}">
-            <i class="fa-regular fa-trash-can"></i>
-          </button>
+          ${delBtnHtml}
           <i class="fa-solid fa-chevron-right mob-card-arrow"></i>
         </div>
       `;
@@ -8353,6 +8789,10 @@ function renderMobilePlaylistGallery(allCategories) {
       if (mobDelBtn) {
         mobDelBtn.addEventListener("click", (e) => {
           e.stopPropagation();
+          if (!isPlatformAdmin()) {
+            showToast("🔒 Only administrator has permission to delete playlists.");
+            return;
+          }
           deletePlaylistCategory(cat.id, cat.title);
         });
       }
@@ -8364,7 +8804,9 @@ function renderMobilePlaylistGallery(allCategories) {
       mobList.appendChild(card);
     });
 
-    mobList.appendChild(mobAddCard);
+    if (isPlatformAdmin()) {
+      mobList.appendChild(mobAddCard);
+    }
   };
 
   buildItems(searchInput ? searchInput.value : "");
@@ -8999,6 +9441,7 @@ async function initVideosPanel() {
 
     category.videos.forEach((rawVideo, idx) => {
       if (rawVideo.isAddTemplate) {
+        if (!isPlatformAdmin()) return;
         const card = document.createElement("div");
         card.className = "video-card add-video-card";
 
@@ -9033,6 +9476,13 @@ async function initVideosPanel() {
       card.setAttribute("data-video-id", video.id);
       card.setAttribute("data-level", video.level.toLowerCase());
 
+      const adminActionsHtml = isPlatformAdmin() ? `
+        <div class="video-card-actions">
+          <button class="edit-video-btn mini" data-id="${video.id}" title="Edit Video Title"><i class="fa-solid fa-pen"></i></button>
+          ${video.isUserAdded ? `<button class="delete-video-btn mini" data-id="${video.id}" title="Delete Video"><i class="fa-solid fa-trash-can"></i></button>` : ""}
+        </div>
+      ` : "";
+
       card.innerHTML = `
         <div class="video-poster-container">
           <img src="${video.thumbUrl}" alt="${escapeHtml(video.title)}" class="video-poster-img" loading="lazy" />
@@ -9055,10 +9505,7 @@ async function initVideosPanel() {
         <div class="video-card-info-footer">
           <div class="video-card-title-row">
             <h4 class="video-card-title" title="${escapeHtml(video.title)}">${escapeHtml(video.title)}</h4>
-            <div class="video-card-actions">
-              <button class="edit-video-btn mini" data-id="${video.id}" title="Edit Video Title"><i class="fa-solid fa-pen"></i></button>
-              ${video.isUserAdded ? `<button class="delete-video-btn mini" data-id="${video.id}" title="Delete Video"><i class="fa-solid fa-trash-can"></i></button>` : ""}
-            </div>
+            ${adminActionsHtml}
           </div>
           <div class="video-card-sub-row">
             <span class="video-rating-pill"><i class="fa-solid fa-star"></i> 4.9</span>
@@ -9082,12 +9529,16 @@ async function initVideosPanel() {
       if (editBtn) {
         editBtn.addEventListener("click", (e) => {
           e.stopPropagation();
+          if (!isPlatformAdmin()) {
+            showToast("🔒 Only administrator has permission to edit videos.");
+            return;
+          }
           openEditVideoModal(video);
         });
       }
 
       const titleEl = card.querySelector(".video-card-title");
-      if (titleEl) {
+      if (titleEl && isPlatformAdmin()) {
         titleEl.addEventListener("dblclick", (e) => {
           e.stopPropagation();
           openEditVideoModal(video);
@@ -9098,6 +9549,10 @@ async function initVideosPanel() {
       if (deleteBtn) {
         deleteBtn.addEventListener("click", async (e) => {
           e.stopPropagation();
+          if (!isPlatformAdmin()) {
+            showToast("🔒 Only administrator has permission to delete videos.");
+            return;
+          }
           if (confirm(`Delete video "${video.title}"?`)) {
             await deleteVideoFromServer(video.id);
             showToast("🗑️ Video removed.");
@@ -10306,44 +10761,36 @@ function renderCircleMembersWidget() {
   if (!container) return;
 
   const currentUser = getActiveUserProfile();
+  const isAdmin = isPlatformAdmin();
 
-  const coaches = [
-    { name: "Gregory Dobbins", role: "Program Manager 🎓", status: "online", avatar: "GD", roleType: "staff" },
-    { name: "Sarah K.", role: "Language Coach 🏅", status: "online", avatar: "SK", roleType: "coach" },
-    { name: "Elena Rostova", role: "Linguist & Phonetics 🌍", status: "online", avatar: "ER", roleType: "coach" }
-  ];
-
-  const onlineMembers = [];
-  if (currentUser) {
-    onlineMembers.push({
-      name: `${currentUser.name} (You)`,
-      role: "Learner 👤",
-      status: "online",
-      avatar: currentUser.picture || getUserInitials(currentUser.name),
-      isUser: true,
-      roleType: "member"
-    });
-  } else {
-    onlineMembers.push({
-      name: "Guest Learner (You)",
-      role: "Guest 👤",
-      status: "online",
-      avatar: "👤",
-      isUser: true,
-      roleType: "member"
-    });
+  if (!communityMembersList || communityMembersList.length === 0) {
+    communityMembersList = [
+      { id: "mem_1", name: "Gregory Dobbins", role: "Program Manager 🎓", status: "online", avatar: "GD", roleType: "staff", group: "coaches" },
+      { id: "mem_2", name: "Sarah K.", role: "Language Coach 🏅", status: "online", avatar: "SK", roleType: "coach", group: "coaches" },
+      { id: "mem_3", name: "Elena Rostova", role: "Linguist & Phonetics 🌍", status: "online", avatar: "ER", roleType: "coach", group: "coaches" },
+      { id: "mem_4", name: "Alice F.", role: "Member 👤", status: "online", avatar: "AF", roleType: "member", group: "online" },
+      { id: "mem_5", name: "Carlos M.", role: "Member 👤", status: "online", avatar: "CM", roleType: "member", group: "online" },
+      { id: "mem_6", name: "Li Wei", role: "Member 👤", status: "online", avatar: "LW", roleType: "member", group: "online" },
+      { id: "mem_7", name: "Bob D.", role: "Member 👤", status: "offline", avatar: "BD", roleType: "member", group: "offline" },
+      { id: "mem_8", name: "Marcus Vance", role: "Moderator 🛡️", status: "offline", avatar: "MV", roleType: "member", group: "offline" }
+    ];
   }
 
-  onlineMembers.push(
-    { name: "Alice F.", role: "Member 👤", status: "online", avatar: "AF", roleType: "member" },
-    { name: "Carlos M.", role: "Member 👤", status: "online", avatar: "CM", roleType: "member" },
-    { name: "Li Wei", role: "Member 👤", status: "online", avatar: "LW", roleType: "member" }
-  );
+  // Create current user display object
+  const userRole = isAdmin ? "Platform Admin 👑" : "Learner 👤";
+  const userItem = {
+    id: "mem_current_user",
+    name: currentUser ? `${currentUser.name} (You)` : "Guest Learner (You)",
+    role: userRole,
+    status: "online",
+    avatar: currentUser ? (currentUser.picture || getUserInitials(currentUser.name)) : "👤",
+    isUser: true,
+    roleType: isAdmin ? "staff" : "member"
+  };
 
-  const offlineMembers = [
-    { name: "Bob D.", role: "Member 👤", status: "offline", avatar: "BD", roleType: "member" },
-    { name: "Marcus Vance", role: "Moderator 🛡️", status: "offline", avatar: "MV", roleType: "member" }
-  ];
+  const coaches = communityMembersList.filter(m => m.roleType === "staff" || m.roleType === "coach" || m.group === "coaches");
+  const onlineMembers = [userItem, ...communityMembersList.filter(m => (!m.roleType || m.roleType === "member") && m.group !== "coaches" && m.status === "online")];
+  const offlineMembers = communityMembersList.filter(m => (!m.roleType || m.roleType === "member") && m.group !== "coaches" && m.status === "offline");
 
   const renderMemberRow = (m) => {
     let avatarHtml = "";
@@ -10355,6 +10802,13 @@ function renderCircleMembersWidget() {
 
     const roleClass = m.roleType === "staff" ? "role-staff" : (m.roleType === "coach" ? "role-coach" : "");
 
+    const adminTools = (isAdmin && !m.isUser) ? `
+      <div class="discord-member-admin-tools">
+        <button type="button" class="btn-mem-tool title-tool" data-memid="${escapeHtml(m.id || m.name)}" title="Change Title / Role for ${escapeHtml(m.name)}"><i class="fa-solid fa-crown"></i></button>
+        <button type="button" class="btn-mem-tool remove-tool" data-memid="${escapeHtml(m.id || m.name)}" title="Remove ${escapeHtml(m.name)}"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    ` : "";
+
     return `
       <div class="discord-member-row ${m.isUser ? 'is-current-user' : ''}">
         <div class="discord-member-avatar-wrap">
@@ -10365,11 +10819,19 @@ function renderCircleMembersWidget() {
           <div class="discord-member-name ${roleClass}">${escapeHtml(m.name)}</div>
           <div class="discord-member-sub">${escapeHtml(m.role)}</div>
         </div>
+        ${adminTools}
       </div>
     `;
   };
 
+  const addMemberBtnHtml = isAdmin ? `
+    <button type="button" class="btn-discord-add-member" id="btn-discord-add-member">
+      <i class="fa-solid fa-user-plus"></i> Add Community Member
+    </button>
+  ` : "";
+
   container.innerHTML = `
+    ${addMemberBtnHtml}
     <div class="member-group-header">COACHES & LEADERS — ${coaches.length}</div>
     ${coaches.map(renderMemberRow).join("")}
 
@@ -10379,6 +10841,187 @@ function renderCircleMembersWidget() {
     <div class="member-group-header">OFFLINE — ${offlineMembers.length}</div>
     ${offlineMembers.map(renderMemberRow).join("")}
   `;
+
+  if (isAdmin) {
+    const btnAdd = container.querySelector("#btn-discord-add-member");
+    if (btnAdd) {
+      btnAdd.addEventListener("click", () => {
+        promptAddMember();
+      });
+    }
+
+    container.querySelectorAll(".btn-mem-tool.title-tool").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const memId = btn.getAttribute("data-memid");
+        promptEditMemberTitle(memId);
+      });
+    });
+
+    container.querySelectorAll(".btn-mem-tool.remove-tool").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const memId = btn.getAttribute("data-memid");
+        promptRemoveMember(memId);
+      });
+    });
+  }
+}
+
+async function promptEditMemberTitle(memberId) {
+  if (!isPlatformAdmin()) {
+    showToast("🔒 Only administrator has permission to assign member titles.");
+    return;
+  }
+  const member = communityMembersList.find(m => m.id === memberId || m.name === memberId);
+  if (!member) return;
+
+  const titlePresets = [
+    "Language Coach 🏅",
+    "Program Manager 🎓",
+    "VIP Immersion ⭐",
+    "Linguist & Phonetics 🌍",
+    "Moderator 🛡️",
+    "Senior Learner 🌟",
+    "Community Guide 🧭",
+    "Immersion Specialist 🎧"
+  ];
+
+  const promptMsg = `Assign Title / Role for "${member.name}":\n\nPresets:\n` + 
+    titlePresets.map((p, i) => `${i + 1}. ${p}`).join("\n") + 
+    `\n\nEnter number (1-${titlePresets.length}) or type a custom title:`;
+
+  const input = prompt(promptMsg, member.role || "Member 👤");
+  if (input === null) return;
+  const choiceNum = parseInt(input.trim(), 10);
+  let finalTitle = input.trim();
+  if (!isNaN(choiceNum) && choiceNum >= 1 && choiceNum <= titlePresets.length) {
+    finalTitle = titlePresets[choiceNum - 1];
+  }
+  if (!finalTitle) return;
+
+  const curUser = getActiveUserProfile();
+  const adminEmail = (curUser && curUser.email) ? curUser.email : "sinsecontactmilla@gmail.com";
+
+  try {
+    const res = await fetch("/api/community/members", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-User-Email": adminEmail },
+      body: JSON.stringify({
+        adminEmail,
+        action: "update_title",
+        memberId: member.id || memberId,
+        newTitle: finalTitle
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      communityMembersList = data.members;
+      renderCircleMembersWidget();
+      showToast(`👑 Assigned "${finalTitle}" to ${member.name}`);
+    } else {
+      showToast(`❌ Error: ${data.error || "Failed to update title"}`);
+    }
+  } catch (err) {
+    showToast("❌ Network error updating member title");
+  }
+}
+
+async function promptRemoveMember(memberId) {
+  if (!isPlatformAdmin()) {
+    showToast("🔒 Only administrator has permission to remove members.");
+    return;
+  }
+  const member = communityMembersList.find(m => m.id === memberId || m.name === memberId);
+  const memName = member ? member.name : memberId;
+
+  if (!confirm(`Are you sure you want to remove "${memName}" from community members?`)) return;
+
+  const curUser = getActiveUserProfile();
+  const adminEmail = (curUser && curUser.email) ? curUser.email : "sinsecontactmilla@gmail.com";
+
+  try {
+    const res = await fetch("/api/community/members", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-User-Email": adminEmail },
+      body: JSON.stringify({
+        adminEmail,
+        action: "remove",
+        memberId: member ? (member.id || memberId) : memberId
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      communityMembersList = data.members;
+      renderCircleMembersWidget();
+      showToast(`🗑️ Removed ${memName} from community.`);
+    } else {
+      showToast(`❌ Error: ${data.error || "Failed to remove member"}`);
+    }
+  } catch (err) {
+    showToast("❌ Network error removing member");
+  }
+}
+
+async function promptAddMember() {
+  if (!isPlatformAdmin()) {
+    showToast("🔒 Only administrator has permission to add members.");
+    return;
+  }
+
+  const nameRaw = prompt("Enter new community member's name:");
+  if (!nameRaw || !nameRaw.trim()) return;
+  const name = nameRaw.trim();
+
+  const titleRaw = prompt("Enter title / role (e.g. Language Coach 🏅 or Member 👤):", "Member 👤");
+  const role = (titleRaw && titleRaw.trim()) ? titleRaw.trim() : "Member 👤";
+
+  let roleType = "member";
+  let group = "online";
+  const lowerRole = role.toLowerCase();
+  if (lowerRole.includes("coach") || lowerRole.includes("mentor") || lowerRole.includes("linguist")) {
+    roleType = "coach";
+    group = "coaches";
+  } else if (lowerRole.includes("manager") || lowerRole.includes("director") || lowerRole.includes("admin")) {
+    roleType = "staff";
+    group = "coaches";
+  }
+
+  const initials = getUserInitials(name);
+  const newMember = {
+    id: "mem_" + Date.now(),
+    name: name,
+    role: role,
+    status: "online",
+    avatar: initials,
+    roleType: roleType,
+    group: group
+  };
+
+  const curUser = getActiveUserProfile();
+  const adminEmail = (curUser && curUser.email) ? curUser.email : "sinsecontactmilla@gmail.com";
+
+  try {
+    const res = await fetch("/api/community/members", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-User-Email": adminEmail },
+      body: JSON.stringify({
+        adminEmail,
+        action: "add",
+        member: newMember
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      communityMembersList = data.members;
+      renderCircleMembersWidget();
+      showToast(`🎉 Added ${name} (${role}) to community!`);
+    } else {
+      showToast(`❌ Error: ${data.error || "Failed to add member"}`);
+    }
+  } catch (err) {
+    showToast("❌ Network error adding member");
+  }
 }
 
 function simulateCircleReply(postId, title, body) {

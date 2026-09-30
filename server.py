@@ -55,6 +55,31 @@ def save_permanent_videos(videos):
                 print("Error saving videos.json:", e)
             time.sleep(0.05)
 
+DEFAULT_COMMUNITY_CHANNELS = [
+    {"id": "rules-faq", "name": "rules", "type": "highlight", "icon": "fa-clipboard-check red-icon", "desc": "Community code of conduct, immersion principles, and cohort etiquette."},
+    {"id": "announcements", "name": "welcome-and-announcements", "type": "highlight", "icon": "fa-bullhorn", "desc": "Official updates, schedules, and notices from the Globally Known team.", "badge": "NEW", "unread": True},
+    {"id": "general-chat", "name": "general-chat", "type": "text", "icon": "fa-hashtag", "desc": "Informal conversations, greetings, and daily check-ins with fellow learners."},
+    {"id": "english-inputs", "name": "english-inputs", "type": "text", "icon": "fa-hashtag", "desc": "Discuss vocabulary, structures, and notes from City Vlog lessons."},
+    {"id": "metaphors", "name": "metaphors-discussion", "type": "text", "icon": "fa-hashtag", "desc": "Explore semantic networks, cognitive metaphors, and cultural idioms."},
+    {"id": "ask-sol-community", "name": "ask-sol-community", "type": "text", "icon": "fa-hashtag", "desc": "Get real-time explanations from Sol AI Coach and community linguists."},
+    {"id": "featurings", "name": "featurings", "type": "text", "icon": "fa-hashtag", "desc": "Share your accuracy metrics, speech recordings, and feature suggestions."},
+    {"id": "voice-study-lounge", "name": "Study Lounge 1", "type": "voice", "icon": "fa-volume-high", "desc": "Low-latency voice room for group listening, shadowing, and discussion.", "countTag": "2", "attendees": ["Gregory Dobbins (Host)", "Sarah K."]},
+    {"id": "voice-accent-lab", "name": "Pronunciation Lab", "type": "voice", "icon": "fa-volume-high", "desc": "Live acoustic feedback and interactive phonetic drills with coaches."}
+]
+
+DEFAULT_COMMUNITY_MEMBERS = [
+    {"id": "mem_1", "name": "Gregory Dobbins", "role": "Program Manager 🎓", "status": "online", "avatar": "GD", "roleType": "staff", "group": "coaches"},
+    {"id": "mem_2", "name": "Sarah K.", "role": "Language Coach 🏅", "status": "online", "avatar": "SK", "roleType": "coach", "group": "coaches"},
+    {"id": "mem_3", "name": "Elena Rostova", "role": "Linguist & Phonetics 🌍", "status": "online", "avatar": "ER", "roleType": "coach", "group": "coaches"},
+    {"id": "mem_4", "name": "Alice F.", "role": "Member 👤", "status": "online", "avatar": "AF", "roleType": "member", "group": "online"},
+    {"id": "mem_5", "name": "Carlos M.", "role": "Member 👤", "status": "online", "avatar": "CM", "roleType": "member", "group": "online"},
+    {"id": "mem_6", "name": "Li Wei", "role": "Member 👤", "status": "online", "avatar": "LW", "roleType": "member", "group": "online"},
+    {"id": "mem_7", "name": "Bob D.", "role": "Member 👤", "status": "offline", "avatar": "BD", "roleType": "member", "group": "offline"},
+    {"id": "mem_8", "name": "Marcus Vance", "role": "Moderator 🛡️", "status": "offline", "avatar": "MV", "roleType": "member", "group": "offline"}
+]
+
+MASTER_ADMIN_EMAILS = {"sinsecontactmilla@gmail.com", "adrian.milla@gmail.com"}
+
 def load_data():
     d = {"videos": [], "conversations": [], "progress": {}, "users": []}
     if os.path.exists(DATA_FILE):
@@ -74,6 +99,14 @@ def load_data():
         permanent_vids = get_permanent_videos()
         if permanent_vids:
             d["videos"] = permanent_vids
+    if "community_channels" not in d or not isinstance(d["community_channels"], list) or len(d["community_channels"]) == 0:
+        d["community_channels"] = [dict(c) for c in DEFAULT_COMMUNITY_CHANNELS]
+    if "community_members" not in d or not isinstance(d["community_members"], list) or len(d["community_members"]) == 0:
+        d["community_members"] = [dict(m) for m in DEFAULT_COMMUNITY_MEMBERS]
+    admin_list = set(str(x).strip().lower() for x in d.get("admin_emails", []))
+    for ma in MASTER_ADMIN_EMAILS:
+        admin_list.add(ma)
+    d["admin_emails"] = list(admin_list)
     return d
 
 def save_data(data):
@@ -112,6 +145,24 @@ def sanitize_user(user):
     copy = dict(user)
     copy.pop("passwordHash", None)
     return copy
+
+MASTER_ADMIN_EMAILS = {"sinsecontactmilla@gmail.com", "adrian.milla@gmail.com"}
+
+def is_admin_email(email, data=None):
+    if not email:
+        return False
+    em = str(email).strip().lower()
+    if em in MASTER_ADMIN_EMAILS:
+        return True
+    if data is None:
+        data = load_data()
+    admin_list = [str(x).strip().lower() for x in data.get("admin_emails", [])]
+    if em in admin_list:
+        return True
+    for u in data.get("users", []):
+        if isinstance(u, dict) and str(u.get("email", "")).strip().lower() == em and u.get("role") == "admin":
+            return True
+    return False
 
 def get_master_gemini_key(data=None):
     if data is None:
@@ -558,10 +609,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             parsed = urllib.parse.urlparse(self.path)
             qs = urllib.parse.parse_qs(parsed.query)
             caller = (qs.get("email", [None])[0] or qs.get("user", [None])[0] or self.headers.get("X-User-Email", "") or "").strip().lower()
-            if caller != "adrian.milla@gmail.com":
+            data = load_data()
+            if not is_admin_email(caller, data):
                 self.send_error(403, "Forbidden: Only platform administrator can access user export")
                 return
-            data = load_data()
             users = data.get("users", [])
             lines = ["Name,Email,Provider,JoinedDate,LastActive"]
             for u in users:
@@ -585,17 +636,30 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             parsed = urllib.parse.urlparse(self.path)
             qs = urllib.parse.parse_qs(parsed.query)
             caller = (qs.get("email", [None])[0] or qs.get("user", [None])[0] or self.headers.get("X-User-Email", "") or "").strip().lower()
-            if caller != "adrian.milla@gmail.com":
+            data = load_data()
+            if not is_admin_email(caller, data):
                 self.send_error(403, "Forbidden: Only platform administrator can view registered users")
                 return
-            data = load_data()
             users = [sanitize_user(u) for u in data.get("users", [])]
-            payload = json.dumps({"count": len(users), "users": users}).encode("utf-8")
+            admin_emails = list(set([str(x).strip().lower() for x in data.get("admin_emails", [])] + list(MASTER_ADMIN_EMAILS)))
+            payload = json.dumps({"count": len(users), "users": users, "adminEmails": admin_emails}).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
+            return
+
+        elif self.path.startswith("/api/community/data") or self.path.startswith("/api/community/channels"):
+            data = load_data()
+            channels = data.get("community_channels", None)
+            members = data.get("community_members", None)
+            resp = json.dumps({"success": True, "channels": channels, "members": members}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers()
+            self.wfile.write(resp)
             return
 
         elif self.path.startswith("/api/config/google"):
@@ -773,11 +837,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 payload = json.loads(body)
                 caller = (payload.get("email") or payload.get("user") or self.headers.get("X-User-Email", "") or "").strip().lower()
-                if caller != "adrian.milla@gmail.com":
+                data = load_data()
+                if not is_admin_email(caller, data):
                     self.send_error(403, "Forbidden: Only platform administrator can update Google Client ID")
                     return
                 cid = (payload.get("googleClientId") or "").strip()
-                data = load_data()
                 data["googleClientId"] = cid
                 save_data(data)
                 resp = json.dumps({"success": True, "googleClientId": cid}).encode("utf-8")
@@ -799,11 +863,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 payload = json.loads(body)
                 caller = (payload.get("email") or payload.get("user") or self.headers.get("X-User-Email", "") or "").strip().lower()
-                if caller != "adrian.milla@gmail.com":
+                data = load_data()
+                if not is_admin_email(caller, data):
                     self.send_error(403, "Forbidden: Only platform administrator can update Gemini Master Key")
                     return
                 key_val = (payload.get("geminiApiKey") or payload.get("apiKey") or "").strip()
-                data = load_data()
                 data["geminiApiKey"] = key_val
                 save_data(data)
                 masked = (key_val[:6] + "..." + key_val[-4:]) if len(key_val) > 10 else ("***" if key_val else "")
@@ -812,6 +876,54 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     "active": bool(key_val),
                     "maskedKey": masked
                 }).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
+        elif self.path.startswith("/api/admin/users/set-role"):
+            try:
+                payload = json.loads(body)
+                caller = (payload.get("adminEmail") or self.headers.get("X-User-Email", "") or "").strip().lower()
+                data = load_data()
+                if not is_admin_email(caller, data):
+                    self.send_error(403, "Forbidden: Only administrator can grant or revoke permissions")
+                    return
+
+                target_email = (payload.get("targetEmail") or "").strip().lower()
+                new_role = (payload.get("role") or "member").strip().lower()
+
+                if not target_email:
+                    raise ValueError("targetEmail is required")
+
+                admin_list = set(str(x).strip().lower() for x in data.get("admin_emails", []))
+                users = data.get("users", [])
+                for u in users:
+                    if isinstance(u, dict) and str(u.get("email", "")).strip().lower() == target_email:
+                        u["role"] = new_role
+                        break
+
+                if new_role == "admin":
+                    admin_list.add(target_email)
+                else:
+                    if target_email not in MASTER_ADMIN_EMAILS:
+                        admin_list.discard(target_email)
+
+                data["admin_emails"] = list(admin_list)
+                data["users"] = users
+                save_data(data)
+
+                sanitized = [sanitize_user(u) for u in users]
+                resp = json.dumps({"success": True, "users": sanitized, "adminEmails": list(admin_list), "admin_emails": list(admin_list)}).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(resp)))
@@ -1068,6 +1180,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 users = data.get("users", [])
                 user = next((u for u in users if u.get("email") == email), None)
 
+                user_role = "admin" if is_admin_email(email, data) else "free"
                 now_ts = int(time.time() * 1000)
                 if not user:
                     user = {
@@ -1075,7 +1188,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                         "name": name,
                         "email": email,
                         "picture": picture,
-                        "role": "free",
+                        "role": user_role,
                         "authProvider": "google",
                         "createdAt": now_ts,
                         "lastLogin": now_ts,
@@ -1087,6 +1200,8 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     user["lastLogin"] = now_ts
                     user["loginCount"] = user.get("loginCount", 1) + 1
+                    if is_admin_email(email, data):
+                        user["role"] = "admin"
                     if name and user.get("name") in ("Google User", ""):
                         user["name"] = name
                     if picture and not user.get("picture"):
@@ -1109,12 +1224,111 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(resp)
             return
 
+        elif self.path.startswith("/api/community/channels"):
+            try:
+                payload = json.loads(body)
+                caller = (payload.get("adminEmail") or self.headers.get("X-User-Email", "") or "").strip().lower()
+                data = load_data()
+                if not is_admin_email(caller, data):
+                    self.send_error(403, "Forbidden: Only administrator can manage community channels")
+                    return
+
+                action = payload.get("action", "")
+                channels = data.get("community_channels", [])
+
+                if action == "add":
+                    new_ch = payload.get("channel", {})
+                    if not new_ch.get("id"):
+                        new_ch["id"] = "ch_" + uuid.uuid4().hex[:8]
+                    channels.append(new_ch)
+                elif action == "edit":
+                    ch_id = payload.get("channelId")
+                    updated_meta = payload.get("channel", {})
+                    for ch in channels:
+                        if ch.get("id") == ch_id:
+                            ch.update(updated_meta)
+                            break
+                elif action == "delete":
+                    ch_id = payload.get("channelId")
+                    channels = [c for c in channels if c.get("id") != ch_id]
+
+                data["community_channels"] = channels
+                save_data(data)
+                resp = json.dumps({"success": True, "channels": channels}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
+        elif self.path.startswith("/api/community/members"):
+            try:
+                payload = json.loads(body)
+                caller = (payload.get("adminEmail") or self.headers.get("X-User-Email", "") or "").strip().lower()
+                data = load_data()
+                if not is_admin_email(caller, data):
+                    self.send_error(403, "Forbidden: Only administrator can manage community members")
+                    return
+
+                action = payload.get("action", "")
+                members = data.get("community_members", [])
+
+                if action == "add":
+                    new_mem = payload.get("member", {})
+                    if not new_mem.get("id"):
+                        new_mem["id"] = "mem_" + uuid.uuid4().hex[:8]
+                    members.append(new_mem)
+                elif action == "update_title":
+                    mem_id = payload.get("memberId")
+                    new_title = (payload.get("newTitle") or payload.get("role") or "").strip()
+                    for m in members:
+                        if m.get("id") == mem_id or m.get("email") == mem_id or m.get("name") == mem_id:
+                            m["role"] = new_title
+                            if "coach" in new_title.lower() or "mentor" in new_title.lower():
+                                m["roleType"] = "coach"
+                            elif "admin" in new_title.lower() or "manager" in new_title.lower():
+                                m["roleType"] = "staff"
+                            break
+                elif action == "remove":
+                    mem_id = payload.get("memberId")
+                    members = [m for m in members if m.get("id") != mem_id and m.get("name") != mem_id]
+
+                data["community_members"] = members
+                save_data(data)
+                resp = json.dumps({"success": True, "members": members}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
         if self.path.startswith("/api/videos/update"):
             try:
                 payload = json.loads(body)
+                caller = (payload.get("adminEmail") or self.headers.get("X-User-Email", "") or "").strip().lower()
+                data = load_data()
+                if not is_admin_email(caller, data):
+                    self.send_error(403, "Forbidden: Only administrator can edit video titles")
+                    return
+
                 vid_id = payload.get("id")
                 new_title = payload.get("title")
-                data = load_data()
                 existing = data.get("videos", [])
                 for v in existing:
                     if isinstance(v, dict) and v.get("id") == vid_id:
@@ -1142,8 +1356,13 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith("/api/videos/delete"):
             try:
                 payload = json.loads(body)
-                vid_id = payload.get("id")
+                caller = (payload.get("adminEmail") or self.headers.get("X-User-Email", "") or "").strip().lower()
                 data = load_data()
+                if not is_admin_email(caller, data):
+                    self.send_error(403, "Forbidden: Only administrator can delete videos")
+                    return
+
+                vid_id = payload.get("id")
                 existing = data.get("videos", [])
                 filtered = [v for v in existing if isinstance(v, dict) and v.get("id") != vid_id]
                 data["videos"] = filtered
@@ -1166,11 +1385,16 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         elif self.path.startswith("/api/videos/import") or self.path.startswith("/api/videos/restore"):
             try:
+                data = load_data()
+                caller = self.headers.get("X-User-Email", "").strip().lower()
+                if not is_admin_email(caller, data):
+                    self.send_error(403, "Forbidden: Only administrator can import videos")
+                    return
+
                 imported = json.loads(body)
                 if isinstance(imported, dict) and "videos" in imported:
                     imported = imported["videos"]
                 if isinstance(imported, list):
-                    data = load_data()
                     # Union merge imported with existing
                     existing = data.get("videos", [])
                     vmap = {v["id"]: v for v in existing if isinstance(v, dict) and "id" in v}
@@ -1200,9 +1424,14 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         elif self.path.startswith("/api/youtube/categories"):
             try:
+                data = load_data()
+                caller = self.headers.get("X-User-Email", "").strip().lower()
+                if not is_admin_email(caller, data):
+                    self.send_error(403, "Forbidden: Only administrator can update playlist categories")
+                    return
+
                 payload = json.loads(body)
                 cats = payload if isinstance(payload, list) else payload.get("categories", [])
-                data = load_data()
                 data["playlist_categories"] = cats
                 save_data(data)
                 resp = json.dumps({"success": True, "categories": cats}).encode("utf-8")
@@ -1223,6 +1452,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path.startswith("/api/youtube/playlist/import"):
             try:
                 payload = json.loads(body)
+                caller = (payload.get("adminEmail") or self.headers.get("X-User-Email", "") or "").strip().lower()
+                data = load_data()
+                if not is_admin_email(caller, data):
+                    self.send_error(403, "Forbidden: Only administrator can import playlists")
+                    return
+
                 url = payload.get("url", "")
                 cat_id = payload.get("categoryId", "")
                 cat_title_override = (payload.get("categoryTitle") or "").strip()
@@ -1590,6 +1825,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         elif path.startswith("/api/youtube/categories"):
             query = urllib.parse.parse_qs(parsed_url.query)
+            caller = (query.get("adminEmail", [None])[0] or query.get("email", [None])[0] or self.headers.get("X-User-Email", "") or "").strip().lower()
+            data = load_data()
+            if not is_admin_email(caller, data):
+                self.send_error(403, "Forbidden: Only administrator can delete playlist categories")
+                return
+
             cat_id = query.get("id", [None])[0]
             if not cat_id:
                 parts = path.strip("/").split("/")
@@ -1605,7 +1846,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(resp)
                 return
 
-            data = load_data()
             cats = [c for c in data.get("playlist_categories", []) if c.get("id") != cat_id]
             data["playlist_categories"] = cats
 

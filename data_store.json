@@ -3047,12 +3047,16 @@
       "name": "Biciu Adrian",
       "email": "sinsecontactmilla@gmail.com",
       "picture": "https://lh3.googleusercontent.com/a/ACg8ocLgV1J_JhKi_uZs67o8Tjh4qz3wu22YTATXdchOZkVdSBAkpIFn=s96-c",
-      "role": "free",
+      "role": "admin",
       "authProvider": "google",
       "createdAt": 1790785696142,
       "lastLogin": 1790785696142,
       "loginCount": 1
     }
+  ],
+  "admin_emails": [
+    "sinsecontactmilla@gmail.com",
+    "adrian.milla@gmail.com"
   ],
   "user_progress": {
     "adrian.milla@gmail.com": {
@@ -8096,5 +8100,151 @@
     "shorts_grammar",
     "kitchen",
     "whathouse"
+  ],
+  "community_channels": [
+    {
+      "id": "rules-faq",
+      "name": "rules",
+      "type": "highlight",
+      "icon": "fa-clipboard-check red-icon",
+      "desc": "Community code of conduct, immersion principles, and cohort etiquette."
+    },
+    {
+      "id": "announcements",
+      "name": "welcome-and-announcements",
+      "type": "highlight",
+      "icon": "fa-bullhorn",
+      "desc": "Official updates, schedules, and notices from the Globally Known team.",
+      "badge": "NEW",
+      "unread": true
+    },
+    {
+      "id": "general-chat",
+      "name": "general-chat",
+      "type": "text",
+      "icon": "fa-hashtag",
+      "desc": "Informal conversations, greetings, and daily check-ins with fellow learners."
+    },
+    {
+      "id": "english-inputs",
+      "name": "english-inputs",
+      "type": "text",
+      "icon": "fa-hashtag",
+      "desc": "Discuss vocabulary, structures, and notes from City Vlog lessons."
+    },
+    {
+      "id": "metaphors",
+      "name": "metaphors-discussion",
+      "type": "text",
+      "icon": "fa-hashtag",
+      "desc": "Explore semantic networks, cognitive metaphors, and cultural idioms."
+    },
+    {
+      "id": "ask-sol-community",
+      "name": "ask-sol-community",
+      "type": "text",
+      "icon": "fa-hashtag",
+      "desc": "Get real-time explanations from Sol AI Coach and community linguists."
+    },
+    {
+      "id": "featurings",
+      "name": "featurings",
+      "type": "text",
+      "icon": "fa-hashtag",
+      "desc": "Share your accuracy metrics, speech recordings, and feature suggestions."
+    },
+    {
+      "id": "voice-study-lounge",
+      "name": "Study Lounge 1",
+      "type": "voice",
+      "icon": "fa-volume-high",
+      "desc": "Low-latency voice room for group listening, shadowing, and discussion.",
+      "countTag": "2",
+      "attendees": [
+        "Gregory Dobbins (Host)",
+        "Sarah K."
+      ]
+    },
+    {
+      "id": "voice-accent-lab",
+      "name": "Pronunciation Lab",
+      "type": "voice",
+      "icon": "fa-volume-high",
+      "desc": "Live acoustic feedback and interactive phonetic drills with coaches."
+    }
+  ],
+  "community_members": [
+    {
+      "id": "mem_1",
+      "name": "Gregory Dobbins",
+      "role": "Program Manager 🎓",
+      "status": "online",
+      "avatar": "GD",
+      "roleType": "staff",
+      "group": "coaches"
+    },
+    {
+      "id": "mem_2",
+      "name": "Sarah K.",
+      "role": "Language Coach",
+      "status": "online",
+      "avatar": "SK",
+      "roleType": "coach",
+      "group": "coaches"
+    },
+    {
+      "id": "mem_3",
+      "name": "Elena Rostova",
+      "role": "Linguist & Phonetics 🌍",
+      "status": "online",
+      "avatar": "ER",
+      "roleType": "coach",
+      "group": "coaches"
+    },
+    {
+      "id": "mem_4",
+      "name": "Alice F.",
+      "role": "Member 👤",
+      "status": "online",
+      "avatar": "AF",
+      "roleType": "member",
+      "group": "online"
+    },
+    {
+      "id": "mem_5",
+      "name": "Carlos M.",
+      "role": "Member 👤",
+      "status": "online",
+      "avatar": "CM",
+      "roleType": "member",
+      "group": "online"
+    },
+    {
+      "id": "mem_6",
+      "name": "Li Wei",
+      "role": "Member 👤",
+      "status": "online",
+      "avatar": "LW",
+      "roleType": "member",
+      "group": "online"
+    },
+    {
+      "id": "mem_7",
+      "name": "Bob D.",
+      "role": "Member 👤",
+      "status": "offline",
+      "avatar": "BD",
+      "roleType": "member",
+      "group": "offline"
+    },
+    {
+      "id": "mem_8",
+      "name": "Marcus Vance",
+      "role": "Moderator 🛡️",
+      "status": "offline",
+      "avatar": "MV",
+      "roleType": "member",
+      "group": "offline"
+    }
   ]
 }

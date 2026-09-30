@@ -11745,5 +11745,181 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   text-shadow: none !important;
 }
 
+/* Community Channels & Members Admin Tools */
+.category-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.discord-add-channel-header-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.discord-add-channel-header-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.discord-channel-item {
+  position: relative !important;
+}
+
+.discord-channel-admin-actions {
+  display: none;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.discord-channel-item:hover .discord-channel-admin-actions {
+  display: inline-flex;
+}
+
+.btn-ch-action {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.btn-ch-action:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-ch-action.delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-discord-add-member {
+  width: 100%;
+  margin-bottom: 0.85rem;
+  padding: 0.45rem 0.75rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px dashed rgba(99, 102, 241, 0.45);
+  border-radius: 8px;
+  color: #a5b4fc;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-discord-add-member:hover {
+  background: rgba(99, 102, 241, 0.28);
+  color: #ffffff;
+  border-color: #818cf8;
+}
+
+.discord-member-row {
+  position: relative !important;
+}
+
+.discord-member-admin-tools {
+  display: none;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.discord-member-row:hover .discord-member-admin-tools {
+  display: inline-flex;
+}
+
+.btn-mem-tool {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.btn-mem-tool:hover {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.15);
+}
+
+.btn-mem-tool.remove-tool:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* User Directory Role Buttons */
+.role-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.role-badge-btn.is-admin {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+.role-badge-btn.is-admin:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.role-badge-btn.is-member {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.role-badge-btn.is-member:hover {
+  background: rgba(99, 102, 241, 0.25);
+  color: #c7d2fe;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.role-owner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(249, 115, 22, 0.25));
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+}
+
+
 
 
