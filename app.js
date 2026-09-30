@@ -3901,8 +3901,25 @@ function initDictionaryPanel() {
   const btnNextSlide = document.getElementById("btn-next-slide");
   const slideImage = document.getElementById("slide-image-element");
   const slideImageWrapper = document.getElementById("slide-image-wrapper-element");
+  const slideScreenFrame = document.getElementById("slide-screen-frame-element");
   const counterLabel = document.getElementById("slide-counter-label");
   const dotsContainer = document.getElementById("slide-dots-container");
+
+  const preloadSlideImage = (src) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+      if (img.complete) {
+        if (typeof img.decode === "function") {
+          img.decode().then(() => resolve(img)).catch(() => resolve(img));
+        } else {
+          resolve(img);
+        }
+      }
+    });
+  };
 
   // Floating anchor buttons
   const btnAnchorLeft = document.getElementById("btn-anchor-left");
@@ -4182,7 +4199,11 @@ function initDictionaryPanel() {
     }
     if (slideImageWrapper) {
       slideImageWrapper.classList.remove("zoomed-state");
-      slideImageWrapper.classList.remove("mobile-column-zoomed");
+      setTimeout(() => {
+        if (!isZoomed && slideImageWrapper) {
+          slideImageWrapper.classList.remove("mobile-column-zoomed");
+        }
+      }, 350);
     }
     if (btnZoomReset) {
       btnZoomReset.classList.add("hidden");
@@ -4211,7 +4232,7 @@ function initDictionaryPanel() {
   const headerIntro = document.getElementById("dict-header-intro");
   const deckTitleEl = document.getElementById("slideshow-deck-title");
 
-  const updateSlideDisplay = (preserveZoom = true, direction = null) => {
+  const updateSlideDisplay = async (preserveZoom = true, direction = null) => {
     if (!slideImage || !counterLabel) return;
 
     const isDeckChange = (lastRenderedDeck !== null && lastRenderedDeck !== currentDeck);
@@ -4226,7 +4247,6 @@ function initDictionaryPanel() {
     const prevScale = currentScale;
     const prevTransX = currentTranslateX;
     const prevTransY = currentTranslateY;
-    const prevZoomedColumn = currentZoomedColumn;
 
     if (wasZoomed && currentZoomedColumn !== null) {
       if (direction === "next") {
@@ -4240,36 +4260,48 @@ function initDictionaryPanel() {
       resetZoom();
     }
 
-    let oldImg = null;
-    let incomingStartTransform = "";
-    let oldTargetTransform = "";
-
-    if (isSlideIndexChange && slideImageWrapper) {
-      slideImageWrapper.querySelectorAll(".slide-outgoing-clone").forEach(el => el.remove());
-      oldImg = slideImage.cloneNode(true);
-      oldImg.removeAttribute("id");
-      oldImg.classList.add("slide-outgoing-clone");
-      oldImg.src = slideImage.src;
-      oldImg.style.transform = slideImage.style.transform || "";
-      oldImg.style.removeProperty("transition");
-      slideImageWrapper.insertBefore(oldImg, slideImage);
-    }
-
+    // Determine target slide image URL
+    let targetSrc = "";
     if (currentDeck === "body") {
-      slideImage.src = `assets/dict/page_${currentSlideIdx}.png`;
+      targetSrc = `assets/dict/page_${currentSlideIdx}.png`;
       counterLabel.textContent = `Slide ${currentSlideIdx} of 17`;
       if (deckTitleEl) deckTitleEl.innerHTML = `<i class="fa-solid fa-person-half-dress"></i> Body Parts`;
       maxSlides = 17;
     } else if (currentDeck === "bathroom") {
-      slideImage.src = `assets/dict/bathroom_page_${currentSlideIdx}.png`;
+      targetSrc = `assets/dict/bathroom_page_${currentSlideIdx}.png`;
       counterLabel.textContent = `Slide ${currentSlideIdx} of 18`;
       if (deckTitleEl) deckTitleEl.innerHTML = `<i class="fa-solid fa-bath"></i> Inside The Bathroom`;
       maxSlides = 18;
     } else {
-      slideImage.src = `assets/dict/seaside_page_${currentSlideIdx}.png`;
+      targetSrc = `assets/dict/seaside_page_${currentSlideIdx}.png`;
       counterLabel.textContent = `Slide ${currentSlideIdx} of 21`;
       if (deckTitleEl) deckTitleEl.innerHTML = `<i class="fa-solid fa-umbrella-beach"></i> Sea Side`;
       maxSlides = 21;
+    }
+
+    // First load the slide image before starting transition
+    if (isSlideIndexChange) {
+      await preloadSlideImage(targetSrc);
+    }
+
+    // Grab or create slideScreenFrame for screen swipe
+    let activeScreenFrame = document.getElementById("slide-screen-frame-element");
+    if (!activeScreenFrame && slideImageWrapper && slideImage) {
+      activeScreenFrame = document.createElement("div");
+      activeScreenFrame.className = "slide-screen-frame";
+      activeScreenFrame.id = "slide-screen-frame-element";
+      slideImageWrapper.insertBefore(activeScreenFrame, slideImage);
+      activeScreenFrame.appendChild(slideImage);
+    }
+
+    // Clone current slide screen as outgoing frame before updating image
+    let outgoingFrame = null;
+    if (isSlideIndexChange && activeScreenFrame && slideImageWrapper) {
+      slideImageWrapper.querySelectorAll(".slide-screen-outgoing").forEach(el => el.remove());
+      outgoingFrame = activeScreenFrame.cloneNode(true);
+      outgoingFrame.removeAttribute("id");
+      outgoingFrame.classList.add("slide-screen-outgoing");
+      slideImageWrapper.insertBefore(outgoingFrame, activeScreenFrame);
     }
 
     // Toggle nav buttons disabled state visual indicators
@@ -4304,8 +4336,18 @@ function initDictionaryPanel() {
       });
     }
 
-    let targetTransform = "translate(0px, 0px) scale(1)";
+    // Update active slide image src (now preloaded)
+    slideImage.src = targetSrc;
+
+    // Apply target column/zoom transform to slideImage
     const isMobile = window.innerWidth <= 900;
+
+    // Disable internal column animation during slide screen swipe so no turn around occurs
+    if (outgoingFrame) {
+      slideImage.style.transition = "none";
+    } else {
+      slideImage.style.removeProperty("transition");
+    }
 
     if (wasZoomed) {
       isZoomed = true;
@@ -4322,23 +4364,7 @@ function initDictionaryPanel() {
         if (targetColumn === "left") xPercent = 0;
         else if (targetColumn === "center") xPercent = -33.333333;
         else if (targetColumn === "right") xPercent = -66.666667;
-        targetTransform = `translate3d(${xPercent}%, 0, 0)`;
-
-        if (oldImg) {
-          let prevPercent = 0;
-          if (prevZoomedColumn === "left") prevPercent = 0;
-          else if (prevZoomedColumn === "center") prevPercent = -33.333333;
-          else if (prevZoomedColumn === "right") prevPercent = -66.666667;
-          else prevPercent = isForward ? -66.666667 : 0;
-
-          if (isForward) {
-            oldTargetTransform = `translate3d(${prevPercent - 33.333333}%, 0, 0)`;
-            incomingStartTransform = `translate3d(${xPercent + 33.333333}%, 0, 0)`;
-          } else {
-            oldTargetTransform = `translate3d(${prevPercent + 33.333333}%, 0, 0)`;
-            incomingStartTransform = `translate3d(${xPercent - 33.333333}%, 0, 0)`;
-          }
-        }
+        slideImage.style.transform = `translate3d(${xPercent}%, 0, 0)`;
       } else if (targetColumn) {
         slideImage.classList.add("zoomed");
         if (slideImageWrapper) {
@@ -4359,18 +4385,7 @@ function initDictionaryPanel() {
           translateX = -limitX;
         }
         currentTranslateX = translateX;
-        targetTransform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
-
-        if (oldImg) {
-          const colStep = limitX > 10 ? limitX : width * 0.333;
-          if (isForward) {
-            oldTargetTransform = `translate(${prevTransX - colStep}px, ${translateY}px) scale(${currentScale})`;
-            incomingStartTransform = `translate(${translateX + colStep}px, ${translateY}px) scale(${currentScale})`;
-          } else {
-            oldTargetTransform = `translate(${prevTransX + colStep}px, ${translateY}px) scale(${currentScale})`;
-            incomingStartTransform = `translate(${translateX - colStep}px, ${translateY}px) scale(${currentScale})`;
-          }
-        }
+        slideImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
       } else {
         currentTranslateX = prevTransX;
         currentTranslateY = prevTransY;
@@ -4381,52 +4396,49 @@ function initDictionaryPanel() {
           slideImageWrapper.classList.add("zoomed-state");
           slideImageWrapper.classList.remove("mobile-column-zoomed");
         }
-        targetTransform = `translate(${prevTransX}px, ${prevTransY}px) scale(${prevScale})`;
-
-        if (oldImg) {
-          const width = slideImage.clientWidth || 800;
-          const shift = width * 0.35;
-          if (isForward) {
-            oldTargetTransform = `translate(${prevTransX - shift}px, ${prevTransY}px) scale(${prevScale})`;
-            incomingStartTransform = `translate(${prevTransX + shift}px, ${prevTransY}px) scale(${prevScale})`;
-          } else {
-            oldTargetTransform = `translate(${prevTransX + shift}px, ${prevTransY}px) scale(${prevScale})`;
-            incomingStartTransform = `translate(${prevTransX - shift}px, ${prevTransY}px) scale(${prevScale})`;
-          }
-        }
+        slideImage.style.transform = `translate(${prevTransX}px, ${prevTransY}px) scale(${prevScale})`;
       }
       if (btnZoomReset) btnZoomReset.classList.remove("hidden");
       updateZoomBadge();
     } else {
-      // Unzoomed
-      targetTransform = `translate(0px, 0px) scale(1)`;
-      if (oldImg) {
-        if (isForward) {
-          oldTargetTransform = `translate3d(-100%, 0, 0)`;
-          incomingStartTransform = `translate3d(100%, 0, 0)`;
-        } else {
-          oldTargetTransform = `translate3d(100%, 0, 0)`;
-          incomingStartTransform = `translate3d(-100%, 0, 0)`;
-        }
-      }
+      slideImage.style.transform = `translate(0px, 0px) scale(1)`;
     }
 
-    if (oldImg && incomingStartTransform) {
-      slideImage.style.transition = "none";
-      slideImage.style.transform = incomingStartTransform;
-      void slideImage.offsetWidth;
-      void oldImg.offsetWidth;
-      slideImage.style.removeProperty("transition");
-      slideImage.style.transform = targetTransform;
-      oldImg.style.transform = oldTargetTransform;
+    // Perform Screen Swipe animation like a mobile phone swipe between slides
+    if (outgoingFrame && activeScreenFrame) {
+      const startX = isForward ? "100%" : "-100%";
+      const endX = isForward ? "-100%" : "100%";
 
-      const cleanupOld = () => {
-        if (oldImg && oldImg.parentElement) oldImg.remove();
+      activeScreenFrame.style.transition = "none";
+      activeScreenFrame.style.transform = `translate3d(${startX}, 0, 0)`;
+      outgoingFrame.style.transition = "none";
+      outgoingFrame.style.transform = "translate3d(0%, 0, 0)";
+
+      void activeScreenFrame.offsetWidth;
+      void outgoingFrame.offsetWidth;
+
+      const swipeTransition = "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)";
+      activeScreenFrame.style.transition = swipeTransition;
+      outgoingFrame.style.transition = swipeTransition;
+
+      activeScreenFrame.style.transform = "translate3d(0%, 0, 0)";
+      outgoingFrame.style.transform = `translate3d(${endX}, 0, 0)`;
+
+      const cleanup = () => {
+        if (outgoingFrame && outgoingFrame.parentElement) outgoingFrame.remove();
+        if (activeScreenFrame) {
+          activeScreenFrame.style.removeProperty("transition");
+          activeScreenFrame.style.removeProperty("transform");
+        }
+        if (slideImage) {
+          slideImage.style.removeProperty("transition");
+        }
       };
-      oldImg.addEventListener("transitionend", cleanupOld, { once: true });
-      setTimeout(cleanupOld, 450);
+
+      outgoingFrame.addEventListener("transitionend", cleanup, { once: true });
+      setTimeout(cleanup, 400);
     } else {
-      slideImage.style.transform = targetTransform;
+      slideImage.style.removeProperty("transition");
     }
 
     updateAnchorVisibility();
