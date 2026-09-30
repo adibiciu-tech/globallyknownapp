@@ -3055,8 +3055,8 @@
     }
   ],
   "admin_emails": [
-    "sinsecontactmilla@gmail.com",
-    "globallyknownrappers@gmail.com"
+    "globallyknownrappers@gmail.com",
+    "sinsecontactmilla@gmail.com"
   ],
   "user_progress": {
     "adrian.milla@gmail.com": {
@@ -4423,6 +4423,147 @@
           }
         ],
         "createdAt": 1790273406223
+      }
+    ],
+    "sinsecontactmilla@gmail.com": [
+      {
+        "id": "conv_1790799431154",
+        "title": "Casual Conversation",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "hello",
+            "parts": [
+              {
+                "text": "hello"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Hey Biciu! Good to see you. How's your day going so far? What's on your mind today?",
+            "parts": [
+              {
+                "text": "Hey Biciu! Good to see you. How's your day going so far? What's on your mind today?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "uhm nothing",
+            "parts": [
+              {
+                "text": "uhm nothing"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Haha, fair enough! Honestly, sometimes doing absolutely nothing is the best way to spend your time. \n\nAre you just kickin' back today, or are you trying to recover from a crazy busy week?",
+            "parts": [
+              {
+                "text": "Haha, fair enough! Honestly, sometimes doing absolutely nothing is the best way to spend your time. \n\nAre you just kickin' back today, or are you trying to recover from a crazy busy week?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "i am go to the market",
+            "parts": [
+              {
+                "text": "i am go to the market"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Oh, nice! A market run. \n\nAre you heading out to grab some groceries, or just going to browse around and see what looks good? What's on the shopping list today?",
+            "parts": [
+              {
+                "text": "Oh, nice! A market run. \n\nAre you heading out to grab some groceries, or just going to browse around and see what looks good? What's on the shopping list today?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "you corrected me, nice",
+            "displayHtml": "you corrected me, nice",
+            "parts": [
+              {
+                "text": "you corrected me, nice"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Haha, I got your back! I'm always down to keep things sounding super natural. \n\nSo, what's the mission at the market today? Grabbing anything good?",
+            "parts": [
+              {
+                "text": "Haha, I got your back! I'm always down to keep things sounding super natural. \n\nSo, what's the mission at the market today? Grabbing anything good?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "kinda good",
+            "displayHtml": "kinda good",
+            "parts": [
+              {
+                "text": "kinda good"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Ooh, \"kinda good\" usually means snacks are involved. Am I right? Or are we talking some serious comfort food?",
+            "parts": [
+              {
+                "text": "Ooh, \"kinda good\" usually means snacks are involved. Am I right? Or are we talking some serious comfort food?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "you're the best! let's test you out! shall we?",
+            "displayHtml": "you&#039;re the best! let&#039;s test you out! shall we?",
+            "parts": [
+              {
+                "text": "you're the best! let's test you out! shall we?"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Haha, love the energy! I am 100% ready. Bring it on! \n\nWhat kind of test are we talking about? Rapid-fire trivia, tricky real-world English slang, deep philosophical debates, or something totally out of left field? \n\nThrow whatever you've got at me—I'm all ears!",
+            "parts": [
+              {
+                "text": "Haha, love the energy! I am 100% ready. Bring it on! \n\nWhat kind of test are we talking about? Rapid-fire trivia, tricky real-world English slang, deep philosophical debates, or something totally out of left field? \n\nThrow whatever you've got at me—I'm all ears!"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "welcom in the city",
+            "displayHtml": "welcom in the city",
+            "parts": [
+              {
+                "text": "welcom in the city"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Ooh, Test #1! Let's do this. \n\nIf you want to make that sound 100% natural, you'd swap one little word: **\"Welcome *to* the city!\"**\n\nIn English, whenever you're welcoming someone to a place—a city, a country, a party, or your house—it's almost always **\"welcome *to*...\"** because you're greeting them at a destination. \n\n*(Bonus tip: You might hear \"Welcome in!\" if you walk into a cozy little shop or café, but for cities\n, it's always \"Welcome to [City]!\")*\n\nHow'd I do? Bring on Test #2!",
+            "parts": [
+              {
+                "text": "Ooh, Test #1! Let's do this. \n\nIf you want to make that sound 100% natural, you'd swap one little word: **\"Welcome *to* the city!\"**\n\nIn English, whenever you're welcoming someone to a place—a city, a country, a party, or your house—it's almost always **\"welcome *to*...\"** because you're greeting them at a destination. \n\n*(Bonus tip: You might hear \"Welcome in!\" if you walk into a cozy little shop or café, but for cities\n, it's always \"Welcome to [City]!\")*\n\nHow'd I do? Bring on Test #2!"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790799431155
       }
     ]
   },

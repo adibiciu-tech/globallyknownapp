@@ -985,11 +985,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
                 req_body = {
                     "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                    "generationConfig": {"maxOutputTokens": 120, "temperature": 0.1}
+                    "generationConfig": {"maxOutputTokens": 512, "temperature": 0.1, "thinkingConfig": {"thinkingBudget": 0}}
                 }
 
                 ctx = ssl.create_default_context()
-                models_to_try = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash", "gemini-3.6-flash"]
+                models_to_try = ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-flash-latest"]
                 corrected_result = None
 
                 for mod in models_to_try:
@@ -1019,6 +1019,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                                     corrected_result = reply_text
                                     break
                     except Exception as e:
+                        print("Grammar check error on model", mod, e)
                         continue
 
                 if corrected_result and "NO_CHANGES" not in corrected_result and ("<s>" in corrected_result or "<strike>" in corrected_result or "<del>" in corrected_result):
@@ -1081,10 +1082,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 # Try production models in priority order (Flash models support multimodal vision)
                 models_to_try = [
                     requested_model,
-                    "gemini-2.5-flash",
-                    "gemini-1.5-flash",
-                    "gemini-2.0-flash",
                     "gemini-3.6-flash",
+                    "gemini-3.8-flash",
+                    "gemini-flash-latest",
                     "gemini-3.5-flash-lite"
                 ]
                 seen = set()

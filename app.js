@@ -32,6 +32,7 @@ import { GeminiService } from "./gemini-service.js";
 
 // Initialize Gemini Service
 const geminiService = new GeminiService();
+window.geminiService = geminiService;
 
 // -------------------------------------------------------------
 // SOL Vocabulary Library (For Random Word Generator)
@@ -6528,22 +6529,52 @@ function initOfficialGoogleIdentity() {
           text: "continue_with",
           width: 300
         });
-        if (fallbackBtn) fallbackBtn.style.display = "none";
+        // Check after short delay if Google button actually rendered an iframe
+        setTimeout(() => {
+          const hasIframe = container.querySelector("iframe");
+          if (!hasIframe && fallbackBtn) {
+            fallbackBtn.style.display = "flex";
+          }
+        }, 1200);
       }
     } catch (err) {
       console.warn("Google Identity initialization error:", err);
+      if (fallbackBtn) fallbackBtn.style.display = "flex";
     }
   }
 
   if (fallbackBtn) {
     fallbackBtn.onclick = () => {
+      let promptFired = false;
       if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
         try {
-          google.accounts.id.prompt();
+          google.accounts.id.prompt((notification) => {
+            promptFired = true;
+            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+              if (alertBox) {
+                alertBox.className = "auth-alert";
+                alertBox.style.background = "rgba(239, 68, 68, 0.15)";
+                alertBox.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+                alertBox.style.color = "#fca5a5";
+                alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Google Sign-In origin not allowed. In Google Cloud Console &gt; Credentials, add <strong>' + window.location.origin + '</strong> to Authorized JavaScript origins.</span>';
+                alertBox.classList.remove("hidden");
+              }
+            }
+          });
         } catch (err) {
           console.warn("Google prompt error:", err);
         }
       }
+      setTimeout(() => {
+        if (!promptFired && alertBox) {
+          alertBox.className = "auth-alert";
+          alertBox.style.background = "rgba(66, 133, 244, 0.15)";
+          alertBox.style.border = "1px solid rgba(66, 133, 244, 0.4)";
+          alertBox.style.color = "#93c5fd";
+          alertBox.innerHTML = '<i class="fa-solid fa-circle-info"></i> <span>To enable Google Sign-In on this domain, add <strong>' + window.location.origin + '</strong> to <strong>Authorized JavaScript origins</strong> in your Google Cloud Console OAuth Client settings.</span>';
+          alertBox.classList.remove("hidden");
+        }
+      }, 500);
     };
   }
 }
@@ -7452,13 +7483,20 @@ function loadStoredPlaylistCategories() {
 function persistPlaylistCategories(cats) {
   PLAYLIST_CATEGORIES = cats;
   localStorage.setItem("sol_custom_playlist_categories", JSON.stringify(cats));
-  try {
-    fetch("/api/youtube/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ categories: cats })
-    }).catch(() => {});
-  } catch (e) {}
+  if (typeof isPlatformAdmin === "function" && isPlatformAdmin()) {
+    const curUser = typeof getActiveUserProfile === "function" ? getActiveUserProfile() : null;
+    const adminEmail = (curUser && curUser.email) ? curUser.email : (typeof MASTER_ADMIN_EMAILS !== "undefined" ? MASTER_ADMIN_EMAILS[0] : "sinsecontactmilla@gmail.com");
+    try {
+      fetch("/api/youtube/categories", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-User-Email": adminEmail
+        },
+        body: JSON.stringify({ categories: cats, adminEmail })
+      }).catch(() => {});
+    } catch (e) {}
+  }
 }
 
 async function syncCategoriesFromServer() {
@@ -7481,7 +7519,8 @@ async function syncCategoriesFromServer() {
           if (!idSet.has(c.id) && !deletedIds.has(c.id)) merged.push(c);
         });
         const finalCats = merged.filter(c => !deletedIds.has(c.id));
-        persistPlaylistCategories(finalCats);
+        PLAYLIST_CATEGORIES = finalCats;
+        localStorage.setItem("sol_custom_playlist_categories", JSON.stringify(finalCats));
       }
     }
   } catch (e) {
@@ -7516,13 +7555,18 @@ async function deletePlaylistCategory(catId, catTitle) {
     localStorage.setItem("sol_user_added_videos", JSON.stringify(storedVideos));
   } catch (_) {}
 
-  // 4. Notify server
-  try {
-    await fetch(`/api/youtube/categories?id=${encodeURIComponent(catId)}`, {
-      method: "DELETE"
-    });
-  } catch (e) {
-    console.warn("Failed to delete category on server:", e);
+  // 4. Notify server if platform admin
+  if (typeof isPlatformAdmin === "function" && isPlatformAdmin()) {
+    try {
+      const curUser = typeof getActiveUserProfile === "function" ? getActiveUserProfile() : null;
+      const adminEmail = (curUser && curUser.email) ? curUser.email : (typeof MASTER_ADMIN_EMAILS !== "undefined" ? MASTER_ADMIN_EMAILS[0] : "sinsecontactmilla@gmail.com");
+      await fetch(`/api/youtube/categories?id=${encodeURIComponent(catId)}&adminEmail=${encodeURIComponent(adminEmail)}`, {
+        method: "DELETE",
+        headers: { "X-User-Email": adminEmail }
+      });
+    } catch (e) {
+      console.warn("Failed to delete category on server:", e);
+    }
   }
 
   // 5. If currently viewing this playlist, close player page

@@ -122,9 +122,14 @@ export class GeminiService {
 
   async getSupportedModels() {
     if (!this.apiKey) return [];
-    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(this.apiKey)}`;
+    const isAq = this.apiKey.startsWith("AQ.");
+    const url = isAq
+      ? `https://generativelanguage.googleapis.com/v1beta/models`
+      : `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(this.apiKey)}`;
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: { "x-goog-api-key": this.apiKey }
+      });
       const data = await response.json();
       if (response.ok && data.models && Array.isArray(data.models)) {
         const supported = data.models
@@ -169,17 +174,18 @@ export class GeminiService {
     const preferredOrder = [
       modelName,
       "gemini-3.6-flash",
-      "gemini-3.5-flash-lite",
-      "gemini-2.5-flash"
+      "gemini-3.8-flash",
+      "gemini-flash-latest",
+      "gemini-3.5-flash-lite"
     ].filter(Boolean);
 
     let discovered = await this.getSupportedModels();
-    // Exclude thinking models so they don't dump chain-of-thought drafts
-    const nonThinkingDiscovered = discovered.filter(m => !m.toLowerCase().includes("thinking") && m !== "gemini-pro");
+    // Exclude thinking models and deprecated models
+    const nonThinkingDiscovered = discovered.filter(m => !m.toLowerCase().includes("thinking") && m !== "gemini-pro" && m !== "gemini-1.5-flash");
 
     const modelsToTry = [];
     for (const m of [...preferredOrder, ...nonThinkingDiscovered]) {
-      if (m && !modelsToTry.includes(m) && m !== "gemini-pro") {
+      if (m && !modelsToTry.includes(m) && m !== "gemini-pro" && m !== "gemini-1.5-flash") {
         modelsToTry.push(m);
       }
     }
@@ -284,30 +290,7 @@ Rules:
 - Capitalize like a title (e.g. "Spanish Verb Conjugation", "Daily Practice Routine").
 - Return ONLY the title words and nothing else.`;
 
-    if (this.apiKey) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 16, temperature: 0.3 }
-          })
-        });
-        const data = await response.json();
-        if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
-          const parts = data.candidates[0].content.parts || [];
-          const text = parts[0]?.text || "";
-          const clean = text.replace(/["'`*\n\r]/g, "").replace(/^title:\s*/i, "").trim();
-          if (clean && clean.length >= 2 && clean.length <= 40) {
-            return clean;
-          }
-        }
-      } catch (e) {
-        console.warn("Direct title generation failed:", e);
-      }
-    } else if (this.hasPlatformKey) {
+    if (this.hasPlatformKey) {
       try {
         const response = await fetch("/api/chat", {
           method: "POST",
@@ -328,6 +311,35 @@ Rules:
       } catch (e) {
         console.warn("Platform title generation failed:", e);
       }
+    } else if (this.apiKey) {
+      try {
+        const isAq = this.apiKey.startsWith("AQ.");
+        const url = isAq
+          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`
+          : `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "x-goog-api-key": this.apiKey
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 16, temperature: 0.3 }
+          })
+        });
+        const data = await response.json();
+        if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
+          const parts = data.candidates[0].content.parts || [];
+          const text = parts[0]?.text || "";
+          const clean = text.replace(/["'`*\n\r]/g, "").replace(/^title:\s*/i, "").trim();
+          if (clean && clean.length >= 2 && clean.length <= 40) {
+            return clean;
+          }
+        }
+      } catch (e) {
+        console.warn("Direct title generation failed:", e);
+      }
     }
     return "";
   }
@@ -336,7 +348,28 @@ Rules:
     if (!userText || userText.trim().length < 2) return null;
     const cleanText = userText.trim();
 
-    // 1. Direct call if developer client API key is configured
+    // 1. Server platform endpoint (fastest, robust, handles key security and model routing)
+    if (this.hasPlatformKey) {
+      try {
+        const resp = await fetch("/api/grammar-check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: cleanText })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.hasChanges && data.corrected) {
+            return data.corrected;
+          } else if (data.note !== "No platform API key") {
+            return null;
+          }
+        }
+      } catch (e) {
+        console.warn("Server grammar check failed:", e);
+      }
+    }
+
+    // 2. Direct call if developer client API key is configured
     if (this.apiKey) {
       try {
         const prompt = `You are an expert English grammar proofreader for language learners.
@@ -362,21 +395,35 @@ Assistant: NO_CHANGES
 User: ${cleanText}
 Assistant:`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 120, temperature: 0.1 }
-          })
-        });
-        const data = await response.json();
-        if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
-          const parts = data.candidates[0].content.parts || [];
-          const text = parts[0]?.text || "";
-          if (text && !text.includes("NO_CHANGES") && (text.includes("<s>") || text.includes("<strike>") || text.includes("<del>"))) {
-            return text.trim();
+        const isAq = this.apiKey.startsWith("AQ.");
+        const modelsToTry = ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-flash-latest"];
+        for (const mod of modelsToTry) {
+          try {
+            const url = isAq
+              ? `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent`
+              : `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+            const response = await fetch(url, {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json",
+                "x-goog-api-key": this.apiKey
+              },
+              body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: { maxOutputTokens: 512, temperature: 0.1, thinkingConfig: { thinkingBudget: 0 } }
+              })
+            });
+            const data = await response.json();
+            if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
+              const parts = data.candidates[0].content.parts || [];
+              const text = parts[0]?.text || "";
+              if (text && !text.includes("NO_CHANGES") && (text.includes("<s>") || text.includes("<strike>") || text.includes("<del>"))) {
+                return text.trim();
+              }
+              return null;
+            }
+          } catch (mErr) {
+            continue;
           }
         }
       } catch (e) {
@@ -384,21 +431,23 @@ Assistant:`;
       }
     }
 
-    // 2. Server platform endpoint fallback
-    try {
-      const resp = await fetch("/api/grammar-check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: cleanText })
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.hasChanges && data.corrected) {
-          return data.corrected;
+    // 3. Fallback to server endpoint if not yet tried
+    if (!this.hasPlatformKey) {
+      try {
+        const resp = await fetch("/api/grammar-check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: cleanText })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.hasChanges && data.corrected) {
+            return data.corrected;
+          }
         }
+      } catch (e) {
+        console.warn("Server grammar check fallback failed:", e);
       }
-    } catch (e) {
-      console.warn("Server grammar check failed:", e);
     }
 
     return null;
