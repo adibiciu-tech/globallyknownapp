@@ -3922,14 +3922,22 @@ function initDictionaryPanel() {
   const headerIntro = document.getElementById("dict-header-intro");
   const deckTitleEl = document.getElementById("slideshow-deck-title");
 
-  const updateSlideDisplay = (preserveZoom = true) => {
+  const updateSlideDisplay = (preserveZoom = true, direction = null) => {
     if (!slideImage || !counterLabel) return;
 
     const wasZoomed = isZoomed && preserveZoom;
-    const prevColumn = currentZoomedColumn;
+    let targetColumn = currentZoomedColumn;
     const prevScale = currentScale;
     const prevTransX = currentTranslateX;
     const prevTransY = currentTranslateY;
+
+    if (wasZoomed && currentZoomedColumn !== null) {
+      if (direction === "next") {
+        targetColumn = "left";
+      } else if (direction === "prev") {
+        targetColumn = "right";
+      }
+    }
 
     if (!wasZoomed) {
       resetZoom();
@@ -3986,26 +3994,47 @@ function initDictionaryPanel() {
 
     if (wasZoomed) {
       isZoomed = true;
-      currentZoomedColumn = prevColumn;
+      currentZoomedColumn = targetColumn;
       currentScale = prevScale;
-      currentTranslateX = prevTransX;
-      currentTranslateY = prevTransY;
-      translateX = prevTransX;
-      translateY = prevTransY;
 
       const isMobile = window.innerWidth <= 900;
-      if (isMobile && prevColumn) {
+      if (isMobile && targetColumn) {
         if (slideImageWrapper) {
           slideImageWrapper.classList.add("mobile-column-zoomed");
           slideImageWrapper.classList.remove("zoomed-state");
         }
         slideImage.classList.add("zoomed");
         let xPercent = 0;
-        if (prevColumn === "left") xPercent = 0;
-        else if (prevColumn === "center") xPercent = -33.333333;
-        else if (prevColumn === "right") xPercent = -66.666667;
+        if (targetColumn === "left") xPercent = 0;
+        else if (targetColumn === "center") xPercent = -33.333333;
+        else if (targetColumn === "right") xPercent = -66.666667;
         slideImage.style.transform = `translate3d(${xPercent}%, 0, 0)`;
+      } else if (targetColumn) {
+        slideImage.classList.add("zoomed");
+        if (slideImageWrapper) {
+          slideImageWrapper.classList.add("zoomed-state");
+          slideImageWrapper.classList.remove("mobile-column-zoomed");
+        }
+        const width = slideImage.clientWidth;
+        const limitX = (width * currentScale - width) / 2;
+        const height = slideImage.clientHeight;
+        const limitY = (height * currentScale - height) / 2;
+        translateY = limitY;
+        currentTranslateY = limitY;
+        if (targetColumn === "left") {
+          translateX = limitX;
+        } else if (targetColumn === "center") {
+          translateX = 0;
+        } else if (targetColumn === "right") {
+          translateX = -limitX;
+        }
+        currentTranslateX = translateX;
+        slideImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
       } else {
+        currentTranslateX = prevTransX;
+        currentTranslateY = prevTransY;
+        translateX = prevTransX;
+        translateY = prevTransY;
         slideImage.classList.add("zoomed");
         if (slideImageWrapper) {
           slideImageWrapper.classList.add("zoomed-state");
@@ -4086,7 +4115,7 @@ function initDictionaryPanel() {
     btnPrevSlide.addEventListener("click", () => {
       if (currentSlideIdx > 1) {
         currentSlideIdx--;
-        updateSlideDisplay(true);
+        updateSlideDisplay(true, "prev");
         scrollPanelToTop();
       }
     });
@@ -4096,7 +4125,7 @@ function initDictionaryPanel() {
     btnNextSlide.addEventListener("click", () => {
       if (currentSlideIdx < maxSlides) {
         currentSlideIdx++;
-        updateSlideDisplay(true);
+        updateSlideDisplay(true, "next");
         scrollPanelToTop();
       }
     });
@@ -4108,7 +4137,7 @@ function initDictionaryPanel() {
       e.stopPropagation();
       if (currentSlideIdx > 1) {
         currentSlideIdx--;
-        updateSlideDisplay(true);
+        updateSlideDisplay(true, "prev");
         scrollPanelToTop();
       }
     });
@@ -4119,7 +4148,7 @@ function initDictionaryPanel() {
       e.stopPropagation();
       if (currentSlideIdx < maxSlides) {
         currentSlideIdx++;
-        updateSlideDisplay(true);
+        updateSlideDisplay(true, "next");
         scrollPanelToTop();
       }
     });
@@ -4162,13 +4191,13 @@ function initDictionaryPanel() {
     if (e.key === "ArrowLeft") {
       if (currentSlideIdx > 1) {
         currentSlideIdx--;
-        updateSlideDisplay(true);
+        updateSlideDisplay(true, "prev");
         scrollPanelToTop();
       }
     } else if (e.key === "ArrowRight") {
       if (currentSlideIdx < maxSlides) {
         currentSlideIdx++;
-        updateSlideDisplay(true);
+        updateSlideDisplay(true, "next");
         scrollPanelToTop();
       }
     }
@@ -4354,10 +4383,10 @@ function initDictionaryPanel() {
           } else if (currentZoomedColumn === "center") {
             snapToAnchor("left");
           } else if (currentZoomedColumn === "left") {
-            // On Left Column -> go to PREVIOUS slide, KEEPING ZOOM on left column!
+            // On Left Column -> go to PREVIOUS slide, landing on RIGHT column!
             if (currentSlideIdx > 1) {
               currentSlideIdx--;
-              updateSlideDisplay(true);
+              updateSlideDisplay(true, "prev");
               scrollPanelToTop();
               return;
             }
@@ -4372,10 +4401,10 @@ function initDictionaryPanel() {
           } else if (currentTranslateX < limitX * 0.35) {
             snapToAnchor("left");
           } else {
-            // Already at leftmost on desktop -> go to PREVIOUS slide, KEEPING ZOOM!
+            // Already at leftmost on desktop -> go to PREVIOUS slide, landing on RIGHT column!
             if (currentSlideIdx > 1) {
               currentSlideIdx--;
-              updateSlideDisplay(true);
+              updateSlideDisplay(true, "prev");
               scrollPanelToTop();
               return;
             }
@@ -4403,10 +4432,10 @@ function initDictionaryPanel() {
           } else if (currentZoomedColumn === "center") {
             snapToAnchor("right");
           } else if (currentZoomedColumn === "right") {
-            // On Right Column -> go to NEXT slide, KEEPING ZOOM on right column!
+            // On Right Column -> go to NEXT slide, landing on LEFT column!
             if (currentSlideIdx < maxSlides) {
               currentSlideIdx++;
-              updateSlideDisplay(true);
+              updateSlideDisplay(true, "next");
               scrollPanelToTop();
               return;
             }
@@ -4421,10 +4450,10 @@ function initDictionaryPanel() {
           } else if (currentTranslateX > -limitX * 0.35) {
             snapToAnchor("right");
           } else {
-            // Already at rightmost on desktop -> go to NEXT slide, KEEPING ZOOM!
+            // Already at rightmost on desktop -> go to NEXT slide, landing on LEFT column!
             if (currentSlideIdx < maxSlides) {
               currentSlideIdx++;
-              updateSlideDisplay(true);
+              updateSlideDisplay(true, "next");
               scrollPanelToTop();
               return;
             }
@@ -4544,7 +4573,7 @@ function initDictionaryPanel() {
               else if (currentZoomedColumn === "center") snapToAnchor("right");
               else if (currentZoomedColumn === "right" && currentSlideIdx < maxSlides) {
                 currentSlideIdx++;
-                updateSlideDisplay(true); // PRESERVE ZOOM!
+                updateSlideDisplay(true, "next"); // PRESERVE ZOOM, land on left column!
                 scrollPanelToTop();
               }
             } else {
@@ -4553,7 +4582,7 @@ function initDictionaryPanel() {
               else if (currentZoomedColumn === "center") snapToAnchor("left");
               else if (currentZoomedColumn === "left" && currentSlideIdx > 1) {
                 currentSlideIdx--;
-                updateSlideDisplay(true); // PRESERVE ZOOM!
+                updateSlideDisplay(true, "prev"); // PRESERVE ZOOM, land on right column!
                 scrollPanelToTop();
               }
             }
