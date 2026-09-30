@@ -555,6 +555,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(payload)
             return
         elif self.path.startswith("/api/admin/users/export.csv"):
+            parsed = urllib.parse.urlparse(self.path)
+            qs = urllib.parse.parse_qs(parsed.query)
+            caller = (qs.get("email", [None])[0] or qs.get("user", [None])[0] or self.headers.get("X-User-Email", "") or "").strip().lower()
+            if caller != "adrian.milla@gmail.com":
+                self.send_error(403, "Forbidden: Only platform administrator can access user export")
+                return
             data = load_data()
             users = data.get("users", [])
             lines = ["Name,Email,Provider,JoinedDate,LastActive"]
@@ -576,6 +582,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         elif self.path.startswith("/api/admin/users") or self.path.startswith("/api/auth/users"):
+            parsed = urllib.parse.urlparse(self.path)
+            qs = urllib.parse.parse_qs(parsed.query)
+            caller = (qs.get("email", [None])[0] or qs.get("user", [None])[0] or self.headers.get("X-User-Email", "") or "").strip().lower()
+            if caller != "adrian.milla@gmail.com":
+                self.send_error(403, "Forbidden: Only platform administrator can view registered users")
+                return
             data = load_data()
             users = [sanitize_user(u) for u in data.get("users", [])]
             payload = json.dumps({"count": len(users), "users": users}).encode("utf-8")
@@ -760,6 +772,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path.startswith("/api/config/google"):
             try:
                 payload = json.loads(body)
+                caller = (payload.get("email") or payload.get("user") or self.headers.get("X-User-Email", "") or "").strip().lower()
+                if caller != "adrian.milla@gmail.com":
+                    self.send_error(403, "Forbidden: Only platform administrator can update Google Client ID")
+                    return
                 cid = (payload.get("googleClientId") or "").strip()
                 data = load_data()
                 data["googleClientId"] = cid
@@ -782,6 +798,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path.startswith("/api/config/gemini-key"):
             try:
                 payload = json.loads(body)
+                caller = (payload.get("email") or payload.get("user") or self.headers.get("X-User-Email", "") or "").strip().lower()
+                if caller != "adrian.milla@gmail.com":
+                    self.send_error(403, "Forbidden: Only platform administrator can update Gemini Master Key")
+                    return
                 key_val = (payload.get("geminiApiKey") or payload.get("apiKey") or "").strip()
                 data = load_data()
                 data["geminiApiKey"] = key_val

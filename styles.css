@@ -11708,5 +11708,13 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   color: #ffffff !important;
 }
 
+/* Admin-Only Settings Cards */
+.admin-only-card {
+  display: none !important;
+}
+.admin-only-card.admin-visible {
+  display: block !important;
+}
+
 
 

@@ -1807,8 +1807,33 @@
               </div>
             </div>
 
-            <!-- 2. Google Gemini AI Engine Key -->
-            <div class="settings-card">
+            <!-- Install App (PWA) Card -->
+            <div class="settings-card install-pwa-card" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.05);">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <i class="fa-solid fa-download" style="font-size: 1.35rem; color: #818cf8;"></i>
+                  <h3 style="margin: 0; font-size: 1.15rem; color: #ffffff;">Install Globally Known App</h3>
+                </div>
+                <span id="pwa-install-status" style="font-size: 0.76rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px; background: rgba(129, 140, 248, 0.15); border: 1px solid rgba(129, 140, 248, 0.3); color: #818cf8;">
+                  Standalone App
+                </span>
+              </div>
+              <p class="setting-desc" style="color: #cbd5e1; margin-bottom: 1rem;">
+                Install Globally Known directly onto your device (iPhone, iPad, Android, Windows, or Mac) for a fast, standalone fullscreen experience without browser toolbars.
+              </p>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; background: rgba(0, 0, 0, 0.35); padding: 1.25rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <button type="button" class="primary-btn pwa-settings-btn" id="btn-install-pwa" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; padding: 0.72rem 1.4rem; font-size: 0.92rem; font-weight: 700; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: #ffffff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4); white-space: nowrap;">
+                  <i class="fa-solid fa-download"></i> <span>Install App Now</span>
+                </button>
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4; flex: 1; min-width: 220px;">
+                  <strong>Mobile tip:</strong> On iPhone/Safari, tap Share (<i class="fa-solid fa-arrow-up-from-bracket"></i>) → <em>Add to Home Screen</em>. On Android/Chrome, tap menu (⋮) → <em>Install app</em>.
+                </div>
+              </div>
+            </div>
+
+            <!-- Admin Only: Google Gemini AI Engine Key -->
+            <div class="settings-card admin-only-card" id="settings-gemini-key-card" style="display: none !important;">
               <div class="setting-group">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
                   <label for="api-key-input" class="setting-label" style="margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 6px;">
@@ -1837,96 +1862,8 @@
               </div>
             </div>
 
-            <!-- Mobile Access & QR Code Card -->
-            <div class="settings-card mobile-access-card" style="border-color: rgba(246, 202, 33, 0.4); background: rgba(246, 202, 33, 0.04);">
-              <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;">
-                <i class="fa-solid fa-mobile-screen-button" style="font-size: 1.4rem; color: var(--accent-yellow, #f6ca21);"></i>
-                <h3 style="margin: 0; font-size: 1.15rem; color: #ffffff;">Connect with your Mobile Phone</h3>
-              </div>
-              <p class="setting-desc" style="color: #cbd5e1; margin-bottom: 1rem;">
-                Open Globally Known on your phone right now! Make sure your phone is connected to the same Wi-Fi network.
-              </p>
-              
-              <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; background: rgba(0, 0, 0, 0.35); padding: 1.25rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                <div style="background: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; width: 150px; height: 150px;">
-                  <img src="assets/mobile_qr_code.png" alt="Scan with Phone Camera" style="width: 100%; height: 100%; display: block;" />
-                </div>
-                <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.75rem;">
-                  <div style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Direct Mobile Link:</div>
-                  <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.4); padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);">
-                    <code style="color: var(--accent-yellow, #f6ca21); font-size: 0.95rem; font-weight: 700; user-select: all;" id="mobile-url-display">http://10.194.55.210:8000</code>
-                  </div>
-                  <div style="display: flex; gap: 0.6rem; margin-top: 0.25rem;">
-                    <button type="button" class="secondary-action-btn" id="btn-copy-mobile-url" onclick="navigator.clipboard.writeText('http://10.194.55.210:8000'); if (typeof showToast === 'function') showToast('📋 Mobile link copied to clipboard!');" style="padding: 0.5rem 0.9rem; font-size: 0.82rem; cursor: pointer;">
-                      <i class="fa-solid fa-copy"></i> Copy Link
-                    </button>
-                    <span style="font-size: 0.78rem; color: #94a3b8; align-self: center;">Scan QR code with your phone camera</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Install App (PWA) Card -->
-            <div class="settings-card install-pwa-card" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.05);">
-              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.65rem;">
-                  <i class="fa-solid fa-download" style="font-size: 1.35rem; color: #818cf8;"></i>
-                  <h3 style="margin: 0; font-size: 1.15rem; color: #ffffff;">Install Globally Known App</h3>
-                </div>
-                <span id="pwa-install-status" style="font-size: 0.76rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px; background: rgba(129, 140, 248, 0.15); border: 1px solid rgba(129, 140, 248, 0.3); color: #818cf8;">
-                  Standalone App
-                </span>
-              </div>
-              <p class="setting-desc" style="color: #cbd5e1; margin-bottom: 1rem;">
-                Install Globally Known directly onto your device (iPhone, iPad, Android, Windows, or Mac) for a fast, standalone fullscreen experience without browser toolbars.
-              </p>
-
-              <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; background: rgba(0, 0, 0, 0.35); padding: 1.25rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                <button type="button" class="primary-btn pwa-settings-btn" id="btn-install-pwa" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; padding: 0.72rem 1.4rem; font-size: 0.92rem; font-weight: 700; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: #ffffff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4); white-space: nowrap;">
-                  <i class="fa-solid fa-download"></i> <span>Install App Now</span>
-                </button>
-                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4; flex: 1; min-width: 220px;">
-                  <strong>Mobile tip:</strong> On iPhone/Safari, tap Share (<i class="fa-solid fa-arrow-up-from-bracket"></i>) → <em>Add to Home Screen</em>. On Android/Chrome, tap menu (⋮) → <em>Install app</em>.
-                </div>
-              </div>
-            </div>
-
-            <!-- Video Library Settings & Permanent Storage Card -->
-            <div class="settings-card video-settings-card" id="video-settings-card" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.04);">
-              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.65rem;">
-                  <i class="fa-solid fa-clapperboard" style="font-size: 1.35rem; color: #38bdf8;"></i>
-                  <h3 style="margin: 0; font-size: 1.15rem; color: #ffffff;">Video Library & Permanent Embeds</h3>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                  <span class="video-sync-badge" id="video-sync-status-badge" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; font-size: 0.76rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px;">
-                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 8px #10b981;"></span> Permanent Storage Active
-                  </span>
-                  <span class="video-count-badge" id="video-total-count-badge" style="display: inline-flex; align-items: center; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.76rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 20px;">
-                    0 Videos Embedded
-                  </span>
-                </div>
-              </div>
-              <p class="setting-desc" style="color: #cbd5e1; margin-bottom: 1rem;">
-                Your embedded videos are synced across browser storage and the permanent server disk store (<code style="color: #38bdf8;">data/videos.json</code>). They are protected from accidental deletion and persist across desktop and mobile.
-              </p>
-
-              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-                <button type="button" class="secondary-action-btn" id="btn-sync-videos-now" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-weight: 600; padding: 0.55rem 1rem; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
-                  <i class="fa-solid fa-rotate"></i> Sync All Videos Now
-                </button>
-                <button type="button" class="secondary-action-btn" id="btn-export-videos-backup" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; font-weight: 600; padding: 0.55rem 1rem; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
-                  <i class="fa-solid fa-download"></i> Backup Video Library (.json)
-                </button>
-                <button type="button" class="secondary-action-btn" id="btn-import-videos-backup" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; font-weight: 600; padding: 0.55rem 1rem; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
-                  <i class="fa-solid fa-upload"></i> Restore / Import Backup
-                </button>
-                <input type="file" id="import-videos-file-input" accept=".json" style="display: none;" />
-              </div>
-            </div>
-
-            <!-- Registered Users & Email Directory Card -->
-            <div class="settings-card users-directory-card" id="users-directory-card" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.04);">
+            <!-- Admin Only: Registered Users & Email Directory Card -->
+            <div class="settings-card users-directory-card admin-only-card" id="users-directory-card" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.04); display: none !important;">
               <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
                 <div style="display: flex; align-items: center; gap: 0.65rem;">
                   <i class="fa-solid fa-users" style="font-size: 1.35rem; color: #818cf8;"></i>
@@ -1966,8 +1903,8 @@
                 <!-- Populated dynamically via JS -->
               </div>
 
-              <!-- Google OAuth Configuration Collapsible Area -->
-              <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+              <!-- Admin Only: Google OAuth Configuration Collapsible Area -->
+              <div id="admin-google-oauth-section" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
                   <span style="font-size: 0.85rem; font-weight: 600; color: #e2e8f0;">
                     <i class="fa-brands fa-google" style="color: #4285F4; margin-right: 4px;"></i> Google OAuth Client ID Configuration
@@ -1984,8 +1921,8 @@
                 </div>
               </div>
 
-              <!-- Platform Master Gemini AI Engine (Central Turnkey Agent) -->
-              <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+              <!-- Admin Only: Platform Master Gemini AI Engine (Central Turnkey Agent) -->
+              <div id="admin-master-gemini-section" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
                   <span style="font-size: 0.85rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-brain" style="color: #10b981;"></i> Platform Master Gemini AI Engine
@@ -2010,14 +1947,6 @@
                   </button>
                 </div>
               </div>
-            </div>
-
-            <div class="settings-card danger-card">
-              <h3>Reset Workspace</h3>
-              <p class="setting-desc">Deletes chat history, cached exercises, and resets your API key configuration. <strong>Your embedded video library is safely preserved.</strong></p>
-              <button class="danger-btn" id="clear-all-data-btn">
-                <i class="fa-solid fa-trash-arrow-up"></i> Reset SOL Workspace
-              </button>
             </div>
             
             <div class="settings-card about-card">

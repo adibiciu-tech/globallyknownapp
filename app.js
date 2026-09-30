@@ -471,6 +471,7 @@ function init() {
   initPwaInstall();
   initGoogleAuth();
   initAdminMode();
+  updateAdminVisibility();
 
   // Settings Panel Bind
   setupSettingsHandlers();
@@ -519,6 +520,38 @@ function getActiveUserProfile() {
 function isGuestUser() {
   return !getActiveUserProfile();
 }
+
+function isPlatformAdmin() {
+  const p = getActiveUserProfile();
+  if (!p || !p.email) return false;
+  const em = p.email.trim().toLowerCase();
+  return em === "adrian.milla@gmail.com" || p.role === "admin";
+}
+window.isPlatformAdmin = isPlatformAdmin;
+
+function updateAdminVisibility() {
+  const isAdmin = isPlatformAdmin();
+  const adminCards = document.querySelectorAll(".admin-only-card");
+  adminCards.forEach(card => {
+    if (isAdmin) {
+      card.classList.add("admin-visible");
+      card.style.setProperty("display", "block", "important");
+    } else {
+      card.classList.remove("admin-visible");
+      card.style.setProperty("display", "none", "important");
+    }
+  });
+
+  if (isAdmin) {
+    if (typeof refreshAdminUsersDirectory === "function") {
+      refreshAdminUsersDirectory();
+    }
+  } else {
+    const container = document.getElementById("admin-users-table-container");
+    if (container) container.innerHTML = "";
+  }
+}
+window.updateAdminVisibility = updateAdminVisibility;
 
 function getActiveUserName() {
   const p = getActiveUserProfile();
@@ -2412,6 +2445,8 @@ window.switchPanel = function(panelId) {
     }
     const homeInput = document.getElementById("gemini-home-input");
     if (homeInput) setTimeout(() => homeInput.focus(), 60);
+  } else if (panelId === "info") {
+    if (typeof updateAdminVisibility === "function") updateAdminVisibility();
   }
 
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -5464,20 +5499,22 @@ function setupSettingsHandlers() {
   });
 
   // Clear data settings (Safeguards video library from being wiped)
-  clearAllDataBtn.addEventListener("click", () => {
-    if (confirm("WARNING: This will clear your chat history, cached exercises, and reset your API key.\n\nNOTE: Your embedded videos in the Video Library will remain safely preserved.\n\nProceed?")) {
-      const savedVideos = localStorage.getItem("sol_user_added_videos");
-      localStorage.clear();
-      if (savedVideos) {
-        localStorage.setItem("sol_user_added_videos", savedVideos);
+  if (clearAllDataBtn) {
+    clearAllDataBtn.addEventListener("click", () => {
+      if (confirm("WARNING: This will clear your chat history, cached exercises, and reset your API key.\n\nNOTE: Your embedded videos in the Video Library will remain safely preserved.\n\nProceed?")) {
+        const savedVideos = localStorage.getItem("sol_user_added_videos");
+        localStorage.clear();
+        if (savedVideos) {
+          localStorage.setItem("sol_user_added_videos", savedVideos);
+        }
+        activeChatMessages = [];
+        geminiService.setApiKey("");
+        
+        alert("Local chat data reset. Your embedded video library was safely preserved.");
+        location.reload();
       }
-      activeChatMessages = [];
-      geminiService.setApiKey("");
-      
-      alert("Local chat data reset. Your embedded video library was safely preserved.");
-      location.reload();
-    }
-  });
+    });
+  }
 
   // Video Library Settings Controls
   const btnSyncVideos = document.getElementById("btn-sync-videos-now");
@@ -5554,7 +5591,13 @@ function setupSettingsHandlers() {
   const btnExportUsersCsv = document.getElementById("btn-export-users-csv");
   if (btnExportUsersCsv) {
     btnExportUsersCsv.addEventListener("click", () => {
-      window.location.href = "/api/admin/users/export.csv";
+      if (!isPlatformAdmin()) {
+        showToast("⚠️ Admin access only.");
+        return;
+      }
+      const profile = getActiveUserProfile();
+      const userEmail = (profile && profile.email) ? profile.email.trim().toLowerCase() : "";
+      window.location.href = `/api/admin/users/export.csv?email=${encodeURIComponent(userEmail)}`;
       showToast("📥 Exporting users directory (.csv)...");
     });
   }
@@ -5562,6 +5605,10 @@ function setupSettingsHandlers() {
   const btnCopyAllEmails = document.getElementById("btn-copy-all-emails");
   if (btnCopyAllEmails) {
     btnCopyAllEmails.addEventListener("click", () => {
+      if (!isPlatformAdmin()) {
+        showToast("⚠️ Admin access only.");
+        return;
+      }
       if (!allRegisteredUsers || allRegisteredUsers.length === 0) {
         showToast("⚠️ No registered emails to copy.");
         return;
@@ -5608,14 +5655,20 @@ function setupSettingsHandlers() {
 
   if (btnSaveGoogleClientId && inputGoogleClientId) {
     btnSaveGoogleClientId.addEventListener("click", async () => {
+      if (!isPlatformAdmin()) {
+        showToast("⚠️ Admin access only.");
+        return;
+      }
       const newCid = inputGoogleClientId.value.trim();
+      const profile = getActiveUserProfile();
+      const userEmail = (profile && profile.email) ? profile.email.trim().toLowerCase() : "";
       try {
         btnSaveGoogleClientId.disabled = true;
         btnSaveGoogleClientId.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
         await fetch("/api/config/google", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ googleClientId: newCid })
+          headers: { "Content-Type": "application/json", "X-User-Email": userEmail },
+          body: JSON.stringify({ googleClientId: newCid, email: userEmail })
         });
         localStorage.setItem("sol_google_client_id", newCid);
         googleClientId = newCid;
@@ -5656,14 +5709,20 @@ function setupSettingsHandlers() {
 
   if (btnSavePlatformKey && inputPlatformKey) {
     btnSavePlatformKey.addEventListener("click", async () => {
+      if (!isPlatformAdmin()) {
+        showToast("⚠️ Admin access only.");
+        return;
+      }
       const rawKey = inputPlatformKey.value.trim();
+      const profile = getActiveUserProfile();
+      const userEmail = (profile && profile.email) ? profile.email.trim().toLowerCase() : "";
       try {
         btnSavePlatformKey.disabled = true;
         btnSavePlatformKey.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Activating...';
         const res = await fetch("/api/config/gemini-key", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ apiKey: rawKey })
+          headers: { "Content-Type": "application/json", "X-User-Email": userEmail },
+          body: JSON.stringify({ apiKey: rawKey, email: userEmail })
         });
         const resData = await res.json();
         if (res.ok && resData.success) {
@@ -5691,9 +5750,6 @@ function setupSettingsHandlers() {
       }
     });
   }
-
-  // Load initial directory
-  refreshAdminUsersDirectory();
 }
 
 // -------------------------------------------------------------
@@ -5848,10 +5904,22 @@ async function refreshAdminUsersDirectory() {
   const countBadge = document.getElementById("admin-user-count-badge");
   if (!container) return;
 
+  if (!isPlatformAdmin()) {
+    container.innerHTML = "";
+    if (countBadge) countBadge.textContent = "Admin Restricted";
+    return;
+  }
+
+  const profile = getActiveUserProfile();
+  const userEmail = (profile && profile.email) ? profile.email.trim().toLowerCase() : "";
+
   container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading registered users...</div>';
 
   try {
-    const res = await fetch("/api/admin/users", { cache: "no-store" });
+    const res = await fetch(`/api/admin/users?email=${encodeURIComponent(userEmail)}`, {
+      headers: { "X-User-Email": userEmail },
+      cache: "no-store"
+    });
     if (res.ok) {
       const data = await res.json();
       allRegisteredUsers = data.users || [];
@@ -6403,6 +6471,17 @@ function loadUserSpecificData() {
   const conversationEl = document.getElementById("gemini-home-conversation");
   if (conversationEl) conversationEl.innerHTML = "";
   updateHomeChatModeState();
+
+  // Reset in-memory word lists and history immediately so no previous user's data leaks
+  rwggpSavingLists = [];
+  rwggpHistory = [];
+  if (typeof renderRwggpSavingsAccordion === "function") renderRwggpSavingsAccordion();
+  if (typeof renderRwggpHistory === "function") renderRwggpHistory();
+
+  // Update admin visibility according to active user profile
+  if (typeof updateAdminVisibility === "function") {
+    updateAdminVisibility();
+  }
 
   // 2. Re-render sidebar conversations for the active user
   if (typeof renderSidebarConversations === "function") {
@@ -9153,15 +9232,71 @@ async function loadRwggpData() {
     console.warn("Could not load words.json:", e);
   }
 
-  // Saved Lists: check localStorage first for active user, else fetch default
-  let loadedLists = null;
+  const profile = getActiveUserProfile();
+  const userEmail = (profile && profile.email) ? profile.email.trim().toLowerCase() : null;
   const savingsKey = getActiveUserStorageKey("sol_savings_lists");
+  const historyKey = getActiveUserStorageKey("sol_rwggp_history");
+
+  let loadedLists = null;
+  let loadedHistory = null;
+
   try {
     const local = localStorage.getItem(savingsKey);
-    if (local) loadedLists = JSON.parse(local);
+    if (local) {
+      const parsed = JSON.parse(local);
+      if (Array.isArray(parsed)) loadedLists = parsed;
+    }
   } catch (e) {}
 
-  if (!loadedLists || !loadedLists.length) {
+  try {
+    const hist = localStorage.getItem(historyKey);
+    if (hist) {
+      const parsedHist = JSON.parse(hist);
+      if (Array.isArray(parsedHist)) loadedHistory = parsedHist;
+    }
+  } catch (e) {}
+
+  // If user is logged in and has nothing in localStorage yet, fetch their personal cloud progress from backend
+  if (userEmail && (!loadedLists || loadedLists.length === 0)) {
+    try {
+      const progRes = await fetch(`/api/progress?email=${encodeURIComponent(userEmail)}`, { cache: "no-store" });
+      if (progRes.ok) {
+        const progData = await progRes.json();
+        if (progData && Array.isArray(progData.saving_lists) && progData.saving_lists.length > 0) {
+          loadedLists = progData.saving_lists;
+          localStorage.setItem(savingsKey, JSON.stringify(loadedLists));
+        }
+        if (progData && Array.isArray(progData.history) && (!loadedHistory || loadedHistory.length === 0)) {
+          loadedHistory = progData.history;
+          localStorage.setItem(historyKey, JSON.stringify(loadedHistory));
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch remote user progress:", e);
+    }
+  }
+
+  // If a non-admin user or guest previously inherited Adrian's default lists (Brown, Silver Pin, Purple, Green), reset them to []
+  if (userEmail !== "adrian.milla@gmail.com" && Array.isArray(loadedLists) && loadedLists.length === 4) {
+    const defaultNames = ["🟤 Brown", "⚪ Silver Pin", "🟣 Purple", "🟢 Green"];
+    const isLeakedAdrianData = loadedLists.every(l => defaultNames.includes(l.name));
+    if (isLeakedAdrianData) {
+      console.log("Resetting previously inherited admin lists for user:", userEmail || "guest");
+      loadedLists = [];
+      localStorage.setItem(savingsKey, JSON.stringify([]));
+      if (userEmail) {
+        fetch(`/api/progress?email=${encodeURIComponent(userEmail)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail, saving_lists: [], history: loadedHistory || [] })
+        }).catch(() => {});
+      }
+    }
+  }
+
+  // ONLY Adrian Milla is seeded with data/saving_lists.json if he has zero lists
+  // All other users (and guests) start fresh with empty lists: []
+  if ((!loadedLists || loadedLists.length === 0) && userEmail === "adrian.milla@gmail.com") {
     try {
       const savRes = await fetch("data/saving_lists.json");
       if (savRes.ok) {
@@ -9174,22 +9309,23 @@ async function loadRwggpData() {
   }
 
   rwggpSavingLists = loadedLists || [];
-  persistRwggpSavingLists();
-  renderRwggpSavingsAccordion();
+  rwggpHistory = loadedHistory || [];
 
-  // History from localStorage for active user
-  const historyKey = getActiveUserStorageKey("sol_rwggp_history");
+  // Persist only what belongs to this active user
   try {
-    const hist = localStorage.getItem(historyKey);
-    rwggpHistory = hist ? JSON.parse(hist) : [];
-  } catch (e) {
-    rwggpHistory = [];
-  }
+    localStorage.setItem(savingsKey, JSON.stringify(rwggpSavingLists));
+    localStorage.setItem(historyKey, JSON.stringify(rwggpHistory));
+  } catch (e) {}
+
+  renderRwggpSavingsAccordion();
   renderRwggpHistory();
 
   // Automatically show the first word from history or a random word
   if (rwggpHistory.length > 0) {
     displayRwggpWord(rwggpHistory[0], false);
+  } else if (rwggpWords && rwggpWords.length > 0) {
+    const randomWord = rwggpWords[Math.floor(Math.random() * rwggpWords.length)];
+    displayRwggpWord(randomWord, false);
   }
 }
 
