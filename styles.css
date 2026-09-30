@@ -3265,6 +3265,104 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   gap: 0.75rem;
 }
 
+/* Manual Zoom Controls in Visual Dictionary */
+.slide-manual-zoom-bar {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+  border-radius: 9999px;
+  padding: 2px 6px;
+  gap: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.slide-manual-zoom-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #cbd5e1);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  transition: all 0.15s ease;
+}
+
+.slide-manual-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.slide-manual-zoom-btn:active {
+  transform: scale(0.92);
+}
+
+.slide-zoom-level-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-yellow, #c5a059);
+  padding: 0 4px;
+  min-width: 38px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  font-family: monospace;
+}
+
+.slide-zoom-level-badge:hover {
+  text-decoration: underline;
+  color: #ffffff;
+}
+
+@media (max-width: 600px) {
+  .slideshow-header {
+    gap: 0.4rem;
+    padding-bottom: 0.5rem;
+  }
+  .slideshow-header-left {
+    gap: 0.5rem;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .slide-back-circle-btn {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8rem;
+  }
+  .slideshow-deck-title {
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .slideshow-header-right {
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+  .slide-manual-zoom-bar {
+    padding: 1px 4px;
+    gap: 1px;
+  }
+  .slide-manual-zoom-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.72rem;
+  }
+  .slide-zoom-level-badge {
+    font-size: 0.72rem;
+    min-width: 32px;
+    padding: 0 2px;
+  }
+  .slide-counter {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
 
 
 .slide-counter {
