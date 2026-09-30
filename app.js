@@ -2057,6 +2057,9 @@ async function requestAiTitleUpdate(convId, userQuery, aiReply = "") {
   const conv = convs.find(c => c.id === convId);
   if (!conv || conv.isCustomNamed) return; // Never overwrite user's manual title!
 
+  // If using personal client key, local smart title is already applied. Skip remote LLM title call to preserve 100% of free quota for chat!
+  if (!geminiService || !geminiService.hasPlatformKey) return;
+
   try {
     if (typeof geminiService !== "undefined" && geminiService && geminiService.hasApiKey()) {
       const aiTitle = await geminiService.generateDirectTitle(userQuery, aiReply);
@@ -9703,8 +9706,10 @@ function initStoryTimePanel() {
   let currentPlaylistId = DEFAULT_STORY_PLAYLIST_ID;
   try {
     const saved = localStorage.getItem("story_time_playlist_id");
-    if (saved && saved.trim()) {
+    if (saved && saved.trim() && saved.trim() !== "PL34800366ECFF1A75" && saved.trim() !== "PLxc3aXYiyRbCCIM7L3P1wuvXb-_3wy1Mk") {
       currentPlaylistId = saved.trim();
+    } else {
+      localStorage.setItem("story_time_playlist_id", DEFAULT_STORY_PLAYLIST_ID);
     }
   } catch (e) {}
 
