@@ -3685,6 +3685,8 @@ function initDictionaryPanel() {
   let currentSlideIdx = 1;
   let currentDeck = "body"; // "body", "bathroom", "seaside"
   let maxSlides = 17;
+  let lastRenderedSlideIdx = null;
+  let lastRenderedDeck = null;
 
   // Zoom & Pan states
   let isZoomed = false;
@@ -3888,7 +3890,8 @@ function initDictionaryPanel() {
     currentTranslateY = 0;
     if (slideImage) {
       slideImage.style.transform = "translate(0px, 0px) scale(1)";
-      slideImage.style.transition = "";
+      slideImage.style.removeProperty("transition");
+      slideImage.classList.remove("slide-image-no-transition");
       slideImage.classList.remove("zoomed");
     }
     if (slideImageWrapper) {
@@ -3925,6 +3928,10 @@ function initDictionaryPanel() {
   const updateSlideDisplay = (preserveZoom = true, direction = null) => {
     if (!slideImage || !counterLabel) return;
 
+    const slideChanged = (lastRenderedSlideIdx !== null && (lastRenderedSlideIdx !== currentSlideIdx || lastRenderedDeck !== currentDeck));
+    lastRenderedSlideIdx = currentSlideIdx;
+    lastRenderedDeck = currentDeck;
+
     const wasZoomed = isZoomed && preserveZoom;
     let targetColumn = currentZoomedColumn;
     const prevScale = currentScale;
@@ -3941,6 +3948,12 @@ function initDictionaryPanel() {
 
     if (!wasZoomed) {
       resetZoom();
+    }
+
+    if (slideChanged) {
+      // Disable transform animation completely during slide change so there is no dizzying horizontal whip across the page
+      slideImage.classList.add("slide-image-no-transition");
+      slideImage.style.setProperty("transition", "none", "important");
     }
 
     if (currentDeck === "body") {
@@ -4046,6 +4059,19 @@ function initDictionaryPanel() {
       updateZoomBadge();
     }
 
+    if (slideChanged) {
+      // Trigger simple gentle fade animation
+      slideImage.classList.remove("slide-simple-fade");
+      void slideImage.offsetWidth; // force DOM reflow
+      slideImage.classList.add("slide-simple-fade");
+
+      // Re-enable smooth transition for column-to-column panning within the same slide
+      setTimeout(() => {
+        slideImage.classList.remove("slide-image-no-transition");
+        slideImage.style.removeProperty("transition");
+      }, 70);
+    }
+
     updateAnchorVisibility();
   };
 
@@ -4106,6 +4132,8 @@ function initDictionaryPanel() {
       coverView.classList.remove("hidden");
       if (headerIntro) headerIntro.classList.remove("hidden");
       resetZoom();
+      lastRenderedSlideIdx = null;
+      lastRenderedDeck = null;
       scrollPanelToTop();
     });
   }

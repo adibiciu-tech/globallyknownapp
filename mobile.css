@@ -456,6 +456,26 @@ html, body {
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+.slide-image-wrapper img.slide-image-no-transition,
+.slide-image-wrapper.mobile-column-zoomed img.slide-image-no-transition {
+  transition: none !important;
+}
+
+/* Simple subtle fade animation for slide changes */
+.slide-simple-fade {
+  animation: slideSimpleFade 0.22s ease-out forwards;
+  will-change: opacity;
+}
+
+@keyframes slideSimpleFade {
+  0% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 /* In-Zoom Column Navigation Buttons on Mobile - Transparent */
 .zoom-anchor-btn {
   width: 22px !important;
