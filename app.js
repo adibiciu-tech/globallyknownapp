@@ -134,7 +134,7 @@ let communityPosts = [
 // -------------------------------------------------------------
 let activePanel = "sol-chat";
 let activeChatMessages = JSON.parse(localStorage.getItem("sol_chat_history")) || [];
-let activeModel = "gemini-3.6-flash";
+let activeModel = "gemini-3.8-flash";
 let activeAgentId = "general";
 let currentTheme = localStorage.getItem("sol_theme") || "dark";
 
@@ -1638,7 +1638,10 @@ function initStartHerePanel() {
     saveActiveConversationMessages();
 
     // Asynchronous AI Grammar Verification (Gemini contextual verification)
-    if (geminiService && typeof geminiService.checkGrammarAndFix === "function") {
+    // Only fire background AI verification if:
+    // 1. ruleBasedFix didn't already catch the error (instant client-side engine already applied it)
+    // 2. We have a dedicated server platform key (hasPlatformKey), so we don't collide with free-tier client API quotas
+    if (!ruleBasedFix && geminiService && geminiService.hasPlatformKey && typeof geminiService.checkGrammarAndFix === "function") {
       geminiService.checkGrammarAndFix(query).then(aiFix => {
         if (aiFix) {
           const formattedAiHtml = formatGrammarMarkup(aiFix);
@@ -1802,9 +1805,9 @@ Key Conversational Principles:
     const savedModelName = localStorage.getItem("sol_active_model_name") || "Flash";
     if (modelNameText) modelNameText.textContent = savedModelName;
     if (savedModelName === "Pro") {
-      activeModel = "gemini-3.6-flash";
+      activeModel = "gemini-3.8-flash";
     } else {
-      activeModel = "gemini-3.6-flash";
+      activeModel = "gemini-3.8-flash";
     }
 
     modelSelector.addEventListener("click", () => {
@@ -1815,7 +1818,7 @@ Key Conversational Principles:
       if (modelNameText) modelNameText.textContent = nextModel;
       localStorage.setItem("sol_active_model_name", nextModel);
 
-      activeModel = "gemini-3.6-flash";
+      activeModel = "gemini-3.8-flash";
       
       const headerModelBadge = document.getElementById("header-model-badge");
       if (headerModelBadge) {
@@ -6870,7 +6873,8 @@ function initOfficialGoogleIdentity() {
         // Check after short delay if Google button actually rendered an iframe
         setTimeout(() => {
           const hasIframe = container.querySelector("iframe");
-          if (!hasIframe && fallbackBtn) {
+          const iframeLoaded = hasIframe && (hasIframe.offsetHeight > 0 || container.offsetHeight > 0);
+          if (!iframeLoaded && fallbackBtn) {
             fallbackBtn.style.display = "flex";
           }
         }, 1200);

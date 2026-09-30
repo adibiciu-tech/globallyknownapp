@@ -66,7 +66,7 @@ export class GeminiService {
     this.apiKey = localStorage.getItem("gemini_api_key") || "";
     this.genAI = null;
     this.hasPlatformKey = false;
-    this.platformModel = "gemini-3.6-flash";
+    this.platformModel = "gemini-3.8-flash";
     this.initGenAI();
     this.checkPlatformStatus();
   }
@@ -172,20 +172,20 @@ export class GeminiService {
     // 1. Build prioritized model candidate list
     // NEVER put thinking models ahead of fast conversational production models!
     const preferredOrder = [
-      modelName,
+      modelName && modelName !== "gemini-3.6-flash" ? modelName : "gemini-3.8-flash",
       "gemini-3.8-flash",
       "gemini-flash-latest",
-      "gemini-3.5-flash-lite",
-      "gemini-3.6-flash"
+      "gemini-2.5-flash",
+      "gemini-3.5-flash-lite"
     ].filter(Boolean);
 
     let discovered = await this.getSupportedModels();
     // Exclude thinking models and deprecated models
-    const nonThinkingDiscovered = discovered.filter(m => !m.toLowerCase().includes("thinking") && m !== "gemini-pro" && m !== "gemini-1.5-flash");
+    const nonThinkingDiscovered = discovered.filter(m => !m.toLowerCase().includes("thinking") && m !== "gemini-pro" && m !== "gemini-1.5-flash" && m !== "gemini-3.6-flash");
 
     const modelsToTry = [];
     for (const m of [...preferredOrder, ...nonThinkingDiscovered]) {
-      if (m && !modelsToTry.includes(m) && m !== "gemini-pro" && m !== "gemini-1.5-flash") {
+      if (m && !modelsToTry.includes(m) && m !== "gemini-pro" && m !== "gemini-1.5-flash" && m !== "gemini-3.6-flash") {
         modelsToTry.push(m);
       }
     }
@@ -225,6 +225,10 @@ export class GeminiService {
           }
           if (onComplete) onComplete(replyText);
           return true;
+        } else if (response.status === 429) {
+          lastError = new Error("Rate limit reached (429 Too Many Requests). The Gemini API free quota allows up to 15 requests per minute. Please wait a moment before sending another message.");
+          // Wait 1.5s before attempting any fallback to avoid instant burst exhaustion
+          await new Promise(r => setTimeout(r, 1500));
         } else if (data.error) {
           lastError = new Error(data.error.message || `API error ${data.error.code}`);
         }
@@ -297,7 +301,7 @@ Rules:
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: [{ role: "user", content: prompt }],
-            model: "gemini-3.6-flash",
+            model: "gemini-3.8-flash",
             isTitle: true
           })
         });
@@ -315,8 +319,8 @@ Rules:
       try {
         const isAq = this.apiKey.startsWith("AQ.");
         const url = isAq
-          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`
-          : `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`
+          : `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
         const response = await fetch(url, {
           method: "POST",
           headers: { 
@@ -413,6 +417,10 @@ Assistant:`;
                 generationConfig: { maxOutputTokens: 512, temperature: 0.1 }
               })
             });
+            if (response.status === 429) {
+              console.warn("Grammar check rate-limited (429). Skipping secondary AI grammar check to preserve chat quota.");
+              return null;
+            }
             const data = await response.json();
             if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
               const parts = data.candidates[0].content.parts || [];
