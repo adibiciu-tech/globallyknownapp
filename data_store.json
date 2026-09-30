@@ -3041,7 +3041,19 @@
   ],
   "conversations": [],
   "progress": {},
-  "users": [],
+  "users": [
+    {
+      "id": "usr_g_7cc3fa5479",
+      "name": "Biciu Adrian",
+      "email": "sinsecontactmilla@gmail.com",
+      "picture": "https://lh3.googleusercontent.com/a/ACg8ocLgV1J_JhKi_uZs67o8Tjh4qz3wu22YTATXdchOZkVdSBAkpIFn=s96-c",
+      "role": "free",
+      "authProvider": "google",
+      "createdAt": 1790785696142,
+      "lastLogin": 1790785696142,
+      "loginCount": 1
+    }
+  ],
   "user_progress": {
     "adrian.milla@gmail.com": {
       "email": "adrian.milla@gmail.com",
@@ -3134,6 +3146,63 @@
   },
   "user_conversations": {
     "adrian.milla@gmail.com": [
+      {
+        "id": "conv_1790786292353",
+        "title": "I Am Go To",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "I am go to the store.",
+            "displayHtml": "I am <s class=\"grammar-strike\">go</s> <span class=\"grammar-fix\">going</span> to the store.",
+            "parts": [
+              {
+                "text": "I am go to the store."
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790786292353
+      },
+      {
+        "id": "conv_1790786257683",
+        "title": "I Am Go To",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "I am go to the store.",
+            "displayHtml": "I am <s class=\"grammar-strike\">go</s> <span class=\"grammar-fix\">going</span> to the store.",
+            "parts": [
+              {
+                "text": "I am go to the store."
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790786257684
+      },
+      {
+        "id": "conv_1790786121557",
+        "title": "I Am Go To",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "I am go to the store.",
+            "displayHtml": "I am <s class=\"grammar-strike\">go</s> <span class=\"grammar-fix\">going</span> to the store.",
+            "parts": [
+              {
+                "text": "I am go to the store."
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790786121557
+      },
       {
         "id": "conv_1790784472441",
         "title": "I Am Go To",

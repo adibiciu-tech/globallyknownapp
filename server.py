@@ -826,6 +826,107 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(resp)
             return
 
+        elif self.path.startswith("/api/grammar-check"):
+            try:
+                payload = json.loads(body)
+                text = (payload.get("text") or "").strip()
+                if not text or len(text) < 2:
+                    resp = json.dumps({"corrected": None, "hasChanges": False}).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                    return
+
+                data = load_data()
+                master_key = get_master_gemini_key(data)
+                if not master_key:
+                    resp = json.dumps({"corrected": None, "hasChanges": False, "note": "No platform API key"}).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
+                    return
+
+                prompt = (
+                    "You are an expert English grammar proofreader for language learners.\n"
+                    "Analyze the user's sentence. Check for grammatical errors, wrong tenses, wrong verb forms, subject-verb disagreement, preposition errors, or spelling mistakes.\n\n"
+                    "Rules:\n"
+                    "1. If the sentence is grammatically correct or natural English, respond with ONLY: NO_CHANGES\n"
+                    "2. If there are errors, output the sentence with each wrong word enclosed in <s>wrong</s> followed immediately by the correct word.\n"
+                    "3. Do NOT rewrite or rephrase sentences if they are already grammatically acceptable.\n"
+                    "4. Preserve original punctuation, casing, and word order as much as possible.\n"
+                    "5. Output ONLY the marked-up sentence or NO_CHANGES. No explanation, no intro, no markdown code blocks.\n\n"
+                    "Examples:\n"
+                    "User: I am go to the store.\n"
+                    "Assistant: I am <s>go</s> going to the store.\n\n"
+                    "User: She don't like apples.\n"
+                    "Assistant: She <s>don't</s> doesn't like apples.\n\n"
+                    "User: I went to the store yesterday.\n"
+                    "Assistant: NO_CHANGES\n\n"
+                    f"User: {text}\n"
+                    "Assistant:"
+                )
+
+                req_body = {
+                    "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                    "generationConfig": {"maxOutputTokens": 120, "temperature": 0.1}
+                }
+
+                ctx = ssl.create_default_context()
+                models_to_try = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash", "gemini-3.6-flash"]
+                corrected_result = None
+
+                for mod in models_to_try:
+                    if master_key.startswith("AQ."):
+                        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent"
+                    else:
+                        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={master_key}"
+
+                    headers = {
+                        "Content-Type": "application/json",
+                        "x-goog-api-key": master_key
+                    }
+                    req = urllib.request.Request(
+                        gemini_url,
+                        data=json.dumps(req_body).encode("utf-8"),
+                        headers=headers,
+                        method="POST"
+                    )
+                    try:
+                        with urllib.request.urlopen(req, context=ctx, timeout=8) as g_resp:
+                            res_json = json.loads(g_resp.read().decode("utf-8"))
+                            candidates = res_json.get("candidates", [])
+                            if candidates and "content" in candidates[0]:
+                                parts = candidates[0]["content"].get("parts", [])
+                                reply_text = "".join([p.get("text", "") for p in parts]).strip()
+                                if reply_text:
+                                    corrected_result = reply_text
+                                    break
+                    except Exception as e:
+                        continue
+
+                if corrected_result and "NO_CHANGES" not in corrected_result and ("<s>" in corrected_result or "<strike>" in corrected_result or "<del>" in corrected_result):
+                    resp = json.dumps({"corrected": corrected_result, "hasChanges": True}).encode("utf-8")
+                else:
+                    resp = json.dumps({"corrected": None, "hasChanges": False}).encode("utf-8")
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                resp = json.dumps({"error": str(e), "hasChanges": False}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+            return
+
         elif self.path.startswith("/api/chat"):
             try:
                 payload = json.loads(body)

@@ -601,6 +601,153 @@ window.getActiveUserName = getActiveUserName;
 window.isGuestUser = isGuestUser;
 window.getActiveUserStorageKey = getActiveUserStorageKey;
 
+function verbToIng(v) {
+  const irregular = { 'be': 'being', 'die': 'dying', 'lie': 'lying', 'tie': 'tying' };
+  if (irregular[v.toLowerCase()]) return irregular[v.toLowerCase()];
+  const lower = v.toLowerCase();
+  const doubleCons = new Set(['run', 'swim', 'get', 'sit', 'stop', 'put', 'cut', 'win', 'beg', 'plan', 'drop', 'rob', 'slip', 'trip', 'shop', 'chat', 'clap', 'jog', 'skip']);
+  if (doubleCons.has(lower)) {
+    return v + v.slice(-1) + 'ing';
+  }
+  if (lower.endsWith('ee') || lower.endsWith('oe') || lower.endsWith('ye')) {
+    return v + 'ing';
+  }
+  if (lower.endsWith('e') && !lower.endsWith('ie')) {
+    return v.slice(0, -1) + 'ing';
+  }
+  return v + 'ing';
+}
+
+function getRuleBasedGrammarFix(text) {
+  if (!text) return null;
+  let updated = text;
+  let changed = false;
+
+  // 1. Progressive: am/is/are + base verb -> am/is/are <s>verb</s> verb-ing
+  const beVerbs = "(?:am|is|are|was|were|be|been|being|'m|'re|'s)";
+  const commonBaseVerbs = "go|come|run|eat|sleep|work|study|play|read|write|watch|listen|speak|talk|walk|drive|cook|clean|buy|sell|drink|wait|learn|swim|make|take|get|look|sing|dance|fly|travel|visit|stay|meet|think|feel|try|start|stop";
+  const progRegex = new RegExp(`\\b(${beVerbs})\\s+(${commonBaseVerbs})\\b`, 'gi');
+  updated = updated.replace(progRegex, (match, be, verb) => {
+    changed = true;
+    const ing = verbToIng(verb);
+    return `${be} <s class="grammar-strike">${verb}</s> <span class="grammar-fix">${ing}</span>`;
+  });
+
+  // 2. Double comparatives: more better -> <s>more better</s> better
+  const comparatives = "better|faster|cheaper|easier|harder|bigger|smaller|taller|shorter|hotter|colder|closer|earlier|later|stronger|weaker";
+  const compRegex = new RegExp(`\\bmore\\s+(${comparatives})\\b`, 'gi');
+  updated = updated.replace(compRegex, (match, comp) => {
+    changed = true;
+    return `<s class="grammar-strike">more ${comp}</s> <span class="grammar-fix">${comp}</span>`;
+  });
+
+  // 3. Subject-verb agreement:
+  updated = updated.replace(/\b(he|she|it)\s+don't\b/gi, (match, subj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">don't</s> <span class="grammar-fix">doesn't</span>`;
+  });
+
+  updated = updated.replace(/\b(he|she|it)\s+have\b/gi, (match, subj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">have</s> <span class="grammar-fix">has</span>`;
+  });
+
+  updated = updated.replace(/\b(I|you|we|they)\s+has\b/gi, (match, subj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">has</s> <span class="grammar-fix">have</span>`;
+  });
+
+  updated = updated.replace(/\b(I|you|we|they)\s+doesn't\b/gi, (match, subj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">doesn't</s> <span class="grammar-fix">don't</span>`;
+  });
+
+  updated = updated.replace(/\bI\s+is\b/gi, () => {
+    changed = true;
+    return `I <s class="grammar-strike">is</s> <span class="grammar-fix">am</span>`;
+  });
+
+  updated = updated.replace(/\b(you|we|they)\s+is\b/gi, (match, subj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">is</s> <span class="grammar-fix">are</span>`;
+  });
+
+  updated = updated.replace(/\b(he|she|it)\s+are\b/gi, (match, subj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">are</s> <span class="grammar-fix">is</span>`;
+  });
+
+  // 4. False friend verbs:
+  updated = updated.replace(/\bI\s+am\s+agree\b/gi, () => {
+    changed = true;
+    return `I <s class="grammar-strike">am agree</s> <span class="grammar-fix">agree</span>`;
+  });
+
+  updated = updated.replace(/\bI\s+am\s+disagree\b/gi, () => {
+    changed = true;
+    return `I <s class="grammar-strike">am disagree</s> <span class="grammar-fix">disagree</span>`;
+  });
+
+  updated = updated.replace(/\b(listen|listens|listening|listened)\s+music\b/gi, (match, verb) => {
+    changed = true;
+    return `${verb} <span class="grammar-fix">to</span> music`;
+  });
+
+  updated = updated.replace(/\b(depend|depends|depending|depended)\s+of\b/gi, (match, verb) => {
+    changed = true;
+    return `${verb} <s class="grammar-strike">of</s> <span class="grammar-fix">on</span>`;
+  });
+
+  // 5. Did + past tense:
+  const pastToPresent = {
+    'went': 'go', 'saw': 'see', 'ate': 'eat', 'came': 'come', 'did': 'do',
+    'bought': 'buy', 'took': 'take', 'made': 'make', 'got': 'get', 'knew': 'know',
+    'told': 'tell', 'thought': 'think', 'felt': 'feel', 'found': 'find'
+  };
+  const pastList = Object.keys(pastToPresent).join('|');
+  const didPastRegex = new RegExp(`\\b(did(?:n't| not)?)\\s+(${pastList})\\b`, 'gi');
+  updated = updated.replace(didPastRegex, (match, didPart, pastVerb) => {
+    changed = true;
+    const base = pastToPresent[pastVerb.toLowerCase()] || pastVerb;
+    return `${didPart} <s class="grammar-strike">${pastVerb}</s> <span class="grammar-fix">${base}</span>`;
+  });
+
+  const didYouPastRegex = new RegExp(`\\b(did\\s+(?:you|he|she|they|we))\\s+(${pastList})\\b`, 'gi');
+  updated = updated.replace(didYouPastRegex, (match, didPart, pastVerb) => {
+    changed = true;
+    const base = pastToPresent[pastVerb.toLowerCase()] || pastVerb;
+    return `${didPart} <s class="grammar-strike">${pastVerb}</s> <span class="grammar-fix">${base}</span>`;
+  });
+
+  // 6. Days of week preposition:
+  const daysRegex = /\bin\s+(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/gi;
+  updated = updated.replace(daysRegex, (match, day) => {
+    changed = true;
+    return `<s class="grammar-strike">in</s> <span class="grammar-fix">on</span> ${day}`;
+  });
+
+  // 7. Age phrasing:
+  updated = updated.replace(/\bI\s+have\s+(\d+|twenty|thirty|forty)\s+years(?:\s+old)?\b/gi, (match, age) => {
+    changed = true;
+    return `I <s class="grammar-strike">have</s> <span class="grammar-fix">am</span> ${age} years old`;
+  });
+  updated = updated.replace(/\b(he|she)\s+has\s+(\d+|twenty|thirty|forty)\s+years(?:\s+old)?\b/gi, (match, subj, age) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">has</s> <span class="grammar-fix">is</span> ${age} years old`;
+  });
+
+  return changed ? updated : null;
+}
+
+function formatGrammarMarkup(text) {
+  if (!text) return "";
+  if (text.includes("grammar-strike")) return text;
+  let normalized = text.replace(/<\/?(strike|del)\b[^>]*>/gi, m => m.toLowerCase().startsWith("</") ? "</s>" : "<s>");
+  return normalized.replace(/<s>([\s\S]*?)<\/s>(?:\s*)([^\s<]+)/gi, (m, wrong, fix) => {
+    return `<s class="grammar-strike">${wrong}</s> <span class="grammar-fix">${fix}</span>`;
+  });
+}
+
 let homeConversationHistory = [];
 let currentHomeConvId = null;
 
@@ -1166,16 +1313,40 @@ function initStartHerePanel() {
       renderSidebarConversations();
     }
 
-    // 1. Render User Message Bubble
+    // 1. Render User Message Bubble with Instant Grammar Correction
+    const ruleBasedFix = getRuleBasedGrammarFix(query);
+    const initialUserHtml = ruleBasedFix ? formatGrammarMarkup(ruleBasedFix) : escapeHtml(query);
+
     const userDiv = document.createElement("div");
     userDiv.className = "gemini-inline-message";
-    userDiv.innerHTML = `<div class="gemini-user-query">${escapeHtml(query)}</div>`;
+    userDiv.innerHTML = `<div class="gemini-user-query">${initialUserHtml}</div>`;
     conversationEl.appendChild(userDiv);
     updateHomeChatModeState();
-    saveActiveConversationMessages();
 
     // Append to home conversation history
-    homeConversationHistory.push({ role: "user", content: query, parts: [{ text: query }] });
+    const historyEntry = {
+      role: "user",
+      content: query,
+      displayHtml: initialUserHtml,
+      parts: [{ text: query }]
+    };
+    homeConversationHistory.push(historyEntry);
+    saveActiveConversationMessages();
+
+    // Asynchronous AI Grammar Verification (Gemini contextual verification)
+    if (geminiService && typeof geminiService.checkGrammarAndFix === "function") {
+      geminiService.checkGrammarAndFix(query).then(aiFix => {
+        if (aiFix) {
+          const formattedAiHtml = formatGrammarMarkup(aiFix);
+          const uQueryEl = userDiv.querySelector(".gemini-user-query");
+          if (uQueryEl && formattedAiHtml && formattedAiHtml !== initialUserHtml) {
+            uQueryEl.innerHTML = formattedAiHtml;
+            historyEntry.displayHtml = formattedAiHtml;
+            saveActiveConversationMessages();
+          }
+        }
+      }).catch(err => console.warn("Background AI grammar check:", err));
+    }
 
     // 2. Activate mini Sol orbital thinking dots animation
     setSolThinking(true);
@@ -1692,7 +1863,9 @@ function loadSolConversation(convId) {
       if (msg.role === "user") {
         const userDiv = document.createElement("div");
         userDiv.className = "gemini-inline-message";
-        userDiv.innerHTML = `<div class="gemini-user-query">${escapeHtml(text)}</div>`;
+        const ruleFix = getRuleBasedGrammarFix(text);
+        const displayHtml = msg.displayHtml || (ruleFix ? formatGrammarMarkup(ruleFix) : escapeHtml(text));
+        userDiv.innerHTML = `<div class="gemini-user-query">${displayHtml}</div>`;
         conversationEl.appendChild(userDiv);
       } else if (msg.role === "model") {
         const aiDiv = document.createElement("div");
@@ -4057,9 +4230,11 @@ CRITICAL: Keep it brief and speak directly. Do NOT output internal thoughts or d
     const roleCfg = ROLE_CONFIGS[activeRole] || ROLE_CONFIGS.creative;
 
     // 1. Render User Message Bubble
+    const labRuleFix = getRuleBasedGrammarFix(query);
+    const labUserHtml = labRuleFix ? formatGrammarMarkup(labRuleFix) : escapeHtml(query);
     const userDiv = document.createElement("div");
     userDiv.className = "gemini-inline-message";
-    userDiv.innerHTML = `<div class="gemini-user-query">${escapeHtml(query)}</div>`;
+    userDiv.innerHTML = `<div class="gemini-user-query">${labUserHtml}</div>`;
     labConversationEl.appendChild(userDiv);
 
     // 2. Render Gemini AI Response Bubble
@@ -5040,10 +5215,12 @@ function initOutputPracticingPanel() {
     if (activeCallMode === "transcript") {
       if (userDiv) {
         userDiv.classList.remove("live-user-speaking");
+        const transcriptRuleFix = getRuleBasedGrammarFix(userSpeech);
+        const transcriptUserHtml = transcriptRuleFix ? formatGrammarMarkup(transcriptRuleFix) : escapeHtml(userSpeech);
         userDiv.innerHTML = `
           <div class="gemini-user-query" style="display:flex;align-items:center;gap:0.6rem;">
             <i class="fa-solid fa-microphone" style="font-size:0.85rem;color:var(--accent-yellow,#f6ca21);opacity:0.9;"></i>
-            <span>${escapeHtml(userSpeech)}</span>
+            <span>${transcriptUserHtml}</span>
           </div>
         `;
       }

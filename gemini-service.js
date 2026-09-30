@@ -332,6 +332,78 @@ Rules:
     return "";
   }
 
+  async checkGrammarAndFix(userText) {
+    if (!userText || userText.trim().length < 2) return null;
+    const cleanText = userText.trim();
+
+    // 1. Direct call if developer client API key is configured
+    if (this.apiKey) {
+      try {
+        const prompt = `You are an expert English grammar proofreader for language learners.
+Analyze the user's sentence. Check for grammatical errors, wrong tenses, wrong verb forms, subject-verb disagreement, preposition errors, or spelling mistakes.
+
+Rules:
+1. If the sentence is grammatically correct or natural English, respond with ONLY: NO_CHANGES
+2. If there are errors, output the sentence with each wrong word enclosed in <s>wrong</s> followed immediately by the correct word.
+3. Do NOT rewrite or rephrase sentences if they are already grammatically acceptable.
+4. Preserve original punctuation, casing, and word order as much as possible.
+5. Output ONLY the marked-up sentence or NO_CHANGES. No explanation, no intro, no markdown code blocks.
+
+Examples:
+User: I am go to the store.
+Assistant: I am <s>go</s> going to the store.
+
+User: She don't like apples.
+Assistant: She <s>don't</s> doesn't like apples.
+
+User: I went to the store yesterday.
+Assistant: NO_CHANGES
+
+User: ${cleanText}
+Assistant:`;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 120, temperature: 0.1 }
+          })
+        });
+        const data = await response.json();
+        if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
+          const parts = data.candidates[0].content.parts || [];
+          const text = parts[0]?.text || "";
+          if (text && !text.includes("NO_CHANGES") && (text.includes("<s>") || text.includes("<strike>") || text.includes("<del>"))) {
+            return text.trim();
+          }
+        }
+      } catch (e) {
+        console.warn("Direct grammar check failed:", e);
+      }
+    }
+
+    // 2. Server platform endpoint fallback
+    try {
+      const resp = await fetch("/api/grammar-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: cleanText })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.hasChanges && data.corrected) {
+          return data.corrected;
+        }
+      }
+    } catch (e) {
+      console.warn("Server grammar check failed:", e);
+    }
+
+    return null;
+  }
+
   getActiveUserContext() {
     let userName = "Guest";
     let isGuest = true;

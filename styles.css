@@ -11716,5 +11716,34 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   display: block !important;
 }
 
+/* Real-time Inline Grammar & Word Correction */
+.grammar-strike {
+  text-decoration: line-through !important;
+  text-decoration-color: #ef4444 !important;
+  text-decoration-thickness: 2.2px !important;
+  color: #fca5a5 !important;
+  opacity: 0.85 !important;
+  margin-right: 4px !important;
+  display: inline !important;
+  font-weight: 500 !important;
+}
+
+.grammar-fix {
+  color: #4ade80 !important;
+  font-weight: 700 !important;
+  display: inline !important;
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.28) !important;
+}
+
+:root[data-theme="light"] .grammar-strike {
+  color: #dc2626 !important;
+  text-decoration-color: #dc2626 !important;
+}
+
+:root[data-theme="light"] .grammar-fix {
+  color: #15803d !important;
+  text-shadow: none !important;
+}
+
 
 
