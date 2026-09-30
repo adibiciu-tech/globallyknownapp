@@ -521,7 +521,7 @@ function isGuestUser() {
   return !getActiveUserProfile();
 }
 
-const MASTER_ADMIN_EMAILS = ["sinsecontactmilla@gmail.com", "adrian.milla@gmail.com"];
+const MASTER_ADMIN_EMAILS = ["sinsecontactmilla@gmail.com", "globallyknownrappers@gmail.com"];
 
 function isPlatformAdmin() {
   const p = getActiveUserProfile();
@@ -10097,8 +10097,8 @@ async function loadRwggpData() {
     }
   }
 
-  // If a non-admin user or guest previously inherited Adrian's default lists (Brown, Silver Pin, Purple, Green), reset them to []
-  if (userEmail !== "adrian.milla@gmail.com" && Array.isArray(loadedLists) && loadedLists.length === 4) {
+  // If a non-admin user or guest previously inherited default admin lists (Brown, Silver Pin, Purple, Green), reset them to []
+  if (!MASTER_ADMIN_EMAILS.includes(userEmail) && userEmail !== "adrian.milla@gmail.com" && Array.isArray(loadedLists) && loadedLists.length === 4) {
     const defaultNames = ["🟤 Brown", "⚪ Silver Pin", "🟣 Purple", "🟢 Green"];
     const isLeakedAdrianData = loadedLists.every(l => defaultNames.includes(l.name));
     if (isLeakedAdrianData) {
@@ -10115,9 +10115,9 @@ async function loadRwggpData() {
     }
   }
 
-  // ONLY Adrian Milla is seeded with data/saving_lists.json if he has zero lists
+  // Master admins are seeded with data/saving_lists.json if they have zero lists
   // All other users (and guests) start fresh with empty lists: []
-  if ((!loadedLists || loadedLists.length === 0) && userEmail === "adrian.milla@gmail.com") {
+  if ((!loadedLists || loadedLists.length === 0) && (MASTER_ADMIN_EMAILS.includes(userEmail) || userEmail === "adrian.milla@gmail.com")) {
     try {
       const savRes = await fetch("data/saving_lists.json");
       if (savRes.ok) {

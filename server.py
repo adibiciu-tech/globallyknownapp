@@ -78,7 +78,7 @@ DEFAULT_COMMUNITY_MEMBERS = [
     {"id": "mem_8", "name": "Marcus Vance", "role": "Moderator 🛡️", "status": "offline", "avatar": "MV", "roleType": "member", "group": "offline"}
 ]
 
-MASTER_ADMIN_EMAILS = {"sinsecontactmilla@gmail.com", "adrian.milla@gmail.com"}
+MASTER_ADMIN_EMAILS = {"sinsecontactmilla@gmail.com", "globallyknownrappers@gmail.com"}
 
 def load_data():
     d = {"videos": [], "conversations": [], "progress": {}, "users": []}
@@ -104,6 +104,7 @@ def load_data():
     if "community_members" not in d or not isinstance(d["community_members"], list) or len(d["community_members"]) == 0:
         d["community_members"] = [dict(m) for m in DEFAULT_COMMUNITY_MEMBERS]
     admin_list = set(str(x).strip().lower() for x in d.get("admin_emails", []))
+    admin_list.discard("adrian.milla@gmail.com")
     for ma in MASTER_ADMIN_EMAILS:
         admin_list.add(ma)
     d["admin_emails"] = list(admin_list)
@@ -146,7 +147,7 @@ def sanitize_user(user):
     copy.pop("passwordHash", None)
     return copy
 
-MASTER_ADMIN_EMAILS = {"sinsecontactmilla@gmail.com", "adrian.milla@gmail.com"}
+MASTER_ADMIN_EMAILS = {"sinsecontactmilla@gmail.com", "globallyknownrappers@gmail.com"}
 
 def is_admin_email(email, data=None):
     if not email:
