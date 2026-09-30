@@ -4214,7 +4214,10 @@ function initDictionaryPanel() {
   const updateSlideDisplay = (preserveZoom = true, direction = null) => {
     if (!slideImage || !counterLabel) return;
 
-    const slideChanged = (lastRenderedSlideIdx !== null && (lastRenderedSlideIdx !== currentSlideIdx || lastRenderedDeck !== currentDeck));
+    const isDeckChange = (lastRenderedDeck !== null && lastRenderedDeck !== currentDeck);
+    const isSlideIndexChange = (lastRenderedSlideIdx !== null && lastRenderedSlideIdx !== currentSlideIdx && !isDeckChange);
+    const isForward = direction === "next" || (direction !== "prev" && currentSlideIdx > (lastRenderedSlideIdx || 1));
+
     lastRenderedSlideIdx = currentSlideIdx;
     lastRenderedDeck = currentDeck;
 
@@ -4223,6 +4226,7 @@ function initDictionaryPanel() {
     const prevScale = currentScale;
     const prevTransX = currentTranslateX;
     const prevTransY = currentTranslateY;
+    const prevZoomedColumn = currentZoomedColumn;
 
     if (wasZoomed && currentZoomedColumn !== null) {
       if (direction === "next") {
@@ -4236,6 +4240,20 @@ function initDictionaryPanel() {
       resetZoom();
     }
 
+    let oldImg = null;
+    let incomingStartTransform = "";
+    let oldTargetTransform = "";
+
+    if (isSlideIndexChange && slideImageWrapper) {
+      slideImageWrapper.querySelectorAll(".slide-outgoing-clone").forEach(el => el.remove());
+      oldImg = slideImage.cloneNode(true);
+      oldImg.removeAttribute("id");
+      oldImg.classList.add("slide-outgoing-clone");
+      oldImg.src = slideImage.src;
+      oldImg.style.transform = slideImage.style.transform || "";
+      oldImg.style.removeProperty("transition");
+      slideImageWrapper.insertBefore(oldImg, slideImage);
+    }
 
     if (currentDeck === "body") {
       slideImage.src = `assets/dict/page_${currentSlideIdx}.png`;
@@ -4286,12 +4304,14 @@ function initDictionaryPanel() {
       });
     }
 
+    let targetTransform = "translate(0px, 0px) scale(1)";
+    const isMobile = window.innerWidth <= 900;
+
     if (wasZoomed) {
       isZoomed = true;
       currentZoomedColumn = targetColumn;
       currentScale = prevScale;
 
-      const isMobile = window.innerWidth <= 900;
       if (isMobile && targetColumn) {
         if (slideImageWrapper) {
           slideImageWrapper.classList.add("mobile-column-zoomed");
@@ -4302,16 +4322,32 @@ function initDictionaryPanel() {
         if (targetColumn === "left") xPercent = 0;
         else if (targetColumn === "center") xPercent = -33.333333;
         else if (targetColumn === "right") xPercent = -66.666667;
-        slideImage.style.transform = `translate3d(${xPercent}%, 0, 0)`;
+        targetTransform = `translate3d(${xPercent}%, 0, 0)`;
+
+        if (oldImg) {
+          let prevPercent = 0;
+          if (prevZoomedColumn === "left") prevPercent = 0;
+          else if (prevZoomedColumn === "center") prevPercent = -33.333333;
+          else if (prevZoomedColumn === "right") prevPercent = -66.666667;
+          else prevPercent = isForward ? -66.666667 : 0;
+
+          if (isForward) {
+            oldTargetTransform = `translate3d(${prevPercent - 33.333333}%, 0, 0)`;
+            incomingStartTransform = `translate3d(${xPercent + 33.333333}%, 0, 0)`;
+          } else {
+            oldTargetTransform = `translate3d(${prevPercent + 33.333333}%, 0, 0)`;
+            incomingStartTransform = `translate3d(${xPercent - 33.333333}%, 0, 0)`;
+          }
+        }
       } else if (targetColumn) {
         slideImage.classList.add("zoomed");
         if (slideImageWrapper) {
           slideImageWrapper.classList.add("zoomed-state");
           slideImageWrapper.classList.remove("mobile-column-zoomed");
         }
-        const width = slideImage.clientWidth;
+        const width = slideImage.clientWidth || 800;
         const limitX = (width * currentScale - width) / 2;
-        const height = slideImage.clientHeight;
+        const height = slideImage.clientHeight || 500;
         const limitY = (height * currentScale - height) / 2;
         translateY = limitY;
         currentTranslateY = limitY;
@@ -4323,7 +4359,18 @@ function initDictionaryPanel() {
           translateX = -limitX;
         }
         currentTranslateX = translateX;
-        slideImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+        targetTransform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+
+        if (oldImg) {
+          const colStep = limitX > 10 ? limitX : width * 0.333;
+          if (isForward) {
+            oldTargetTransform = `translate(${prevTransX - colStep}px, ${translateY}px) scale(${currentScale})`;
+            incomingStartTransform = `translate(${translateX + colStep}px, ${translateY}px) scale(${currentScale})`;
+          } else {
+            oldTargetTransform = `translate(${prevTransX + colStep}px, ${translateY}px) scale(${currentScale})`;
+            incomingStartTransform = `translate(${translateX - colStep}px, ${translateY}px) scale(${currentScale})`;
+          }
+        }
       } else {
         currentTranslateX = prevTransX;
         currentTranslateY = prevTransY;
@@ -4334,10 +4381,52 @@ function initDictionaryPanel() {
           slideImageWrapper.classList.add("zoomed-state");
           slideImageWrapper.classList.remove("mobile-column-zoomed");
         }
-        slideImage.style.transform = `translate(${prevTransX}px, ${prevTransY}px) scale(${prevScale})`;
+        targetTransform = `translate(${prevTransX}px, ${prevTransY}px) scale(${prevScale})`;
+
+        if (oldImg) {
+          const width = slideImage.clientWidth || 800;
+          const shift = width * 0.35;
+          if (isForward) {
+            oldTargetTransform = `translate(${prevTransX - shift}px, ${prevTransY}px) scale(${prevScale})`;
+            incomingStartTransform = `translate(${prevTransX + shift}px, ${prevTransY}px) scale(${prevScale})`;
+          } else {
+            oldTargetTransform = `translate(${prevTransX + shift}px, ${prevTransY}px) scale(${prevScale})`;
+            incomingStartTransform = `translate(${prevTransX - shift}px, ${prevTransY}px) scale(${prevScale})`;
+          }
+        }
       }
       if (btnZoomReset) btnZoomReset.classList.remove("hidden");
       updateZoomBadge();
+    } else {
+      // Unzoomed
+      targetTransform = `translate(0px, 0px) scale(1)`;
+      if (oldImg) {
+        if (isForward) {
+          oldTargetTransform = `translate3d(-100%, 0, 0)`;
+          incomingStartTransform = `translate3d(100%, 0, 0)`;
+        } else {
+          oldTargetTransform = `translate3d(100%, 0, 0)`;
+          incomingStartTransform = `translate3d(-100%, 0, 0)`;
+        }
+      }
+    }
+
+    if (oldImg && incomingStartTransform) {
+      slideImage.style.transition = "none";
+      slideImage.style.transform = incomingStartTransform;
+      void slideImage.offsetWidth;
+      void oldImg.offsetWidth;
+      slideImage.style.removeProperty("transition");
+      slideImage.style.transform = targetTransform;
+      oldImg.style.transform = oldTargetTransform;
+
+      const cleanupOld = () => {
+        if (oldImg && oldImg.parentElement) oldImg.remove();
+      };
+      oldImg.addEventListener("transitionend", cleanupOld, { once: true });
+      setTimeout(cleanupOld, 450);
+    } else {
+      slideImage.style.transform = targetTransform;
     }
 
     updateAnchorVisibility();

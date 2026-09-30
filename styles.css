@@ -3410,6 +3410,16 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   user-select: none;
   -webkit-user-drag: none;
   transform-origin: center center;
+  position: relative;
+  z-index: 2;
+}
+
+.slide-image-wrapper img.slide-outgoing-clone {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
 }
 
 .slide-image-wrapper img.zoomed {
