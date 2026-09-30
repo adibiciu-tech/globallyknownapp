@@ -3412,26 +3412,6 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   transform-origin: center center;
 }
 
-.slide-image-wrapper img.slide-image-no-transition,
-.slide-image-wrapper.zoomed-state img.slide-image-no-transition {
-  transition: none !important;
-}
-
-/* Simple subtle fade animation for slide changes */
-.slide-simple-fade {
-  animation: slideSimpleFade 0.22s ease-out forwards;
-  will-change: opacity;
-}
-
-@keyframes slideSimpleFade {
-  0% {
-    opacity: 0.25;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
 .slide-image-wrapper img.zoomed {
   cursor: grab;
 }

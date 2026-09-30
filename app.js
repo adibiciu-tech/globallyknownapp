@@ -4178,7 +4178,6 @@ function initDictionaryPanel() {
     if (slideImage) {
       slideImage.style.transform = "translate(0px, 0px) scale(1)";
       slideImage.style.removeProperty("transition");
-      slideImage.classList.remove("slide-image-no-transition");
       slideImage.classList.remove("zoomed");
     }
     if (slideImageWrapper) {
@@ -4237,11 +4236,6 @@ function initDictionaryPanel() {
       resetZoom();
     }
 
-    if (slideChanged) {
-      // Disable transform animation completely during slide change so there is no dizzying horizontal whip across the page
-      slideImage.classList.add("slide-image-no-transition");
-      slideImage.style.setProperty("transition", "none", "important");
-    }
 
     if (currentDeck === "body") {
       slideImage.src = `assets/dict/page_${currentSlideIdx}.png`;
@@ -4344,19 +4338,6 @@ function initDictionaryPanel() {
       }
       if (btnZoomReset) btnZoomReset.classList.remove("hidden");
       updateZoomBadge();
-    }
-
-    if (slideChanged) {
-      // Trigger simple gentle fade animation
-      slideImage.classList.remove("slide-simple-fade");
-      void slideImage.offsetWidth; // force DOM reflow
-      slideImage.classList.add("slide-simple-fade");
-
-      // Re-enable smooth transition for column-to-column panning within the same slide
-      setTimeout(() => {
-        slideImage.classList.remove("slide-image-no-transition");
-        slideImage.style.removeProperty("transition");
-      }, 70);
     }
 
     updateAnchorVisibility();
