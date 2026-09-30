@@ -107,6 +107,12 @@
           <!-- separating horizontal line after 3 -->
           <hr class="sidebar-divider">
 
+          <!-- Category: Story Time -->
+          <li class="nav-item" data-panel="story-time" onclick="window.switchPanel('story-time')" title="📰 Story Time!">
+            <span class="nav-icon" style="font-style: normal; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem;">📰</span>
+            <span class="nav-label">📰 Story Time!</span>
+          </li>
+
           <!-- Category 4: Organized Comprehensible Input Videos -->
           <li class="nav-item" data-panel="videos" onclick="window.switchPanel('videos')" title="Organized Comprehensible Input Videos">
             <i class="fa-solid fa-video nav-icon"></i>
@@ -1098,6 +1104,123 @@
             <div class="save-popover-lists" id="save-popover-lists-container">
               <!-- Populated dynamically -->
             </div>
+          </div>
+        </div>
+
+        <!-- Story Time Panel -->
+        <div class="workspace-panel" id="panel-story-time">
+          <div class="story-time-container">
+            <!-- Header Section -->
+            <div class="story-header-section">
+              <div class="story-badge-row">
+                <span class="story-category-badge"><i class="fa-solid fa-book-open-reader"></i> Comprehensible Story Stream</span>
+                <span class="story-status-badge"><span class="story-live-pulse"></span> Playlist Embed</span>
+              </div>
+              <h1 class="story-main-title">📰 Story Time!</h1>
+              <p class="story-description">
+                Immerse yourself in engaging English stories. Watch curated playlists or paste any YouTube playlist link to embed and enjoy right here.
+              </p>
+            </div>
+
+            <!-- Embed Control Bar -->
+            <div class="story-embed-card">
+              <div class="story-embed-input-wrapper">
+                <i class="fa-solid fa-link story-embed-icon"></i>
+                <input 
+                  type="text" 
+                  id="story-playlist-input" 
+                  class="story-playlist-input" 
+                  placeholder="Paste YouTube Playlist URL or ID (e.g. https://www.youtube.com/playlist?list=...)" 
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button type="button" id="btn-story-load-playlist" class="story-load-btn" title="Load YouTube Playlist">
+                  <i class="fa-solid fa-circle-play"></i> <span>Embed Playlist</span>
+                </button>
+              </div>
+              <div class="story-quick-presets">
+                <span class="story-presets-label"><i class="fa-solid fa-wand-magic-sparkles"></i> Quick Presets:</span>
+                <button type="button" class="story-preset-btn active" data-playlist="PLTYeDakuqA3-Hjw-Ha6CiDCKFKmLj3LlZ" title="Snow White and Seven Dwarfs">
+                  <i class="fa-solid fa-crown"></i> Snow White & Classics
+                </button>
+                <button type="button" class="story-preset-btn" data-playlist="PLTYeDakuqA39Y5mina6jJgSzc_wCaoHRk" title="A Christmas Carol">
+                  <i class="fa-solid fa-tree"></i> A Christmas Carol
+                </button>
+                <button type="button" class="story-preset-btn" data-playlist="PLTYeDakuqA38NFvIrBpCAV0CUXCrSN8mm" title="Classics by Oscar Wilde">
+                  <i class="fa-solid fa-feather-pointed"></i> Oscar Wilde Stories
+                </button>
+                <button type="button" class="story-preset-btn" data-playlist="PLTYeDakuqA3-QaxDWGOkuHXChRFaDfMTT" title="The Light Princess">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> The Light Princess
+                </button>
+                <button type="button" id="btn-story-reset-default" class="story-preset-reset" title="Reset to default playlist">
+                  <i class="fa-solid fa-rotate-left"></i> Reset Default
+                </button>
+              </div>
+            </div>
+
+            <!-- Cinematic Player Window Frame -->
+            <div class="story-cinema-wrapper" id="story-cinema-wrapper">
+              <div class="story-window-chrome">
+                <div class="story-window-dots">
+                  <span class="window-dot dot-red"></span>
+                  <span class="window-dot dot-yellow"></span>
+                  <span class="window-dot dot-green"></span>
+                </div>
+                <div class="story-window-title" id="story-window-current-title">
+                  <i class="fa-brands fa-youtube" style="color: #ff0000;"></i> YouTube Playlist Player
+                </div>
+                <div class="story-window-actions">
+                  <button type="button" class="story-window-btn" id="btn-story-open-external" title="Open Playlist on YouTube">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </button>
+                  <button type="button" class="story-window-btn" id="btn-story-fullscreen" title="Toggle Fullscreen">
+                    <i class="fa-solid fa-expand"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="story-cinema-frame-container" id="story-player-container">
+                <iframe 
+                  id="story-cinema-iframe" 
+                  src="https://www.youtube.com/embed/videoseries?list=PLTYeDakuqA3-Hjw-Ha6CiDCKFKmLj3LlZ" 
+                  title="Story Time Playlist Player" 
+                  frameborder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
+                  allowfullscreen
+                ></iframe>
+              </div>
+
+              <!-- Action Bar under the Player -->
+              <div class="story-player-footer">
+                <div class="story-footer-info">
+                  <span class="story-pill-badge" id="story-active-pill"><i class="fa-solid fa-list-check"></i> Playing Playlist</span>
+                  <span class="story-current-id-text" id="story-current-id-display">ID: PLTYeDakuqA3-Hjw-Ha6CiDCKFKmLj3LlZ</span>
+                </div>
+                <div class="story-footer-actions">
+                  <button type="button" class="story-footer-btn" id="btn-story-copy-link" title="Copy Playlist URL">
+                    <i class="fa-solid fa-copy"></i> Copy Link
+                  </button>
+                  <button type="button" class="story-footer-btn" id="btn-story-toggle-cinema" title="Cinema Mode (Wide View)">
+                    <i class="fa-solid fa-film"></i> Cinema Mode
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Future Expansion Preview Card -->
+            <div class="story-roadmap-card">
+              <div class="story-roadmap-icon-box">
+                <i class="fa-solid fa-sparkles"></i>
+              </div>
+              <div class="story-roadmap-text">
+                <h3 class="story-roadmap-title">Coming Soon: The Comprehensible Stories Library</h3>
+                <p class="story-roadmap-desc">
+                  This space will become a comprehensive story sanctuary with level-graded stories (A1 to C1), dual-language subtitles, instant word explanations, and comprehension quizzes!
+                </p>
+              </div>
+              <div class="story-roadmap-badge">In Development</div>
+            </div>
+
           </div>
         </div>
 
