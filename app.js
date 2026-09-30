@@ -645,14 +645,186 @@ function verbToIng(v) {
   return v + 'ing';
 }
 
+const COMMON_TYPOS = {
+  "helo": "hello",
+  "hellow": "hello",
+  "hallo": "hello",
+  "heyy": "hey",
+  "alot": "a lot",
+  "noone": "no one",
+  "everytime": "every time",
+  "infact": "in fact",
+  "allright": "all right",
+  "definately": "definitely",
+  "definatly": "definitely",
+  "definetly": "definitely",
+  "definitly": "definitely",
+  "seperate": "separate",
+  "seperated": "separated",
+  "seperation": "separation",
+  "untill": "until",
+  "recieve": "receive",
+  "recieved": "received",
+  "recieving": "receiving",
+  "beleive": "believe",
+  "beleived": "believed",
+  "beleif": "belief",
+  "wierd": "weird",
+  "occured": "occurred",
+  "occuring": "occurring",
+  "truely": "truly",
+  "tommorow": "tomorrow",
+  "tommorrow": "tomorrow",
+  "tomorow": "tomorrow",
+  "goverment": "government",
+  "enviroment": "environment",
+  "neccessary": "necessary",
+  "necesary": "necessary",
+  "accomodate": "accommodate",
+  "embarass": "embarrass",
+  "embarassed": "embarrassed",
+  "embarassing": "embarrassing",
+  "begining": "beginning",
+  "suprise": "surprise",
+  "suprised": "surprised",
+  "arguement": "argument",
+  "pronounciation": "pronunciation",
+  "grammer": "grammar",
+  "writting": "writing",
+  "wich": "which",
+  "becuase": "because",
+  "becasue": "because",
+  "beacuse": "because",
+  "thier": "their",
+  "freind": "friend",
+  "freinds": "friends",
+  "peice": "piece",
+  "collogue": "colleague",
+  "collegue": "colleague",
+  "succesful": "successful",
+  "fourty": "forty"
+};
+
 function getRuleBasedGrammarFix(text) {
   if (!text) return null;
   let updated = text;
   let changed = false;
 
-  // 1. Progressive: am/is/are + base verb -> am/is/are <s>verb</s> verb-ing
+  // 1. Common typos and misspellings
+  for (const [typo, fix] of Object.entries(COMMON_TYPOS)) {
+    const reg = new RegExp(`\\b(${typo})\\b`, 'gi');
+    if (reg.test(updated)) {
+      updated = updated.replace(reg, (match, word) => {
+        changed = true;
+        const targetFix = (word[0] === word[0].toUpperCase() && word[0] !== word[0].toLowerCase())
+          ? fix.charAt(0).toUpperCase() + fix.slice(1)
+          : fix;
+        return `<s class="grammar-strike">${word}</s> <span class="grammar-fix">${targetFix}</span>`;
+      });
+    }
+  }
+
+  // 2. Homophone: grate vs great
+  updated = updated.replace(/\b(doing(?:\s+really)?|feeling|feel|looks|looked|sounds|sounded|is|are|was|were|it's|its|very|pretty|so|a|such\s+a)\s+grate\b/gi, (match, prefix) => {
+    changed = true;
+    return `${prefix} <s class="grammar-strike">grate</s> <span class="grammar-fix">great</span>`;
+  });
+  updated = updated.replace(/\bgrate\s+(job|work|idea|day|time|news|thing|person|guy|girl|view|weather|food|meal|place|to\s+see|to\s+hear|to\s+meet)\b/gi, (match, suffix) => {
+    changed = true;
+    return `<s class="grammar-strike">grate</s> <span class="grammar-fix">great</span> ${suffix}`;
+  });
+  updated = updated.replace(/^(\s*)grate([.!?,\s]*)$/gi, (match, p1, p2) => {
+    changed = true;
+    return `${p1}<s class="grammar-strike">grate</s> <span class="grammar-fix">great</span>${p2}`;
+  });
+
+  // 3. Homophone: your vs you're
+  updated = updated.replace(/\byour\s+(welcome|right|wrong|so\s+\w+|very\s+\w+|doing|going|coming|being|gonna|talking)\b/gi, (match, nextWord) => {
+    changed = true;
+    return `<s class="grammar-strike">your</s> <span class="grammar-fix">you're</span> ${nextWord}`;
+  });
+  updated = updated.replace(/\byou're\s+(car|house|phone|dog|cat|name|friend|friends|family|parents|job|book|computer|bag|room|money)\b/gi, (match, noun) => {
+    changed = true;
+    return `<s class="grammar-strike">you're</s> <span class="grammar-fix">your</span> ${noun}`;
+  });
+
+  // 4. Homophone: to vs too
+  const tooAdj = "much|many|late|early|far|close|fast|slow|high|low|big|small|hard|easy|hot|cold|tired|expensive|busy|good|bad|heavy|light|dark|bright|loud|quiet|young|old|long|short|sweet|salty|spicy|warm|cool|lazy|funny|sad|happy";
+  const toTooRegex = new RegExp(`\\bto\\s+(${tooAdj})\\b`, 'gi');
+  updated = updated.replace(toTooRegex, (match, adj) => {
+    changed = true;
+    return `<s class="grammar-strike">to</s> <span class="grammar-fix">too</span> ${adj}`;
+  });
+  updated = updated.replace(/\b(me|you|us|them|him|her)\s+to([.!?,\s]*)$/gi, (match, pronoun, punct) => {
+    changed = true;
+    return `${pronoun} <s class="grammar-strike">to</s> <span class="grammar-fix">too</span>${punct}`;
+  });
+
+  // 5. Homophone: their vs there vs they're
+  updated = updated.replace(/\btheir\s+(is|are|was|were|will\s+be|has\s+been|have\s+been)\b/gi, (match, verb) => {
+    changed = true;
+    return `<s class="grammar-strike">their</s> <span class="grammar-fix">there</span> ${verb}`;
+  });
+  updated = updated.replace(/\bover\s+their\b/gi, () => {
+    changed = true;
+    return `over <s class="grammar-strike">their</s> <span class="grammar-fix">there</span>`;
+  });
+  updated = updated.replace(/\bthere\s+(car|house|phone|name|friends|family|parents|job|dog|cat|books|room)\b/gi, (match, noun) => {
+    changed = true;
+    return `<s class="grammar-strike">there</s> <span class="grammar-fix">their</span> ${noun}`;
+  });
+  updated = updated.replace(/\bthey're\s+(car|house|phone|name|friends|family|parents|job|dog|cat|books|room)\b/gi, (match, noun) => {
+    changed = true;
+    return `<s class="grammar-strike">they're</s> <span class="grammar-fix">their</span> ${noun}`;
+  });
+  updated = updated.replace(/\bthey're\s+(is|are|was|were)\b/gi, (match, verb) => {
+    changed = true;
+    return `<s class="grammar-strike">they're</s> <span class="grammar-fix">there</span> ${verb}`;
+  });
+
+  // 6. Comparative: then vs than
+  const compWords = "better|worse|more|less|faster|slower|easier|harder|bigger|smaller|taller|shorter|older|younger|stronger|weaker|hotter|colder|closer|rather|other";
+  const thenThanRegex = new RegExp(`\\b(${compWords})\\s+then\\b`, 'gi');
+  updated = updated.replace(thenThanRegex, (match, comp) => {
+    changed = true;
+    return `${comp} <s class="grammar-strike">then</s> <span class="grammar-fix">than</span>`;
+  });
+
+  // 7. its vs it's
+  updated = updated.replace(/\bits\s+(a|an|the|so|very|really|not|been|going|time|hard|easy|good|bad|cool|nice|awesome|amazing|okay|ok|fine|great)\b/gi, (match, nextWord) => {
+    changed = true;
+    return `<s class="grammar-strike">its</s> <span class="grammar-fix">it's</span> ${nextWord}`;
+  });
+
+  // 8. loose vs lose
+  updated = updated.replace(/\b(to|will|gonna|don't|did|can|could|might)\s+loose\b/gi, (match, pre) => {
+    changed = true;
+    return `${pre} <s class="grammar-strike">loose</s> <span class="grammar-fix">lose</span>`;
+  });
+  updated = updated.replace(/\bloose\s+(weight|my|the|your|his|her|their|our)\b/gi, (match, post) => {
+    changed = true;
+    return `<s class="grammar-strike">loose</s> <span class="grammar-fix">lose</span> ${post}`;
+  });
+
+  // 9. no vs know
+  updated = updated.replace(/\bI\s+no(\s+(?:that|what|where|how|who|why|about))?\b/gi, (match, rest) => {
+    changed = true;
+    return `I <s class="grammar-strike">no</s> <span class="grammar-fix">know</span>${rest || ''}`;
+  });
+  updated = updated.replace(/\b(do\s+you|you|don't|dont)\s+no\b/gi, (match, pre) => {
+    changed = true;
+    return `${pre} <s class="grammar-strike">no</s> <span class="grammar-fix">know</span>`;
+  });
+
+  // 10. new vs knew
+  updated = updated.replace(/\b(I|he|she|we|they|already)\s+new\s+(it|that|about|how|what)\b/gi, (match, subj, obj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">new</s> <span class="grammar-fix">knew</span> ${obj}`;
+  });
+
+  // 11. Progressive: am/is/are + base verb -> am/is/are <s>verb</s> verb-ing
   const beVerbs = "(?:am|is|are|was|were|be|been|being|'m|'re|'s)";
-  const commonBaseVerbs = "go|come|run|eat|sleep|work|study|play|read|write|watch|listen|speak|talk|walk|drive|cook|clean|buy|sell|drink|wait|learn|swim|make|take|get|look|sing|dance|fly|travel|visit|stay|meet|think|feel|try|start|stop";
+  const commonBaseVerbs = "go|come|run|eat|sleep|work|study|play|read|write|watch|listen|speak|talk|walk|drive|cook|clean|buy|sell|drink|wait|learn|swim|make|take|get|look|sing|dance|fly|travel|visit|stay|meet|think|feel|try|start|stop|leave|call|ask|help|live|use|find|tell|show|pay|hear";
   const progRegex = new RegExp(`\\b(${beVerbs})\\s+(${commonBaseVerbs})\\b`, 'gi');
   updated = updated.replace(progRegex, (match, be, verb) => {
     changed = true;
@@ -660,7 +832,13 @@ function getRuleBasedGrammarFix(text) {
     return `${be} <s class="grammar-strike">${verb}</s> <span class="grammar-fix">${ing}</span>`;
   });
 
-  // 2. Double comparatives: more better -> <s>more better</s> better
+  // Missing 'am/is/are' in progressive
+  updated = updated.replace(/\bI\s+going\b/g, () => {
+    changed = true;
+    return `I <span class="grammar-fix">am</span> going`;
+  });
+
+  // 12. Double comparatives: more better -> <s>more better</s> better
   const comparatives = "better|faster|cheaper|easier|harder|bigger|smaller|taller|shorter|hotter|colder|closer|earlier|later|stronger|weaker";
   const compRegex = new RegExp(`\\bmore\\s+(${comparatives})\\b`, 'gi');
   updated = updated.replace(compRegex, (match, comp) => {
@@ -668,64 +846,87 @@ function getRuleBasedGrammarFix(text) {
     return `<s class="grammar-strike">more ${comp}</s> <span class="grammar-fix">${comp}</span>`;
   });
 
-  // 3. Subject-verb agreement:
+  // 13. Subject-verb agreement:
   updated = updated.replace(/\b(he|she|it)\s+don't\b/gi, (match, subj) => {
     changed = true;
     return `${subj} <s class="grammar-strike">don't</s> <span class="grammar-fix">doesn't</span>`;
   });
-
   updated = updated.replace(/\b(he|she|it)\s+have\b/gi, (match, subj) => {
     changed = true;
     return `${subj} <s class="grammar-strike">have</s> <span class="grammar-fix">has</span>`;
   });
-
   updated = updated.replace(/\b(I|you|we|they)\s+has\b/gi, (match, subj) => {
     changed = true;
     return `${subj} <s class="grammar-strike">has</s> <span class="grammar-fix">have</span>`;
   });
-
   updated = updated.replace(/\b(I|you|we|they)\s+doesn't\b/gi, (match, subj) => {
     changed = true;
     return `${subj} <s class="grammar-strike">doesn't</s> <span class="grammar-fix">don't</span>`;
   });
-
   updated = updated.replace(/\bI\s+is\b/gi, () => {
     changed = true;
     return `I <s class="grammar-strike">is</s> <span class="grammar-fix">am</span>`;
   });
-
   updated = updated.replace(/\b(you|we|they)\s+is\b/gi, (match, subj) => {
     changed = true;
     return `${subj} <s class="grammar-strike">is</s> <span class="grammar-fix">are</span>`;
   });
-
   updated = updated.replace(/\b(he|she|it)\s+are\b/gi, (match, subj) => {
     changed = true;
     return `${subj} <s class="grammar-strike">are</s> <span class="grammar-fix">is</span>`;
   });
+  updated = updated.replace(/\b(we|they|you)\s+was\b/gi, (match, subj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">was</s> <span class="grammar-fix">were</span>`;
+  });
+  updated = updated.replace(/\b(everyone|everybody|someone|somebody|nobody|no\s+one)\s+are\b/gi, (match, subj) => {
+    changed = true;
+    return `${subj} <s class="grammar-strike">are</s> <span class="grammar-fix">is</span>`;
+  });
 
-  // 4. False friend verbs:
+  // 14. False friend verbs & prepositions
   updated = updated.replace(/\bI\s+am\s+agree\b/gi, () => {
     changed = true;
     return `I <s class="grammar-strike">am agree</s> <span class="grammar-fix">agree</span>`;
   });
-
   updated = updated.replace(/\bI\s+am\s+disagree\b/gi, () => {
     changed = true;
     return `I <s class="grammar-strike">am disagree</s> <span class="grammar-fix">disagree</span>`;
   });
-
+  updated = updated.replace(/\bI'm\s+agree\b/gi, () => {
+    changed = true;
+    return `I <s class="grammar-strike">'m agree</s> <span class="grammar-fix">agree</span>`;
+  });
   updated = updated.replace(/\b(listen|listens|listening|listened)\s+music\b/gi, (match, verb) => {
     changed = true;
     return `${verb} <span class="grammar-fix">to</span> music`;
   });
-
   updated = updated.replace(/\b(depend|depends|depending|depended)\s+of\b/gi, (match, verb) => {
     changed = true;
     return `${verb} <s class="grammar-strike">of</s> <span class="grammar-fix">on</span>`;
   });
+  updated = updated.replace(/\bmarried\s+with\b/gi, () => {
+    changed = true;
+    return `married <s class="grammar-strike">with</s> <span class="grammar-fix">to</span>`;
+  });
+  updated = updated.replace(/\binterested\s+(?:for|on)\b/gi, () => {
+    changed = true;
+    return `interested <s class="grammar-strike">for</s> <span class="grammar-fix">in</span>`;
+  });
+  updated = updated.replace(/\bgood\s+in\s+(english|spanish|french|german|math|maths|sports|art)\b/gi, (match, subject) => {
+    changed = true;
+    return `good <s class="grammar-strike">in</s> <span class="grammar-fix">at</span> ${subject}`;
+  });
+  updated = updated.replace(/\bafraid\s+from\b/gi, () => {
+    changed = true;
+    return `afraid <s class="grammar-strike">from</s> <span class="grammar-fix">of</span>`;
+  });
+  updated = updated.replace(/\bcongratulations\s+for\b/gi, () => {
+    changed = true;
+    return `congratulations <s class="grammar-strike">for</s> <span class="grammar-fix">on</span>`;
+  });
 
-  // 5. Did + past tense:
+  // 15. Did + past tense:
   const pastToPresent = {
     'went': 'go', 'saw': 'see', 'ate': 'eat', 'came': 'come', 'did': 'do',
     'bought': 'buy', 'took': 'take', 'made': 'make', 'got': 'get', 'knew': 'know',
@@ -746,14 +947,48 @@ function getRuleBasedGrammarFix(text) {
     return `${didPart} <s class="grammar-strike">${pastVerb}</s> <span class="grammar-fix">${base}</span>`;
   });
 
-  // 6. Days of week preposition:
+  // 16. Irregular plurals:
+  updated = updated.replace(/\bchilds\b/gi, (match) => {
+    changed = true;
+    return `<s class="grammar-strike">${match}</s> <span class="grammar-fix">children</span>`;
+  });
+  updated = updated.replace(/\bpeoples\b/gi, (match) => {
+    changed = true;
+    return `<s class="grammar-strike">${match}</s> <span class="grammar-fix">people</span>`;
+  });
+  updated = updated.replace(/\bmans\b/gi, (match) => {
+    changed = true;
+    return `<s class="grammar-strike">${match}</s> <span class="grammar-fix">men</span>`;
+  });
+  updated = updated.replace(/\bwomans\b/gi, (match) => {
+    changed = true;
+    return `<s class="grammar-strike">${match}</s> <span class="grammar-fix">women</span>`;
+  });
+  updated = updated.replace(/\btooths\b/gi, (match) => {
+    changed = true;
+    return `<s class="grammar-strike">${match}</s> <span class="grammar-fix">teeth</span>`;
+  });
+  updated = updated.replace(/\bfoots\b/gi, (match) => {
+    changed = true;
+    return `<s class="grammar-strike">${match}</s> <span class="grammar-fix">feet</span>`;
+  });
+
+  // 17. Articles: a apple -> an apple, a hour -> an hour
+  const vowelWords = "apple|orange|egg|ice|umbrella|elephant|hour|honest|idea|answer|easy|interesting|unusual|animal|onion|airplane|airport|expert";
+  const aAnRegex = new RegExp(`\\ba\\s+(${vowelWords})\\b`, 'gi');
+  updated = updated.replace(aAnRegex, (match, word) => {
+    changed = true;
+    return `<s class="grammar-strike">a</s> <span class="grammar-fix">an</span> ${word}`;
+  });
+
+  // 18. Days of week preposition:
   const daysRegex = /\bin\s+(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/gi;
   updated = updated.replace(daysRegex, (match, day) => {
     changed = true;
     return `<s class="grammar-strike">in</s> <span class="grammar-fix">on</span> ${day}`;
   });
 
-  // 7. Age phrasing:
+  // 19. Age phrasing:
   updated = updated.replace(/\bI\s+have\s+(\d+|twenty|thirty|forty)\s+years(?:\s+old)?\b/gi, (match, age) => {
     changed = true;
     return `I <s class="grammar-strike">have</s> <span class="grammar-fix">am</span> ${age} years old`;
@@ -770,9 +1005,50 @@ function formatGrammarMarkup(text) {
   if (!text) return "";
   if (text.includes("grammar-strike")) return text;
   let normalized = text.replace(/<\/?(strike|del)\b[^>]*>/gi, m => m.toLowerCase().startsWith("</") ? "</s>" : "<s>");
-  return normalized.replace(/<s>([\s\S]*?)<\/s>(?:\s*)([^\s<]+)/gi, (m, wrong, fix) => {
+  return normalized.replace(/<s>([\s\S]*?)<\/s>(?:\s*)([^\s<]+(?:\s+[^\s<]+)*)/gi, (m, wrong, fix) => {
     return `<s class="grammar-strike">${wrong}</s> <span class="grammar-fix">${fix}</span>`;
   });
+}
+
+function extractAndApplySolGrammarHint(aiResponseText, userDiv, historyEntry) {
+  if (!aiResponseText || !userDiv || !historyEntry) return;
+  const uQueryEl = userDiv.querySelector(".gemini-user-query");
+  if (!uQueryEl) return;
+
+  const currentHtml = uQueryEl.innerHTML;
+  const match = aiResponseText.match(/(?:you mean|spelling[—\-:\s]+you mean|should be|did you mean|instead of\s+[*_"]?([a-zA-Z']+)[*_"]?,?\s+(?:you should )?(?:use|say|write|mean))\s+[*_"]?([a-zA-Z']+)[*_"]?/i);
+  if (match) {
+    const wrongWord = match[1];
+    const correctWord = match[2];
+    if (correctWord && !currentHtml.toLowerCase().includes(correctWord.toLowerCase())) {
+      if (wrongWord) {
+        const regex = new RegExp(`\\b${wrongWord}\\b`, "i");
+        if (regex.test(currentHtml)) {
+          const updated = currentHtml.replace(regex, `<s class="grammar-strike">${wrongWord}</s> <span class="grammar-fix">${correctWord}</span>`);
+          uQueryEl.innerHTML = updated;
+          historyEntry.displayHtml = updated;
+          saveActiveConversationMessages();
+          return;
+        }
+      }
+      const words = (historyEntry.content || "").split(/\s+/);
+      for (const w of words) {
+        const cleanW = w.replace(/[^a-zA-Z']/g, "");
+        if (cleanW.length >= 3 && cleanW.toLowerCase() !== correctWord.toLowerCase()) {
+          if (cleanW.toLowerCase().slice(0, 2) === correctWord.toLowerCase().slice(0, 2) || cleanW.toLowerCase().slice(-2) === correctWord.toLowerCase().slice(-2)) {
+            const regex = new RegExp(`\\b${cleanW}\\b`, "i");
+            if (regex.test(currentHtml)) {
+              const updated = currentHtml.replace(regex, `<s class="grammar-strike">${cleanW}</s> <span class="grammar-fix">${correctWord}</span>`);
+              uQueryEl.innerHTML = updated;
+              historyEntry.displayHtml = updated;
+              saveActiveConversationMessages();
+              return;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 let homeConversationHistory = [];
@@ -1460,6 +1736,7 @@ Key Conversational Principles:
             homeConversationHistory.push({ role: "model", content: responseText, parts: [{ text: responseText }] });
             saveActiveConversationMessages();
             attachAiActions(aiDiv, responseText);
+            extractAndApplySolGrammarHint(responseText, userDiv, historyEntry);
           }
         }
       );
@@ -1472,6 +1749,7 @@ Key Conversational Principles:
           saveActiveConversationMessages();
         }
         attachAiActions(aiDiv, responseText);
+        extractAndApplySolGrammarHint(responseText, userDiv, historyEntry);
       }
 
       // Automatically refine conversation title with AI on the first exchange

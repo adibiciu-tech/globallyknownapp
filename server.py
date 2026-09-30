@@ -953,7 +953,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 data = load_data()
-                master_key = get_master_gemini_key(data)
+                master_key = get_master_gemini_key(data) or (self.headers.get("x-gemini-key") or "").strip()
                 if not master_key:
                     resp = json.dumps({"corrected": None, "hasChanges": False, "note": "No platform API key"}).encode("utf-8")
                     self.send_response(200)
@@ -985,11 +985,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
                 req_body = {
                     "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                    "generationConfig": {"maxOutputTokens": 512, "temperature": 0.1, "thinkingConfig": {"thinkingBudget": 0}}
+                    "generationConfig": {"maxOutputTokens": 512, "temperature": 0.1}
                 }
 
                 ctx = ssl.create_default_context()
-                models_to_try = ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-flash-latest"]
+                models_to_try = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.6-flash"]
                 corrected_result = None
 
                 for mod in models_to_try:
@@ -1082,10 +1082,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 # Try production models in priority order (Flash models support multimodal vision)
                 models_to_try = [
                     requested_model,
-                    "gemini-3.6-flash",
                     "gemini-3.8-flash",
                     "gemini-flash-latest",
-                    "gemini-3.5-flash-lite"
+                    "gemini-3.5-flash-lite",
+                    "gemini-3.6-flash"
                 ]
                 seen = set()
                 candidate_models = []

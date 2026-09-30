@@ -173,10 +173,10 @@ export class GeminiService {
     // NEVER put thinking models ahead of fast conversational production models!
     const preferredOrder = [
       modelName,
-      "gemini-3.6-flash",
       "gemini-3.8-flash",
       "gemini-flash-latest",
-      "gemini-3.5-flash-lite"
+      "gemini-3.5-flash-lite",
+      "gemini-3.6-flash"
     ].filter(Boolean);
 
     let discovered = await this.getSupportedModels();
@@ -396,7 +396,7 @@ User: ${cleanText}
 Assistant:`;
 
         const isAq = this.apiKey.startsWith("AQ.");
-        const modelsToTry = ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-flash-latest"];
+        const modelsToTry = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.6-flash"];
         for (const mod of modelsToTry) {
           try {
             const url = isAq
@@ -410,13 +410,14 @@ Assistant:`;
               },
               body: JSON.stringify({
                 contents: [{ role: "user", parts: [{ text: prompt }] }],
-                generationConfig: { maxOutputTokens: 512, temperature: 0.1, thinkingConfig: { thinkingBudget: 0 } }
+                generationConfig: { maxOutputTokens: 512, temperature: 0.1 }
               })
             });
             const data = await response.json();
             if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
               const parts = data.candidates[0].content.parts || [];
-              const text = parts[0]?.text || "";
+              const validParts = parts.filter(p => !p.thought);
+              const text = (validParts.length > 0 ? validParts : parts).map(p => p.text || "").join(" ").trim();
               if (text && !text.includes("NO_CHANGES") && (text.includes("<s>") || text.includes("<strike>") || text.includes("<del>"))) {
                 return text.trim();
               }
@@ -434,9 +435,11 @@ Assistant:`;
     // 3. Fallback to server endpoint if not yet tried
     if (!this.hasPlatformKey) {
       try {
+        const headers = { "Content-Type": "application/json" };
+        if (this.apiKey) headers["x-gemini-key"] = this.apiKey;
         const resp = await fetch("/api/grammar-check", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: headers,
           body: JSON.stringify({ text: cleanText })
         });
         if (resp.ok) {
