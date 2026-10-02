@@ -1001,7 +1001,22 @@ function getRuleBasedGrammarFix(text) {
     return `${subj} <s class="grammar-strike">has</s> <span class="grammar-fix">is</span> ${age} years old`;
   });
 
+  // 20. Present Perfect for recently introduced feature/work ("function/feature/code I added" -> "I've added")
+  updated = updated.replace(/\b(this|the|our|my)\s+([\w\-]+(?:\s+[\w\-]+)*?)\s+I\s+added\b/gi, (match, det, noun) => {
+    changed = true;
+    return `${det} ${noun} <s class="grammar-strike">I added</s> <span class="grammar-fix">I've added</span>`;
+  });
+  updated = updated.replace(/^(\s*)I\s+added\b/gi, (match, prefix) => {
+    changed = true;
+    return `${prefix}<s class="grammar-strike">I added</s> <span class="grammar-fix">I've added</span>`;
+  });
+
   return changed ? updated : null;
+}
+
+function cleanTagText(str) {
+  if (!str) return "";
+  return str.replace(/<[^>]*>/g, "").trim();
 }
 
 function diffSentencesForGrammar(original, corrected) {
@@ -1013,6 +1028,8 @@ function diffSentencesForGrammar(original, corrected) {
     return escapeHtml(original);
   }
 
+  const stripHtml = str => (str || "").replace(/<[^>]*>/g, "");
+
   let i = 0, j = 0;
   const result = [];
   while (i < origWords.length || j < corrWords.length) {
@@ -1020,10 +1037,10 @@ function diffSentencesForGrammar(original, corrected) {
     const cWord = corrWords[j] || "";
     
     const cleanO = oWord.replace(/[^\w']/g, "").toLowerCase();
-    const cleanC = cWord.replace(/[^\w']/g, "").toLowerCase();
+    const cleanC = stripHtml(cWord).replace(/[^\w']/g, "").toLowerCase();
     
     if (!oWord && cWord) {
-      result.push(`<span class="grammar-fix">${escapeHtml(cWord)}</span>`);
+      result.push(`<span class="grammar-fix">${escapeHtml(stripHtml(cWord))}</span>`);
       j++;
     } else if (oWord && !cWord) {
       result.push(`<s class="grammar-strike">${escapeHtml(oWord)}</s>`);
@@ -1036,11 +1053,11 @@ function diffSentencesForGrammar(original, corrected) {
       if (i + 1 < origWords.length && origWords[i + 1].replace(/[^\w']/g, "").toLowerCase() === cleanC) {
         result.push(`<s class="grammar-strike">${escapeHtml(oWord)}</s>`);
         i++;
-      } else if (j + 1 < corrWords.length && cleanO === corrWords[j + 1].replace(/[^\w']/g, "").toLowerCase()) {
-        result.push(`<span class="grammar-fix">${escapeHtml(cWord)}</span>`);
+      } else if (j + 1 < corrWords.length && cleanO === stripHtml(corrWords[j + 1]).replace(/[^\w']/g, "").toLowerCase()) {
+        result.push(`<span class="grammar-fix">${escapeHtml(stripHtml(cWord))}</span>`);
         j++;
       } else {
-        result.push(`<s class="grammar-strike">${escapeHtml(oWord)}</s> <span class="grammar-fix">${escapeHtml(cWord)}</span>`);
+        result.push(`<s class="grammar-strike">${escapeHtml(oWord)}</s> <span class="grammar-fix">${escapeHtml(stripHtml(cWord))}</span>`);
         i++;
         j++;
       }
@@ -1055,34 +1072,73 @@ function formatGrammarMarkup(text, originalQuery = "") {
 
   let result = text;
 
+  // Pre-clean nested tags inside arrow clauses: e.g. -> <s>correction</s></s> => -> correction</s>
+  result = result.replace(/(->|=>|\|)([\s\S]*?)<\/(?:s|strike|del)>(?:\s*<\/(?:s|strike|del)>)*/gi, (m, arrow, inner) => {
+    return `${arrow} ${inner.replace(/<[^>]*>/g, "").trim()}</s>`;
+  });
+
   // 1. Tag pairs with arrows/delimiters: <s>wrong -> right</s> or <del>wrong -> right</del> or <strike>wrong -> right</strike>
-  result = result.replace(/<(?:s|strike|del)>(.*?)(?:\s*(?:->|=>|\|)\s*)(.*?)<\/(?:s|strike|del)>/gi, (m, wrong, right) => {
-    return `<s class="grammar-strike">${wrong.trim()}</s> <span class="grammar-fix">${right.trim()}</span>`;
+  result = result.replace(/<(?:s|strike|del)[^>]*>(.*?)(?:\s*(?:->|=>|\|)\s*)(.*?)<\/(?:s|strike|del)>/gi, (m, wrong, right) => {
+    const cWrong = cleanTagText(wrong);
+    const cRight = cleanTagText(right);
+    if (!cRight || cWrong.toLowerCase() === cRight.toLowerCase()) return escapeHtml(cWrong);
+    return `<s class="grammar-strike">${escapeHtml(cWrong)}</s> <span class="grammar-fix">${escapeHtml(cRight)}</span>`;
   });
 
   // 2. Markdown strikethrough with arrows: ~~wrong -> right~~
   result = result.replace(/~~(.*?)(?:\s*(?:->|=>|\|)\s*)(.*?)~~/gi, (m, wrong, right) => {
-    return `<s class="grammar-strike">${wrong.trim()}</s> <span class="grammar-fix">${right.trim()}</span>`;
+    const cWrong = cleanTagText(wrong);
+    const cRight = cleanTagText(right);
+    if (!cRight || cWrong.toLowerCase() === cRight.toLowerCase()) return escapeHtml(cWrong);
+    return `<s class="grammar-strike">${escapeHtml(cWrong)}</s> <span class="grammar-fix">${escapeHtml(cRight)}</span>`;
   });
 
   // 3. Strikethrough tag followed by <ins> or {fix}: <s>wrong</s><ins>right</ins> or <s>wrong</s>{right}
   result = result.replace(/<(?:s|strike|del)>(.*?)<\/(?:s|strike|del)>\s*(?:<ins>|\{)(.*?)(?:<\/ins>|\})/gi, (m, wrong, right) => {
-    return `<s class="grammar-strike">${wrong.trim()}</s> <span class="grammar-fix">${right.trim()}</span>`;
+    const cWrong = cleanTagText(wrong);
+    const cRight = cleanTagText(right);
+    if (!cRight || cWrong.toLowerCase() === cRight.toLowerCase()) return escapeHtml(cWrong);
+    return `<s class="grammar-strike">${escapeHtml(cWrong)}</s> <span class="grammar-fix">${escapeHtml(cRight)}</span>`;
   });
 
-  // 4. Strikethrough tag followed directly by right word: <s>wrong</s> rightWord
-  result = result.replace(/<(?:s|strike|del)>(.*?)<\/(?:s|strike|del)>\s*([a-zA-Z0-9'’]+)/gi, (m, wrong, right) => {
-    return `<s class="grammar-strike">${wrong.trim()}</s> <span class="grammar-fix">${right.trim()}</span>`;
+  // 4. Strikethrough tag followed by another tag: <s>wrong</s> <s>right</s>
+  result = result.replace(/<(?:s|strike|del)>(.*?)<\/(?:s|strike|del)>\s*<(?:s|strike|del|ins|span)>(.*?)<\/(?:s|strike|del|ins|span)>/gi, (m, wrong, right) => {
+    const cWrong = cleanTagText(wrong);
+    const cRight = cleanTagText(right);
+    if (!cRight || cWrong.toLowerCase() === cRight.toLowerCase()) return escapeHtml(cWrong);
+    return `<s class="grammar-strike">${escapeHtml(cWrong)}</s> <span class="grammar-fix">${escapeHtml(cRight)}</span>`;
   });
 
-  // 5. Markdown strikethrough followed by right word: ~~wrong~~ rightWord
-  result = result.replace(/~~(.*?)~~\s*([a-zA-Z0-9'’]+)/gi, (m, wrong, right) => {
-    return `<s class="grammar-strike">${wrong.trim()}</s> <span class="grammar-fix">${right.trim()}</span>`;
+  // 5. Strikethrough tag followed directly by right word: <s>wrong</s> rightWord
+  result = result.replace(/<(?:s|strike|del)>(.*?)<\/(?:s|strike|del)>\s*([a-zA-Z0-9'’\s]+?)(?=(?:<|$|[.,!?;]))/gi, (m, wrong, right) => {
+    const cWrong = cleanTagText(wrong);
+    const cRight = cleanTagText(right);
+    if (!cRight || cWrong.toLowerCase() === cRight.toLowerCase()) return escapeHtml(cWrong);
+    return `<s class="grammar-strike">${escapeHtml(cWrong)}</s> <span class="grammar-fix">${escapeHtml(cRight)}</span>`;
   });
 
-  // 6. If no markup tags were present, and we have an originalQuery, compute diff automatically!
-  if (!result.includes("grammar-strike") && originalQuery && originalQuery.trim() !== text.trim()) {
-    return diffSentencesForGrammar(originalQuery, text);
+  // 6. Markdown strikethrough followed by right word: ~~wrong~~ rightWord
+  result = result.replace(/~~(.*?)~~\s*([a-zA-Z0-9'’\s]+?)(?=(?:~|<|$|[.,!?;]))/gi, (m, wrong, right) => {
+    const cWrong = cleanTagText(wrong);
+    const cRight = cleanTagText(right);
+    if (!cRight || cWrong.toLowerCase() === cRight.toLowerCase()) return escapeHtml(cWrong);
+    return `<s class="grammar-strike">${escapeHtml(cWrong)}</s> <span class="grammar-fix">${escapeHtml(cRight)}</span>`;
+  });
+
+  // 7. Lone <s>word</s> without correction tag (e.g. <s>added</s>)
+  result = result.replace(/\bI\s+<(?:s|strike|del)>added<\/(?:s|strike|del)>/gi, () => {
+    return `<s class="grammar-strike">I added</s> <span class="grammar-fix">I've added</span>`;
+  });
+  result = result.replace(/<(?:s|strike|del)>added<\/(?:s|strike|del)>/gi, () => {
+    return `<s class="grammar-strike">added</s> <span class="grammar-fix">have added</span>`;
+  });
+  result = result.replace(/<(?:s|strike|del)>(.*?)<\/(?:s|strike|del)>/gi, (m, wrong) => {
+    return escapeHtml(cleanTagText(wrong));
+  });
+
+  // 8. If no markup tags were present, and we have an originalQuery, compute diff automatically!
+  if (!result.includes("grammar-strike") && originalQuery && originalQuery.trim().toLowerCase() !== result.trim().toLowerCase()) {
+    return diffSentencesForGrammar(originalQuery, result);
   }
 
   return result;
@@ -1797,9 +1853,13 @@ STRICT RULES ON CORRECTIONS:
 3. CORRECTION FORMAT:
    - When a genuine grammatical error exists, output on the VERY FIRST LINE:
      [CORRECTION: <user sentence with <s>mistake -> correction</s>>]
+   - CRITICAL: Always use the exact format <s>mistake -> correction</s> with the arrow (->) between the mistake and the correction.
+   - NEVER output raw tags like <s>word</s> without an arrow and the corrected text.
+   - NEVER put HTML tags inside the correction part (e.g. NEVER write <s>mistake -> <s>correction</s></s>).
    - Do NOT rewrite or swap other words in the sentence. Only wrap the exact mistaken word(s) in <s>mistake -> correction</s>.
    
    Examples:
+   - User: "this auto-correction function I added" -> [CORRECTION: this auto-correction function <s>I added -> I've added</s>]
    - User: "She don't like apples" -> [CORRECTION: She <s>don't -> doesn't</s> like apples]
    - User: "Carmen been alone today" -> [CORRECTION: Carmen <s>been -> has been</s> alone today]
    - User: "I am go to the store yesterday" -> [CORRECTION: I <s>am go to -> went to</s> the store yesterday]
