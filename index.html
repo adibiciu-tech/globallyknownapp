@@ -46,7 +46,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=35109">
+  <link rel="stylesheet" href="styles.css?v=35120">
   <link rel="stylesheet" href="desktop.css?v=1020" media="(min-width: 901px)">
   <link rel="stylesheet" href="mobile.css?v=1045" media="(max-width: 900px)">
   <!-- CodeMirror CSS for Code Editor -->
@@ -61,6 +61,8 @@
   <!-- Google Identity Services -->
   <meta name="google-signin-client_id" content="32346631219-r4ttj64i9fbmocui6nukcqrr6f82d95p.apps.googleusercontent.com">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- YouTube IFrame Player API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
   <div class="app-container">
@@ -1370,7 +1372,7 @@
                 <div class="desktop-player-layout-grid">
                   <!-- Left Column: Primary Cinema Player (~70%) -->
                   <div class="desktop-cinema-player-col" id="desktop-cinema-player-col">
-                    <div class="desktop-cinema-iframe-wrapper">
+                    <div class="desktop-cinema-iframe-wrapper" id="desktop-cinema-iframe-wrapper">
                       <iframe 
                         id="desktop-cinema-iframe" 
                         src="" 
@@ -1379,6 +1381,19 @@
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
                         referrerpolicy="strict-origin-when-cross-origin"
                       ></iframe>
+                      <!-- YouTube-Style On-Screen Seek Overlay Indicators -->
+                      <div class="yt-seek-overlay left hidden" id="desktop-seek-overlay-left">
+                        <div class="yt-seek-circle">
+                          <i class="fa-solid fa-rotate-left"></i>
+                          <span class="yt-seek-text" id="desktop-seek-text-left">-10 seconds</span>
+                        </div>
+                      </div>
+                      <div class="yt-seek-overlay right hidden" id="desktop-seek-overlay-right">
+                        <div class="yt-seek-circle">
+                          <i class="fa-solid fa-rotate-right"></i>
+                          <span class="yt-seek-text" id="desktop-seek-text-right">+10 seconds</span>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Under Player Details & Action Bar -->
@@ -1398,18 +1413,39 @@
                       </div>
 
                       <div class="cinema-action-buttons-bar">
-                        <button type="button" class="cinema-btn cinema-play-pause-btn" id="btn-desktop-cinema-play-pause" title="Play or Pause Video (Shortcut: Spacebar)">
-                          <i class="fa-solid fa-pause" id="desktop-play-pause-icon"></i> <span id="desktop-play-pause-label">Pause</span>
-                        </button>
-                        <button type="button" class="cinema-btn" id="btn-cinema-save-list">
-                          <i class="fa-solid fa-bookmark"></i> <span>Save to My List</span>
-                        </button>
-                        <button type="button" class="cinema-btn" id="btn-cinema-vocab">
-                          <i class="fa-solid fa-book-open"></i> <span>Key Vocabulary</span>
-                        </button>
-                        <button type="button" class="cinema-btn" id="btn-cinema-share">
-                          <i class="fa-solid fa-share-nodes"></i> <span>Share</span>
-                        </button>
+                        <!-- Playback Navigation & Seeking Controls -->
+                        <div class="cinema-playback-group">
+                          <button type="button" class="cinema-btn cinema-nav-btn" id="btn-cinema-prev-video" title="Previous Video (Shortcut: Shift+P)">
+                            <i class="fa-solid fa-backward-step"></i> <span>Prev</span>
+                          </button>
+                          <button type="button" class="cinema-btn cinema-seek-btn" id="btn-cinema-rewind-10" title="Rewind 10s (Press repeatedly for 20s, 30s... | Shortcut: J or Left Arrow)">
+                            <i class="fa-solid fa-rotate-left"></i> <span class="seek-label">10s</span>
+                          </button>
+                          <button type="button" class="cinema-btn cinema-play-pause-btn" id="btn-desktop-cinema-play-pause" title="Play or Pause Video (Shortcut: Spacebar)">
+                            <i class="fa-solid fa-pause" id="desktop-play-pause-icon"></i> <span id="desktop-play-pause-label">Pause Video</span>
+                          </button>
+                          <button type="button" class="cinema-btn cinema-seek-btn" id="btn-cinema-forward-10" title="Forward 10s (Press repeatedly for 20s, 30s... | Shortcut: L or Right Arrow)">
+                            <span class="seek-label">10s</span> <i class="fa-solid fa-rotate-right"></i>
+                          </button>
+                          <button type="button" class="cinema-btn cinema-nav-btn" id="btn-cinema-next-video" title="Next Video (Shortcut: Shift+N)">
+                            <span>Next</span> <i class="fa-solid fa-forward-step"></i>
+                          </button>
+                        </div>
+
+                        <div class="cinema-bar-divider"></div>
+
+                        <!-- Secondary Actions -->
+                        <div class="cinema-utility-group">
+                          <button type="button" class="cinema-btn" id="btn-cinema-save-list">
+                            <i class="fa-solid fa-bookmark"></i> <span>Save to My List</span>
+                          </button>
+                          <button type="button" class="cinema-btn" id="btn-cinema-vocab">
+                            <i class="fa-solid fa-book-open"></i> <span>Key Vocabulary</span>
+                          </button>
+                          <button type="button" class="cinema-btn" id="btn-cinema-share">
+                            <i class="fa-solid fa-share-nodes"></i> <span>Share</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1511,6 +1547,19 @@
                   <button type="button" class="pseudo-landscape-exit-btn" id="btn-exit-pseudo-landscape" title="Exit Landscape">
                     <i class="fa-solid fa-compress"></i>
                   </button>
+                  <!-- Mobile Seek Overlays -->
+                  <div class="yt-seek-overlay left hidden" id="mobile-seek-overlay-left">
+                    <div class="yt-seek-circle">
+                      <i class="fa-solid fa-rotate-left"></i>
+                      <span class="yt-seek-text" id="mobile-seek-text-left">-10 seconds</span>
+                    </div>
+                  </div>
+                  <div class="yt-seek-overlay right hidden" id="mobile-seek-overlay-right">
+                    <div class="yt-seek-circle">
+                      <i class="fa-solid fa-rotate-right"></i>
+                      <span class="yt-seek-text" id="mobile-seek-text-right">+10 seconds</span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Active Video Info & Metadata -->
@@ -1526,8 +1575,20 @@
 
                   <!-- Quick Action Buttons -->
                   <div class="mobile-player-actions-row">
+                    <button type="button" class="btn-mobile-action btn-mobile-prev" id="btn-mobile-cinema-prev" title="Previous Video">
+                      <i class="fa-solid fa-backward-step"></i> Prev
+                    </button>
+                    <button type="button" class="btn-mobile-action btn-mobile-seek" id="btn-mobile-cinema-rewind-10" title="Rewind 10s (Press repeatedly for 20s, 30s...)">
+                      <i class="fa-solid fa-rotate-left"></i> 10s
+                    </button>
                     <button type="button" class="btn-mobile-action btn-mobile-play-pause" id="btn-mobile-cinema-play-pause" title="Play or Pause Video">
                       <i class="fa-solid fa-pause" id="mobile-play-pause-icon"></i> <span id="mobile-play-pause-label">Pause</span>
+                    </button>
+                    <button type="button" class="btn-mobile-action btn-mobile-seek" id="btn-mobile-cinema-forward-10" title="Forward 10s (Press repeatedly for 20s, 30s...)">
+                      10s <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button type="button" class="btn-mobile-action btn-mobile-next" id="btn-mobile-cinema-next" title="Next Video">
+                      Next <i class="fa-solid fa-forward-step"></i>
                     </button>
                     <button type="button" class="btn-mobile-action" id="btn-mobile-rotate-landscape" title="Rotate to Landscape">
                       <i class="fa-solid fa-arrows-rotate"></i> Rotate
@@ -2928,6 +2989,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35114"></script>
+  <script type="module" src="app.js?v=35120"></script>
 </body>
 </html>
