@@ -94,6 +94,7 @@ let rwggpSavingLists = [];
 let rwggpHistory = [];
 let rwggpActiveWord = null;
 let rwggpSaveTargetWord = null;
+let rwggpActiveListFilter = null;
 
 // Global Metronome State
 let metAudioCtx = null;
@@ -10800,6 +10801,20 @@ function initRandomWordPanel() {
     });
   }
 
+  // 4b. Clear active list filter button
+  const btnClearFilter = document.getElementById("btn-clear-active-list");
+  if (btnClearFilter) {
+    btnClearFilter.addEventListener("click", (e) => {
+      e.stopPropagation();
+      rwggpActiveListFilter = null;
+      const pill = document.getElementById("rwggp-active-list-pill");
+      if (pill) pill.classList.add("hidden");
+      if (typeof showToast === "function") {
+        showToast("Cleared list filter — shuffling from full database");
+      }
+    });
+  }
+
   // 5. Category Name click on active word -> Open Category Words Modal
   const catNameEl = document.getElementById("rwggp-category-name");
   if (catNameEl) {
@@ -11034,6 +11049,18 @@ function displayRwggpWord(wordData, pushHistory = true) {
     }
   }
 
+  // Update active list filter pill state
+  const listPill = document.getElementById("rwggp-active-list-pill");
+  const listPillName = document.getElementById("rwggp-active-list-name");
+  if (listPill) {
+    if (rwggpActiveListFilter && rwggpActiveListFilter.name) {
+      if (listPillName) listPillName.textContent = rwggpActiveListFilter.name;
+      listPill.classList.remove("hidden");
+    } else {
+      listPill.classList.add("hidden");
+    }
+  }
+
   if (card) {
     card.classList.remove("hidden");
   }
@@ -11049,6 +11076,16 @@ function displayRwggpWord(wordData, pushHistory = true) {
 }
 
 async function generateRandomWord() {
+  // If an active saved list filter is set, pick randomly from that saved list!
+  if (rwggpActiveListFilter && Array.isArray(rwggpActiveListFilter.words) && rwggpActiveListFilter.words.length > 0) {
+    const listWords = rwggpActiveListFilter.words;
+    const randomIndex = Math.floor(Math.random() * listWords.length);
+    const chosen = listWords[randomIndex];
+    const fullWord = (rwggpWords || []).find(w => (w.word || "").toLowerCase() === (chosen.word || "").toLowerCase()) || chosen;
+    displayRwggpWord(fullWord, true);
+    return;
+  }
+
   if (!rwggpWords || rwggpWords.length === 0) {
     try {
       const res = await fetch("/api/words/random");
@@ -11221,10 +11258,18 @@ function renderRwggpSavingsAccordion() {
     return;
   }
 
+  // Preserve which accordions are currently expanded across re-renders
+  const expandedListIds = new Set(
+    Array.from(container.querySelectorAll(".savings-accordion-item.expanded"))
+      .map(el => el.getAttribute("data-list-id"))
+      .filter(Boolean)
+  );
+
   container.innerHTML = rwggpSavingLists.map(list => {
     const wordsCount = (list.words || []).length;
+    const isExpanded = expandedListIds.has(list.id);
     return `
-      <div class="savings-accordion-item" data-list-id="${escapeHtml(list.id)}">
+      <div class="savings-accordion-item ${isExpanded ? 'expanded' : ''}" data-list-id="${escapeHtml(list.id)}">
         <div class="savings-accordion-header">
           <div class="savings-header-title">
             <i class="fa-solid fa-chevron-right chevron"></i>
@@ -11235,20 +11280,32 @@ function renderRwggpSavingsAccordion() {
             <i class="fa-regular fa-trash-can"></i>
           </button>
         </div>
-        <div class="savings-accordion-body hidden">
-          ${wordsCount === 0 ? '<p style="font-size: 0.8rem; color: #94a3b8; padding: 0.4rem 0.5rem; margin:0;">No words saved in this list yet.</p>' : (list.words || []).map(w => {
-            const color = getRwggpCategoryColor(w.colorCategory);
-            return `
-              <div class="savings-word-row" data-word="${escapeHtml(w.word)}">
-                <div class="word-name">
-                  <span class="history-color-dot" style="background-color: ${color};"></span>
-                  <span>${escapeHtml(w.word)}</span>
-                  <span style="font-size: 0.72rem; color: #94a3b8; font-weight: normal; margin-left: 0.3rem;">${escapeHtml(w.definition || '')}</span>
+        <div class="savings-accordion-body ${isExpanded ? '' : 'hidden'}">
+          <div class="savings-words-scroll-list">
+            ${wordsCount === 0 ? '<p style="font-size: 0.8rem; color: #94a3b8; padding: 0.4rem 0.5rem; margin:0;">No words saved in this list yet.</p>' : (list.words || []).map(w => {
+              const color = getRwggpCategoryColor(w.colorCategory);
+              return `
+                <div class="savings-word-row" data-word="${escapeHtml(w.word)}">
+                  <div class="word-name">
+                    <span class="history-color-dot" style="background-color: ${color};"></span>
+                    <span>${escapeHtml(w.word)}</span>
+                    <span style="font-size: 0.72rem; color: #94a3b8; font-weight: normal; margin-left: 0.3rem;">${escapeHtml(w.definition || '')}</span>
+                  </div>
+                  <button type="button" class="savings-delete-btn" data-action="remove-word" title="Remove word" style="font-size: 0.9rem; padding: 2px 6px;">&times;</button>
                 </div>
-                <button type="button" class="savings-delete-btn" data-action="remove-word" title="Remove word" style="font-size: 0.9rem; padding: 2px 6px;">&times;</button>
-              </div>
-            `;
-          }).join("")}
+              `;
+            }).join("")}
+          </div>
+          ${wordsCount > 0 ? `
+            <div class="savings-list-actions">
+              <button type="button" class="savings-action-btn btn-shuffle-list" data-action="shuffle-list" title="Shuffle the words in this saved list">
+                <i class="fa-solid fa-shuffle"></i> Shuffle This List
+              </button>
+              <button type="button" class="savings-action-btn btn-practice-list" data-action="practice-list" title="Generate random words from this list in the main generator">
+                <i class="fa-solid fa-dice"></i> Generate Random Word
+              </button>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -11261,10 +11318,12 @@ function renderRwggpSavingsAccordion() {
     const header = itemEl.querySelector(".savings-accordion-header");
     const body = itemEl.querySelector(".savings-accordion-body");
     const delListBtn = itemEl.querySelector('[data-action="delete-list"]');
+    const shuffleBtn = itemEl.querySelector('[data-action="shuffle-list"]');
+    const practiceBtn = itemEl.querySelector('[data-action="practice-list"]');
 
     if (header && body) {
       header.addEventListener("click", (e) => {
-        if (e.target.closest('[data-action="delete-list"]')) return;
+        if (e.target.closest('[data-action="delete-list"]') || e.target.closest('.savings-action-btn')) return;
         const isExpanded = itemEl.classList.toggle("expanded");
         body.classList.toggle("hidden", !isExpanded);
       });
@@ -11274,11 +11333,59 @@ function renderRwggpSavingsAccordion() {
       delListBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (confirm(`Delete the list "${targetList ? targetList.name : ''}"?`)) {
+          if (rwggpActiveListFilter && rwggpActiveListFilter.id === listId) {
+            rwggpActiveListFilter = null;
+            const pill = document.getElementById("rwggp-active-list-pill");
+            if (pill) pill.classList.add("hidden");
+          }
           rwggpSavingLists = rwggpSavingLists.filter(l => l.id !== listId);
           persistRwggpSavingLists();
           renderRwggpSavingsAccordion();
           renderRwggpHistory();
           if (typeof showToast === "function") showToast("List deleted");
+        }
+      });
+    }
+
+    if (shuffleBtn) {
+      shuffleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!targetList || !Array.isArray(targetList.words) || targetList.words.length <= 1) {
+          if (typeof showToast === "function") showToast("Add more words to this list to shuffle");
+          return;
+        }
+        // Fisher-Yates shuffle
+        for (let i = targetList.words.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [targetList.words[i], targetList.words[j]] = [targetList.words[j], targetList.words[i]];
+        }
+        persistRwggpSavingLists();
+        renderRwggpSavingsAccordion();
+        if (typeof showToast === "function") showToast(`🔀 Shuffled "${targetList.name}" words!`);
+      });
+    }
+
+    if (practiceBtn) {
+      practiceBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!targetList || !Array.isArray(targetList.words) || targetList.words.length === 0) {
+          if (typeof showToast === "function") showToast("No words in this list to generate");
+          return;
+        }
+        rwggpActiveListFilter = targetList;
+        // Pick and display a random word from this list right now
+        const randomIndex = Math.floor(Math.random() * targetList.words.length);
+        const chosen = targetList.words[randomIndex];
+        const fullWord = (rwggpWords || []).find(w => (w.word || "").toLowerCase() === (chosen.word || "").toLowerCase()) || chosen;
+        displayRwggpWord(fullWord, true);
+
+        // Scroll smoothly to the generator word card
+        const wordCard = document.getElementById("rwggp-word-card");
+        if (wordCard) {
+          wordCard.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        if (typeof showToast === "function") {
+          showToast(`🔀 Generating from list: "${targetList.name}"`);
         }
       });
     }
@@ -11292,6 +11399,11 @@ function renderRwggpSavingsAccordion() {
           e.stopPropagation();
           if (targetList) {
             targetList.words = (targetList.words || []).filter(w => (w.word || "").toLowerCase() !== wordStr.toLowerCase());
+            if (rwggpActiveListFilter && rwggpActiveListFilter.id === listId && targetList.words.length === 0) {
+              rwggpActiveListFilter = null;
+              const pill = document.getElementById("rwggp-active-list-pill");
+              if (pill) pill.classList.add("hidden");
+            }
             persistRwggpSavingLists();
             renderRwggpSavingsAccordion();
             renderRwggpHistory();

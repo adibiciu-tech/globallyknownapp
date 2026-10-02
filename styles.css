@@ -8578,6 +8578,74 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   width: 100%;
 }
 
+/* Active List Filter Pill (Opposite the speaker button on the left) */
+.rwggp-active-list-pill {
+  position: absolute;
+  top: -2px;
+  left: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #818cf8;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.rwggp-active-list-pill.hidden {
+  display: none !important;
+}
+
+.rwggp-active-list-pill .active-list-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #818cf8;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .rwggp-active-list-pill {
+  background: rgba(246, 202, 33, 0.12);
+  border-color: rgba(246, 202, 33, 0.4);
+  color: var(--accent-yellow, #f6ca21);
+}
+
+:root[data-theme="dark"] .rwggp-active-list-pill .active-list-label {
+  color: var(--accent-yellow, #f6ca21);
+}
+
+.rwggp-active-list-pill .active-list-clear-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  font-size: 0.82rem;
+}
+
+.rwggp-active-list-pill .active-list-clear-btn:hover {
+  color: #ef4444 !important;
+  transform: scale(1.2);
+}
+
+@media (max-width: 600px) {
+  .rwggp-active-list-pill {
+    position: static;
+    margin-bottom: 0.4rem;
+  }
+}
+
 .rwggp-sound {
   font-size: 1.3rem;
   font-weight: 700;
@@ -8944,6 +9012,34 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   gap: 0.25rem;
 }
 
+/* Maximum 7 words display before becoming scrollable */
+.savings-words-scroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 266px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.savings-words-scroll-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.savings-words-scroll-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.savings-words-scroll-list::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 4px;
+}
+
+.savings-words-scroll-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-yellow, #f6ca21);
+}
+
 .savings-word-row {
   display: flex;
   align-items: center;
@@ -8965,6 +9061,66 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   font-size: 0.88rem;
   font-weight: 600;
   color: #0f172a;
+}
+
+/* Actions footer inside saved list (Shuffle This List & Generate Random Word) */
+.savings-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(226, 232, 240, 0.8);
+  flex-wrap: wrap;
+}
+
+:root[data-theme="dark"] .savings-list-actions,
+:root[data-theme="cyan"] .savings-list-actions,
+:root[data-theme="emerald"] .savings-list-actions,
+:root[data-theme="purple"] .savings-list-actions,
+:root[data-theme="crimson"] .savings-list-actions,
+:root[data-theme="rainbow"] .savings-list-actions {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.savings-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="dark"] .savings-action-btn,
+:root[data-theme="cyan"] .savings-action-btn,
+:root[data-theme="emerald"] .savings-action-btn,
+:root[data-theme="purple"] .savings-action-btn,
+:root[data-theme="crimson"] .savings-action-btn,
+:root[data-theme="rainbow"] .savings-action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+}
+
+.savings-action-btn:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #818cf8;
+  transform: translateY(-1px);
+}
+
+.savings-action-btn.btn-shuffle-list:hover {
+  background: rgba(246, 202, 33, 0.15);
+  border-color: var(--accent-yellow, #f6ca21);
+  color: var(--accent-yellow, #f6ca21);
 }
 
 /* Color Vowel Chart Card */
