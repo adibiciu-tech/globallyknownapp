@@ -3055,8 +3055,8 @@
     }
   ],
   "admin_emails": [
-    "sinsecontactmilla@gmail.com",
-    "globallyknownrappers@gmail.com"
+    "globallyknownrappers@gmail.com",
+    "sinsecontactmilla@gmail.com"
   ],
   "user_progress": {
     "adrian.milla@gmail.com": {
@@ -4426,6 +4426,53 @@
       }
     ],
     "sinsecontactmilla@gmail.com": [
+      {
+        "id": "conv_1790961026756",
+        "title": "Carmen Been Alone Today",
+        "icon": "fa-comments",
+        "type": "chat",
+        "history": [
+          {
+            "role": "user",
+            "content": "Carmen been alone today",
+            "displayHtml": "Carmen <s class=\"grammar-strike\">been</s> <span class=\"grammar-fix\">has been</span> alone today",
+            "parts": [
+              {
+                "text": "Carmen been alone today"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Hey Biciu! Oh really? Is she holding down the fort by herself, or just taking a little quiet time to recharge? How about you—are you keeping busy today, or catching a break too?",
+            "parts": [
+              {
+                "text": "Hey Biciu! Oh really? Is she holding down the fort by herself, or just taking a little quiet time to recharge? How about you—are you keeping busy today, or catching a break too?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "great correction!",
+            "displayHtml": "great correction!",
+            "parts": [
+              {
+                "text": "great correction!"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Haha, glad you caught that! Hey, when you're ready to fix Carmen's sentence, it's usually missing a little helper verb: *\"Carmen has been alone today\"* or *\"Carmen was alone today.\"* \n\nHow are you two spending the rest of the day, though? Anything fun planned, or just taking it easy?",
+            "parts": [
+              {
+                "text": "Haha, glad you caught that! Hey, when you're ready to fix Carmen's sentence, it's usually missing a little helper verb: *\"Carmen has been alone today\"* or *\"Carmen was alone today.\"* \n\nHow are you two spending the rest of the day, though? Anything fun planned, or just taking it easy?"
+              }
+            ]
+          }
+        ],
+        "createdAt": 1790961026757
+      },
       {
         "id": "conv_1790805873569",
         "title": "Could You Corect Me",
