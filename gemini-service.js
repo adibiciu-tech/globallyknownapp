@@ -610,7 +610,7 @@ Assistant:`;
 - You must output ONLY your final, direct response to the user.
 - NEVER output internal thoughts, outlines, drafts ("Draft 1", "Draft 2"), notes, or meta-commentary.
 - NEVER output breakdown bullet points (e.g. "*Greeting:*", "*Warmth:*", "*Draft:*").
-- Begin speaking directly to the user immediately from your very first character.`);
+- Begin speaking directly to the user immediately from your very first character (or outputting the [CORRECTION: ...] line if grammar errors were present in the user's latest message).`);
 
     return promptParts.join("\n\n");
   }
