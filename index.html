@@ -46,9 +46,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=35106">
+  <link rel="stylesheet" href="styles.css?v=35107">
   <link rel="stylesheet" href="desktop.css?v=1020" media="(min-width: 901px)">
-  <link rel="stylesheet" href="mobile.css?v=1044" media="(max-width: 900px)">
+  <link rel="stylesheet" href="mobile.css?v=1045" media="(max-width: 900px)">
   <!-- CodeMirror CSS for Code Editor -->
   <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
   
@@ -183,8 +183,35 @@
             <i class="fa-solid fa-graduation-cap"></i> <span class="train-btn-text">Train Sol</span>
           </button>
 
-          <div class="model-badge" id="header-model-badge">
-            <i class="fa-solid fa-brain"></i> SOL Engine
+          <!-- Theme Selector Dropdown Button (Moved from Settings) -->
+          <div class="theme-picker-wrapper">
+            <button class="header-btn theme-toggle-btn" id="theme-toggle-btn" onclick="window.toggleThemeDropdown(event)" title="Switch Color Theme">
+              <i class="fa-solid fa-palette"></i> <span id="theme-btn-text">Theme</span>
+            </button>
+            <div class="theme-dropdown-menu hidden" id="theme-dropdown-menu">
+              <div class="theme-menu-title">Select Color Theme</div>
+              <button class="theme-option-btn active" data-theme-val="dark">
+                <span class="theme-color-dot" style="background: #f6ca21;"></span> Sol Amber
+              </button>
+              <button class="theme-option-btn" data-theme-val="cyan">
+                <span class="theme-color-dot" style="background: #06b6d4;"></span> Cyber Cyan
+              </button>
+              <button class="theme-option-btn" data-theme-val="emerald">
+                <span class="theme-color-dot" style="background: #10b981;"></span> Emerald Mint
+              </button>
+              <button class="theme-option-btn" data-theme-val="purple">
+                <span class="theme-color-dot" style="background: #c084fc;"></span> Amethyst Violet
+              </button>
+              <button class="theme-option-btn" data-theme-val="crimson">
+                <span class="theme-color-dot" style="background: #f43f5e;"></span> Crimson Sunset
+              </button>
+              <button class="theme-option-btn" data-theme-val="rainbow">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #ff007f, #ffeb00, #00e5ff);"></span> Spectrum Rainbow
+              </button>
+              <button class="theme-option-btn" data-theme-val="light">
+                <span class="theme-color-dot" style="background: #ca9e0d; border: 1px solid #94a3b8;"></span> Minimal Light
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1884,58 +1911,7 @@
         <div class="workspace-panel" id="panel-info">
           <div class="panel-section">
             <h2>⚙️ SOL Configurations & Settings</h2>
-            <p class="section-subtitle">Manage your appearance themes, Gemini AI Key credentials, and workspace settings.</p>
-
-            <!-- 1. Appearance & Color Themes -->
-            <div class="settings-card" id="settings-appearance-card">
-              <h3>🎨 Appearance & Color Themes</h3>
-              <p class="setting-desc">Customize your SOL workspace color palette, glowing aura, and interface accent colors.</p>
-              
-              <div class="theme-swatches-grid" id="theme-swatches-container">
-                <button class="theme-swatch-card active" data-theme-val="dark">
-                  <div class="swatch-preview" style="background: #090a0f; border-color: #f6ca21;">
-                    <span class="swatch-dot" style="background: #f6ca21;"></span>
-                  </div>
-                  <span>Sol Amber</span>
-                </button>
-                <button class="theme-swatch-card" data-theme-val="cyan">
-                  <div class="swatch-preview" style="background: #030712; border-color: #06b6d4;">
-                    <span class="swatch-dot" style="background: #06b6d4;"></span>
-                  </div>
-                  <span>Cyber Cyan</span>
-                </button>
-                <button class="theme-swatch-card" data-theme-val="emerald">
-                  <div class="swatch-preview" style="background: #022c22; border-color: #10b981;">
-                    <span class="swatch-dot" style="background: #10b981;"></span>
-                  </div>
-                  <span>Emerald Mint</span>
-                </button>
-                <button class="theme-swatch-card" data-theme-val="purple">
-                  <div class="swatch-preview" style="background: #090514; border-color: #c084fc;">
-                    <span class="swatch-dot" style="background: #c084fc;"></span>
-                  </div>
-                  <span>Amethyst Violet</span>
-                </button>
-                <button class="theme-swatch-card" data-theme-val="crimson">
-                  <div class="swatch-preview" style="background: #110507; border-color: #f43f5e;">
-                    <span class="swatch-dot" style="background: #f43f5e;"></span>
-                  </div>
-                  <span>Crimson Sunset</span>
-                </button>
-                <button class="theme-swatch-card" data-theme-val="rainbow">
-                  <div class="swatch-preview" style="background: #0a0814; border-color: #ff007f;">
-                    <span class="swatch-dot" style="background: linear-gradient(135deg, #ff007f, #ffeb00, #00e5ff);"></span>
-                  </div>
-                  <span>Spectrum Rainbow</span>
-                </button>
-                <button class="theme-swatch-card" data-theme-val="light">
-                  <div class="swatch-preview" style="background: #ffffff; border-color: #94a3b8;">
-                    <span class="swatch-dot" style="background: #ca9e0d;"></span>
-                  </div>
-                  <span>Minimal Light</span>
-                </button>
-              </div>
-            </div>
+            <p class="section-subtitle">Manage your Gemini AI Key credentials, install options, and workspace settings.</p>
 
             <!-- Install App (PWA) Card -->
             <div class="settings-card install-pwa-card" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.05);">
@@ -2945,6 +2921,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35110"></script>
+  <script type="module" src="app.js?v=35111"></script>
 </body>
 </html>

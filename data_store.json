@@ -3195,50 +3195,40 @@
   "user_conversations": {
     "sinsecontactmilla@gmail.com": [
       {
-        "id": "conv_1790962488998",
-        "title": "Grammar & Structure",
+        "id": "conv_1790963020185",
+        "title": "Tell Me One Short",
         "icon": "fa-comments",
         "type": "chat",
         "history": [
           {
             "role": "user",
-            "content": "great correction!",
-            "displayHtml": "great correction!",
+            "content": "Tell me one short fun fact.",
+            "displayHtml": "Tell me one short fun fact.",
             "parts": [
               {
-                "text": "great correction!"
+                "text": "Tell me one short fun fact."
               }
             ]
           },
           {
             "role": "model",
-            "content": "Glad you found it helpful, Sinse! I'm always happy to keep things flowing smoothly. What's been on your mind lately? Anything fun or interesting happening in your world?",
+            "content": "Did you know that sea otters hold hands when they sleep so they don’t drift away from each other? It’s called a \"raft.\" Honestly, it’s probably one of the most wholesome things in the animal kingdom! \n\nHow’s your day going so far, Sinse? Doing anything fun?",
             "parts": [
               {
-                "text": "Glad you found it helpful, Sinse! I'm always happy to keep things flowing smoothly. What's been on your mind lately? Anything fun or interesting happening in your world?"
-              }
-            ]
-          },
-          {
-            "role": "user",
-            "content": "she don't likes it",
-            "displayHtml": "she <s class=\"grammar-strike\">don't</s> <span class=\"grammar-fix\">doesn't</span> likes it",
-            "parts": [
-              {
-                "text": "she don't likes it"
+                "text": "Did you know that sea otters hold hands when they sleep so they don’t drift away from each other? It’s called a \"raft.\" Honestly, it’s probably one of the most wholesome things in the animal kingdom! \n\nHow’s your day going so far, Sinse? Doing anything fun?"
               }
             ]
           }
         ],
-        "createdAt": 1790962488999
+        "createdAt": 1790963020185
       },
       {
-        "id": "conv_1790962165517",
-        "title": "Helo",
+        "id": "conv_1790962989369",
+        "title": "Hello Sol",
         "icon": "fa-comments",
         "type": "chat",
         "history": [],
-        "createdAt": 1790962165517
+        "createdAt": 1790962989369
       },
       {
         "id": "conv_1790962089383",
@@ -3316,8 +3306,7 @@
           {
             "role": "user",
             "content": "Ana buy apples",
-            "displayHtml": "Ana <s class=\"grammar-strike\">buy</s> <span class=\"grammar-fix\">bought</span> ,
-    ,
+            "displayHtml": "Ana <s class=\"grammar-strike\">buy</s> <span class=\"grammar-fix\">bought</span> apples",
             "parts": [
               {
                 "text": "Ana buy apples"

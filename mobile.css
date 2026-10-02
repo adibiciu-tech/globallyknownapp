@@ -264,7 +264,8 @@ html, body {
 /* Compact header buttons on mobile */
 .chat-header .install-app-btn .install-text,
 .train-agent-btn .train-btn-text,
-#admin-toggle-text {
+#admin-toggle-text,
+#theme-btn-text {
   display: none !important;
 }
 

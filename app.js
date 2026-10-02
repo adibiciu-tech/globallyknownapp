@@ -7394,10 +7394,15 @@ function applyTheme(themeName) {
     metaTheme.setAttribute("content", statusColor);
   }
 
-  // Update active state in settings swatches grid
+  // Update active state in settings swatches grid & header dropdown
   const swatchCards = document.querySelectorAll(".theme-swatch-card");
   swatchCards.forEach(card => {
     card.classList.toggle("active", card.getAttribute("data-theme-val") === currentTheme);
+  });
+
+  const themeOptions = document.querySelectorAll(".theme-option-btn");
+  themeOptions.forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-theme-val") === currentTheme);
   });
 }
 window.applyTheme = applyTheme;

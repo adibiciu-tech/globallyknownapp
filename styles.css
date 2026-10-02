@@ -10482,28 +10482,33 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
  * ------------------------------------------------------------- */
 .theme-picker-wrapper {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 #theme-toggle-btn {
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color, #28282b);
-  background: var(--bg-secondary, #0c0c0d);
-  color: var(--text-primary, #ffffff);
-  font-size: 1.1rem;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 38px !important;
+  padding: 0 0.95rem !important;
+  border-radius: 20px !important;
+  border: 1px solid var(--border-color, #28282b) !important;
+  background: var(--bg-secondary, #0c0c0d) !important;
+  color: var(--text-secondary, #94a3b8) !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  white-space: nowrap !important;
 }
 
 #theme-toggle-btn:hover {
-  background: var(--bg-tertiary, #141416);
-  color: var(--accent-yellow, #f6ca21);
-  border-color: var(--accent-yellow, #f6ca21);
-  box-shadow: 0 0 10px var(--glow-color-1, rgba(246, 202, 33, 0.3));
+  background: var(--bg-tertiary, #141416) !important;
+  color: var(--accent-yellow, #f6ca21) !important;
+  border-color: var(--accent-yellow, #f6ca21) !important;
+  box-shadow: 0 0 12px var(--glow-color-1, rgba(246, 202, 33, 0.3)) !important;
+  transform: translateY(-1px) !important;
 }
 
 .theme-dropdown-menu {
@@ -10649,6 +10654,30 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   margin-top: 8px;
   padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+/* Make action buttons visible only when the mouse cursor is hovering over the message box or actions area */
+.gemini-inline-message:hover .gemini-ai-actions,
+.gemini-ai-row:hover .gemini-ai-actions,
+.gemini-ai-content-col:hover .gemini-ai-actions,
+.gemini-ai-response:hover + .gemini-ai-actions,
+.gemini-ai-actions:hover,
+.gemini-ai-actions:focus-within {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .gemini-ai-actions {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
 }
 
 .gemini-action-btn {
