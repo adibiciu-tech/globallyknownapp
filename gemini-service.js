@@ -66,7 +66,8 @@ export class GeminiService {
     this.apiKey = localStorage.getItem("gemini_api_key") || "";
     this.genAI = null;
     this.hasPlatformKey = false;
-    this.platformModel = "gemini-3.8-flash";
+    this.platformModel = "gemini-2.0-flash";
+    this.cachedSupportedModels = null;
     this.initGenAI();
     this.checkPlatformStatus();
   }
@@ -102,6 +103,7 @@ export class GeminiService {
 
   async setApiKey(key) {
     this.apiKey = key.trim();
+    this.cachedSupportedModels = null;
     if (this.apiKey) {
       localStorage.setItem("gemini_api_key", this.apiKey);
       try {
@@ -122,6 +124,9 @@ export class GeminiService {
 
   async getSupportedModels() {
     if (!this.apiKey) return [];
+    if (this.cachedSupportedModels && this.cachedSupportedModels.length > 0) {
+      return this.cachedSupportedModels;
+    }
     const isAq = this.apiKey.startsWith("AQ.");
     const url = isAq
       ? `https://generativelanguage.googleapis.com/v1beta/models`
@@ -135,6 +140,7 @@ export class GeminiService {
         const supported = data.models
           .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
           .map(m => m.name.replace(/^models\//, ""));
+        this.cachedSupportedModels = supported;
         return supported;
       }
     } catch (e) {
@@ -161,7 +167,11 @@ export class GeminiService {
       });
 
     const bodyData = {
-      contents: formattedContents
+      contents: formattedContents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1024
+      }
     };
     if (systemInstruction && systemInstruction.trim()) {
       bodyData.systemInstruction = {
@@ -169,34 +179,45 @@ export class GeminiService {
       };
     }
 
-    // 1. Build prioritized model candidate list
-    // NEVER put thinking models ahead of fast conversational production models!
+    // 1. Prioritize ultra-low latency flash-lite models for instantaneous responses without thinking delay
     const preferredOrder = [
-      modelName && modelName !== "gemini-3.6-flash" ? modelName : "gemini-3.8-flash",
+      modelName && modelName !== "gemini-pro" && !modelName.includes("2.0") && !modelName.includes("1.5") ? modelName : null,
+      "gemini-3.1-flash-lite",
+      "gemini-3.1-flash-lite-preview",
+      "gemini-3.5-flash",
+      "gemini-3.6-flash",
       "gemini-3.8-flash",
-      "gemini-flash-latest",
-      "gemini-3.5-flash-lite"
+      "gemini-flash-latest"
     ].filter(Boolean);
 
     let discovered = await this.getSupportedModels();
-    // Exclude thinking models and deprecated models
-    const nonThinkingDiscovered = discovered.filter(m => !m.toLowerCase().includes("thinking") && m !== "gemini-pro" && m !== "gemini-1.5-flash" && m !== "gemini-3.6-flash");
+    const validDiscovered = discovered.filter(m => 
+      !m.toLowerCase().includes("thinking") && 
+      !m.toLowerCase().includes("embedding") &&
+      !m.toLowerCase().includes("tts") &&
+      !m.toLowerCase().includes("image") &&
+      m !== "gemini-pro" &&
+      !m.includes("2.0") &&
+      !m.includes("1.5")
+    );
 
     const modelsToTry = [];
-    for (const m of [...preferredOrder, ...nonThinkingDiscovered]) {
-      if (m && !modelsToTry.includes(m) && m !== "gemini-pro" && m !== "gemini-1.5-flash" && m !== "gemini-3.6-flash") {
+    for (const m of [...preferredOrder, ...validDiscovered]) {
+      if (m && !modelsToTry.includes(m)) {
         modelsToTry.push(m);
       }
     }
 
     let lastError = null;
     for (const mId of modelsToTry) {
-      const url = this.apiKey.startsWith("AQ.")
-        ? `https://generativelanguage.googleapis.com/v1beta/models/${mId}:generateContent`
-        : `https://generativelanguage.googleapis.com/v1beta/models/${mId}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+      const isAq = this.apiKey.startsWith("AQ.");
+      // 2. High-speed Live Streaming endpoint (Server-Sent Events) for instant sub-second response
+      const sseUrl = isAq
+        ? `https://generativelanguage.googleapis.com/v1beta/models/${mId}:streamGenerateContent?alt=sse`
+        : `https://generativelanguage.googleapis.com/v1beta/models/${mId}:streamGenerateContent?alt=sse&key=${encodeURIComponent(this.apiKey)}`;
 
       try {
-        const response = await fetch(url, {
+        const response = await fetch(sseUrl, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
@@ -205,31 +226,57 @@ export class GeminiService {
           body: JSON.stringify(bodyData)
         });
 
-        const data = await response.json();
-        if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
-          const parts = data.candidates[0].content.parts || [];
-          // Filter out internal thought parts (Gemini 2.0 returns thought: true on reasoning parts)
-          const validParts = parts.filter(p => !p.thought);
-          const rawReply = (validParts.length > 0 ? validParts : parts)
-            .map(p => p.text || "")
-            .join("\n");
-          const replyText = cleanGeminiResponse(rawReply);
-          
-          // Stream words out smoothly
-          const words = replyText.split(" ");
-          for (let i = 0; i < words.length; i += 3) {
-            const chunk = words.slice(i, i + 3).join(" ") + " ";
-            onChunk(chunk);
-            await new Promise(r => setTimeout(r, 20));
+        if (response.ok && response.body) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let fullReply = "";
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop(); // Keep incomplete trailing fragment
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith("data:")) {
+                const jsonStr = trimmed.slice(5).trim();
+                if (jsonStr === "[DONE]") continue;
+                try {
+                  const chunkData = JSON.parse(jsonStr);
+                  if (chunkData.candidates && chunkData.candidates[0] && chunkData.candidates[0].content) {
+                    const parts = chunkData.candidates[0].content.parts || [];
+                    const validParts = parts.filter(p => !p.thought);
+                    const chunkText = (validParts.length > 0 ? validParts : parts)
+                      .map(p => p.text || "")
+                      .join("");
+                    if (chunkText) {
+                      fullReply += chunkText;
+                      onChunk(chunkText);
+                    }
+                  }
+                } catch (e) {}
+              }
+            }
           }
-          if (onComplete) onComplete(replyText);
-          return true;
+
+          if (fullReply) {
+            const replyText = cleanGeminiResponse(fullReply);
+            if (onComplete) onComplete(replyText);
+            return true;
+          }
         } else if (response.status === 429) {
           lastError = new Error("Rate limit reached (429 Too Many Requests). The Gemini API free quota allows up to 15 requests per minute. Please wait a moment before sending another message.");
-          // Wait 1.5s before attempting any fallback to avoid instant burst exhaustion
-          await new Promise(r => setTimeout(r, 1500));
-        } else if (data.error) {
-          lastError = new Error(data.error.message || `API error ${data.error.code}`);
+          await new Promise(r => setTimeout(r, 1000));
+        } else {
+          try {
+            const errData = await response.json();
+            if (errData.error) {
+              lastError = new Error(errData.error.message || `API error ${errData.error.code}`);
+            }
+          } catch (e) {}
         }
       } catch (err) {
         lastError = err;
@@ -261,7 +308,7 @@ export class GeminiService {
       body: JSON.stringify({
         messages: formattedContents,
         systemInstruction: systemInstruction,
-        model: modelName || this.platformModel || "gemini-3.6-flash"
+        model: modelName || this.platformModel || "gemini-3.1-flash-lite"
       })
     });
 
@@ -300,7 +347,7 @@ Rules:
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: [{ role: "user", content: prompt }],
-            model: "gemini-3.8-flash",
+            model: "gemini-2.0-flash",
             isTitle: true
           })
         });
@@ -318,8 +365,8 @@ Rules:
       try {
         const isAq = this.apiKey.startsWith("AQ.");
         const url = isAq
-          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`
-          : `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`
+          : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
         const response = await fetch(url, {
           method: "POST",
           headers: { 
@@ -399,7 +446,7 @@ User: ${cleanText}
 Assistant:`;
 
         const isAq = this.apiKey.startsWith("AQ.");
-        const modelsToTry = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.6-flash"];
+        const modelsToTry = ["gemini-3.1-flash-lite", "gemini-3.1-flash-lite-preview", "gemini-3.5-flash", "gemini-3.6-flash"];
         for (const mod of modelsToTry) {
           try {
             const url = isAq

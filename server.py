@@ -685,7 +685,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             payload = json.dumps({
                 "active": is_active,
                 "maskedKey": masked,
-                "model": data.get("geminiModel", "gemini-3.6-flash"),
+                "model": data.get("geminiModel", "gemini-3.1-flash-lite"),
                 "envNames": matched_env_names
             }).encode("utf-8")
             self.send_response(200)
@@ -989,7 +989,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 }
 
                 ctx = ssl.create_default_context()
-                models_to_try = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.6-flash"]
+                models_to_try = ["gemini-3.1-flash-lite", "gemini-3.1-flash-lite-preview", "gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-latest"]
                 corrected_result = None
 
                 for mod in models_to_try:
@@ -1046,9 +1046,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 payload = json.loads(body)
                 messages = payload.get("messages", [])
                 system_instruction = payload.get("systemInstruction", "")
-                requested_model = payload.get("model") or "gemini-3.6-flash"
-                if requested_model in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-pro", "gemini-1.5-pro"]:
-                    requested_model = "gemini-3.6-flash"
+                requested_model = payload.get("model") or "gemini-3.1-flash-lite"
+                if not requested_model or "gemini-2." in requested_model or "gemini-1." in requested_model:
+                    requested_model = "gemini-3.1-flash-lite"
                 is_title = payload.get("isTitle", False)
 
                 data = load_data()
@@ -1082,10 +1082,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 # Try production models in priority order (Flash models support multimodal vision)
                 models_to_try = [
                     requested_model,
-                    "gemini-3.8-flash",
-                    "gemini-flash-latest",
-                    "gemini-3.5-flash-lite",
-                    "gemini-3.6-flash"
+                    "gemini-3.1-flash-lite",
+                    "gemini-3.1-flash-lite-preview",
+                    "gemini-3.5-flash",
+                    "gemini-3.6-flash",
+                    "gemini-flash-latest"
                 ]
                 seen = set()
                 candidate_models = []

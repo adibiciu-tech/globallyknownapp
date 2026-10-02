@@ -134,7 +134,7 @@ let communityPosts = [
 // -------------------------------------------------------------
 let activePanel = "sol-chat";
 let activeChatMessages = JSON.parse(localStorage.getItem("sol_chat_history")) || [];
-let activeModel = "gemini-3.8-flash";
+let activeModel = "gemini-3.1-flash-lite";
 let activeAgentId = "general";
 let currentTheme = localStorage.getItem("sol_theme") || "dark";
 
@@ -1813,7 +1813,7 @@ STRICT RULES ON CORRECTIONS:
       await geminiService.generateResponseStream(
         homeConversationHistory,
         systemInstruction,
-        activeModel || "gemini-3.6-flash",
+        activeModel || "gemini-3.1-flash-lite",
         (chunk) => {
           setSolThinking(false);
           const { aiDiv, aiBody } = ensureAiDiv();
@@ -1928,11 +1928,7 @@ STRICT RULES ON CORRECTIONS:
   if (modelSelector) {
     const savedModelName = localStorage.getItem("sol_active_model_name") || "Flash";
     if (modelNameText) modelNameText.textContent = savedModelName;
-    if (savedModelName === "Pro") {
-      activeModel = "gemini-3.8-flash";
-    } else {
-      activeModel = "gemini-3.8-flash";
-    }
+    activeModel = "gemini-3.1-flash-lite";
 
     modelSelector.addEventListener("click", () => {
       const models = ["Flash", "SOL Engine"];
@@ -1942,7 +1938,7 @@ STRICT RULES ON CORRECTIONS:
       if (modelNameText) modelNameText.textContent = nextModel;
       localStorage.setItem("sol_active_model_name", nextModel);
 
-      activeModel = "gemini-3.8-flash";
+      activeModel = "gemini-3.1-flash-lite";
       
       const headerModelBadge = document.getElementById("header-model-badge");
       if (headerModelBadge) {
@@ -5364,7 +5360,7 @@ Provide your feedback and guidance in character as Sol (${roleCfg.name}).`;
         await geminiService.generateResponseStream(
           messages,
           systemInstruction,
-          "gemini-3.6-flash",
+          "gemini-3.1-flash-lite",
           (chunk) => {
             if (responseText === "") aiBody.innerHTML = "";
             responseText += chunk;
