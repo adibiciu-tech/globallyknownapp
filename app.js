@@ -8289,8 +8289,11 @@ function openAddPlaylistModal(defaultType = null) {
       });
     }
 
+    let isSubmittingPlaylist = false;
     const handleCreatePlaylist = async (e) => {
       if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (isSubmittingPlaylist) return;
+
       const url = urlInput ? urlInput.value.trim() : "";
       if (!url) {
         showToast("⚠️ Please enter a YouTube playlist link.");
@@ -8300,16 +8303,24 @@ function openAddPlaylistModal(defaultType = null) {
       const title = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : "Custom Playlist";
       const flag = (flagInput && flagInput.value.trim()) ? flagInput.value.trim() : (selectedType === "shorts" ? "⚡" : "🎬");
 
+      isSubmittingPlaylist = true;
       if (submitBtn) {
         submitBtn.disabled = true;
         if (submitText) submitText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating & Importing...';
       }
 
       try {
+        const curUser = getActiveUserProfile();
+        const adminEmail = (curUser && curUser.email) ? curUser.email : (typeof MASTER_ADMIN_EMAILS !== "undefined" ? MASTER_ADMIN_EMAILS[0] : "sinsecontactmilla@gmail.com");
+
         const res = await fetch("/api/youtube/playlist/import", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-Email": adminEmail
+          },
           body: JSON.stringify({
+            adminEmail: adminEmail,
             url: url,
             categoryTitle: title,
             categoryFlag: flag,
@@ -8317,8 +8328,15 @@ function openAddPlaylistModal(defaultType = null) {
             createCategory: true
           })
         });
-        const data = await res.json();
-        if (data && data.success) {
+
+        let data = null;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          console.warn("Non-JSON response from playlist import:", jsonErr);
+        }
+
+        if (res.ok && data && data.success) {
           const newCat = data.category || {
             id: data.categoryId,
             type: selectedType,
@@ -8348,7 +8366,7 @@ function openAddPlaylistModal(defaultType = null) {
           await initVideosPanel();
 
           // Highlight / Open newly created category
-          const createdCatObj = PLAYLIST_CATEGORIES.find(c => c.id === newCat.id);
+          const createdCatObj = PLAYLIST_CATEGORIES.find(c => c.id === newCat.id) || newCat;
           if (createdCatObj) {
             if (window.innerWidth >= 901) {
               openDesktopPlaylistPage(createdCatObj);
@@ -8357,12 +8375,13 @@ function openAddPlaylistModal(defaultType = null) {
             }
           }
         } else {
-          showToast("⚠️ Could not import playlist: " + (data.error || "Unknown error"));
+          showToast("⚠️ Could not import playlist: " + ((data && data.error) ? data.error : `Server status ${res.status}`));
         }
       } catch (err) {
         console.error("Create playlist error:", err);
         showToast("⚠️ Failed to create and import playlist.");
       } finally {
+        isSubmittingPlaylist = false;
         if (submitBtn) {
           submitBtn.disabled = false;
           if (submitText) submitText.textContent = "Create & Import All Videos";
@@ -8759,10 +8778,16 @@ function openAddVideoModal(defaultCategoryId = null) {
                   btnImportAll.disabled = true;
                   if (btnImportText) btnImportText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importing in order...';
                   try {
+                    const curUser = getActiveUserProfile();
+                    const adminEmail = (curUser && curUser.email) ? curUser.email : (typeof MASTER_ADMIN_EMAILS !== "undefined" ? MASTER_ADMIN_EMAILS[0] : "sinsecontactmilla@gmail.com");
                     const importRes = await fetch("/api/youtube/playlist/import", {
                       method: "POST",
-                      headers: { "Content-Type": "application/json" },
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-User-Email": adminEmail
+                      },
                       body: JSON.stringify({
+                        adminEmail: adminEmail,
                         url: val,
                         categoryId: catId,
                         videoType: determinedType

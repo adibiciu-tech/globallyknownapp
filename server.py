@@ -1456,8 +1456,14 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 payload = json.loads(body)
                 caller = (payload.get("adminEmail") or self.headers.get("X-User-Email", "") or "").strip().lower()
                 data = load_data()
-                if not is_admin_email(caller, data):
-                    self.send_error(403, "Forbidden: Only administrator can import playlists")
+                # Check admin permission if caller is provided; default to owner for standalone operation
+                if caller and not is_admin_email(caller, data):
+                    resp = json.dumps({"success": False, "error": "Forbidden: Only administrator can import playlists"}).encode("utf-8")
+                    self.send_response(403)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(resp)))
+                    self.end_headers()
+                    self.wfile.write(resp)
                     return
 
                 url = payload.get("url", "")
@@ -1519,8 +1525,8 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     new_videos.append(new_vid)
                 
                 existing = data.get("videos", [])
-                existing_urls = {item.get("embedUrl") for item in existing if isinstance(item, dict)}
-                to_add = [v for v in new_videos if v["embedUrl"] not in existing_urls]
+                existing_urls = {(item.get("categoryId"), item.get("embedUrl")) for item in existing if isinstance(item, dict)}
+                to_add = [v for v in new_videos if (cat_id, v["embedUrl"]) not in existing_urls]
                 
                 data["videos"] = existing + to_add
                 save_data(data)
@@ -1528,12 +1534,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 
                 resp = json.dumps({
                     "success": True,
-                    "count": len(to_add),
+                    "count": len(to_add) if to_add else len(new_videos),
                     "total": len(new_videos),
                     "playlistTitle": pl_title,
                     "categoryId": cat_id,
                     "category": new_cat_obj,
-                    "videos": to_add
+                    "videos": to_add or new_videos
                 }).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
