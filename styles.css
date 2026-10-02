@@ -8578,48 +8578,96 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   width: 100%;
 }
 
-/* Active List Filter Pill (Opposite the speaker button on the left) */
-.rwggp-active-list-pill {
+/* Active Lists Filter Stack (Opposite the speaker button on the left, up to 4 lists) */
+.rwggp-active-lists-stack {
   position: absolute;
   top: -2px;
   left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  z-index: 10;
+  max-width: 240px;
+}
+
+.rwggp-active-lists-stack.hidden {
+  display: none !important;
+}
+
+.rwggp-active-list-chip,
+.rwggp-active-list-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   background: #ffffff !important;
   border: 1px solid #cbd5e1;
-  color: #1e293b;
+  color: #1e293b !important;
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
-  z-index: 10;
+  max-width: 100%;
 }
 
-.rwggp-active-list-pill.hidden {
-  display: none !important;
+.rwggp-active-list-chip:hover,
+.rwggp-active-list-pill:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
+.rwggp-active-list-chip .active-list-label,
 .rwggp-active-list-pill .active-list-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   color: #1e293b !important;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+.rwggp-active-list-chip .active-list-label i,
+.rwggp-active-list-pill .active-list-label i {
+  color: #6366f1;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+.rwggp-active-list-chip .active-list-name,
+.rwggp-active-list-pill .active-list-name {
+  color: #1e293b !important;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+:root[data-theme="dark"] .rwggp-active-lists-stack .rwggp-active-list-chip,
+:root[data-theme="cyan"] .rwggp-active-lists-stack .rwggp-active-list-chip,
+:root[data-theme="emerald"] .rwggp-active-lists-stack .rwggp-active-list-chip,
+:root[data-theme="purple"] .rwggp-active-lists-stack .rwggp-active-list-chip,
+:root[data-theme="crimson"] .rwggp-active-lists-stack .rwggp-active-list-chip,
+:root[data-theme="rainbow"] .rwggp-active-lists-stack .rwggp-active-list-chip,
 :root[data-theme="dark"] .rwggp-active-list-pill {
   background: #ffffff !important;
-  border-color: #cbd5e1;
+  border-color: #cbd5e1 !important;
   color: #1e293b !important;
 }
 
-:root[data-theme="dark"] .rwggp-active-list-pill .active-list-label {
+:root[data-theme="dark"] .rwggp-active-lists-stack .rwggp-active-list-chip .active-list-name,
+:root[data-theme="cyan"] .rwggp-active-lists-stack .rwggp-active-list-chip .active-list-name,
+:root[data-theme="emerald"] .rwggp-active-lists-stack .rwggp-active-list-chip .active-list-name,
+:root[data-theme="purple"] .rwggp-active-lists-stack .rwggp-active-list-chip .active-list-name,
+:root[data-theme="crimson"] .rwggp-active-lists-stack .rwggp-active-list-chip .active-list-name,
+:root[data-theme="rainbow"] .rwggp-active-lists-stack .rwggp-active-list-chip .active-list-name,
+:root[data-theme="dark"] .rwggp-active-list-pill .active-list-name {
   color: #1e293b !important;
 }
 
+.rwggp-active-list-chip .active-list-clear-btn,
 .rwggp-active-list-pill .active-list-clear-btn {
   background: transparent;
   border: none;
@@ -8632,17 +8680,21 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   justify-content: center;
   transition: all 0.15s ease;
   font-size: 0.82rem;
+  flex-shrink: 0;
 }
 
+.rwggp-active-list-chip .active-list-clear-btn:hover,
 .rwggp-active-list-pill .active-list-clear-btn:hover {
   color: #ef4444 !important;
   transform: scale(1.2);
 }
 
 @media (max-width: 600px) {
+  .rwggp-active-lists-stack,
   .rwggp-active-list-pill {
     position: static;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
+    align-items: center;
   }
 }
 
@@ -9122,6 +9174,14 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   background: rgba(246, 202, 33, 0.15);
   border-color: var(--accent-yellow, #f6ca21);
   color: var(--accent-yellow, #f6ca21);
+}
+
+.savings-action-btn.btn-shuffle-list.is-in-active-shuffle {
+  background: rgba(246, 202, 33, 0.22) !important;
+  border-color: var(--accent-yellow, #f6ca21) !important;
+  color: var(--accent-yellow, #f6ca21) !important;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(246, 202, 33, 0.25);
 }
 
 /* Color Vowel Chart Card */

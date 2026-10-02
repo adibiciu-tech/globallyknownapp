@@ -94,6 +94,7 @@ let rwggpSavingLists = [];
 let rwggpHistory = [];
 let rwggpActiveWord = null;
 let rwggpSaveTargetWord = null;
+let rwggpActiveListFilters = [];
 let rwggpActiveListFilter = null;
 
 // Global Metronome State
@@ -11365,19 +11366,14 @@ function initRandomWordPanel() {
     });
   }
 
-  // 4b. Clear active list filter button
-  const btnClearFilter = document.getElementById("btn-clear-active-list");
-  if (btnClearFilter) {
-    btnClearFilter.addEventListener("click", (e) => {
-      e.stopPropagation();
-      rwggpActiveListFilter = null;
-      const pill = document.getElementById("rwggp-active-list-pill");
-      if (pill) pill.classList.add("hidden");
-      if (typeof showToast === "function") {
-        showToast("Cleared list filter — shuffling from full database");
-      }
-    });
-  }
+  // 4b. Multi-List Shuffle Management (Up to 4 active lists)
+  window.renderRwggpActiveLists = renderRwggpActiveLists;
+  window.removeRwggpActiveList = removeRwggpActiveList;
+  window.addRwggpActiveList = addRwggpActiveList;
+  window.generateRandomWord = generateRandomWord;
+  window.getRwggpActiveListFilters = () => rwggpActiveListFilters;
+  window.setRwggpSavingLists = (lists) => { rwggpSavingLists = lists; };
+  window.getRwggpSavingLists = () => rwggpSavingLists;
 
   // 5. Category Name click on active word -> Open Category Words Modal
   const catNameEl = document.getElementById("rwggp-category-name");
@@ -11572,6 +11568,128 @@ function isWordSavedInAnyList(wordStr) {
   return rwggpSavingLists.some(list => (list.words || []).some(w => (w.word || "").toLowerCase() === target));
 }
 
+// -------------------------------------------------------------
+// Random Word Generator Active Lists Management (Up to 4 lists)
+// -------------------------------------------------------------
+function renderRwggpActiveLists() {
+  const container = document.getElementById("rwggp-active-lists-container");
+  if (!container) return;
+
+  // Keep single active list filter in sync for compatibility
+  rwggpActiveListFilter = (rwggpActiveListFilters && rwggpActiveListFilters.length > 0) ? rwggpActiveListFilters[0] : null;
+
+  if (!Array.isArray(rwggpActiveListFilters) || rwggpActiveListFilters.length === 0) {
+    container.classList.add("hidden");
+    container.innerHTML = "";
+    return;
+  }
+
+  container.classList.remove("hidden");
+  container.innerHTML = rwggpActiveListFilters.map((list, idx) => {
+    return `
+      <div class="rwggp-active-list-chip" data-list-id="${escapeHtml(list.id)}" title="Shuffling words from '${escapeHtml(list.name)}' (List ${idx + 1} of ${rwggpActiveListFilters.length})">
+        <span class="active-list-label">
+          <i class="fa-solid fa-shuffle"></i>
+          <span class="active-list-name">${escapeHtml(list.name)}</span>
+        </span>
+        <button type="button" class="active-list-clear-btn" data-action="remove-active-list" data-list-id="${escapeHtml(list.id)}" title="Remove '${escapeHtml(list.name)}' from shuffle">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  // Attach delete handlers for each active list chip
+  container.querySelectorAll('[data-action="remove-active-list"]').forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const listId = btn.getAttribute("data-list-id");
+      removeRwggpActiveList(listId);
+    });
+  });
+}
+
+function removeRwggpActiveList(listId) {
+  const target = (rwggpActiveListFilters || []).find(l => l.id === listId);
+  const name = target ? target.name : "list";
+  rwggpActiveListFilters = (rwggpActiveListFilters || []).filter(l => l.id !== listId);
+  rwggpActiveListFilter = rwggpActiveListFilters.length > 0 ? rwggpActiveListFilters[0] : null;
+
+  renderRwggpActiveLists();
+  renderRwggpSavingsAccordion();
+
+  if (rwggpActiveListFilters.length > 0) {
+    generateRandomWord();
+    if (typeof showToast === "function") {
+      showToast(`Removed "${name}" — shuffling between ${rwggpActiveListFilters.length} list(s)`);
+    }
+  } else {
+    if (typeof showToast === "function") {
+      showToast("Cleared list filters — shuffling from full database");
+    }
+  }
+}
+
+function addRwggpActiveList(targetList) {
+  if (!targetList || !Array.isArray(targetList.words) || targetList.words.length === 0) {
+    if (typeof showToast === "function") showToast("No words in this list to shuffle");
+    return;
+  }
+
+  // Shuffle target list's words in place if > 1
+  if (targetList.words.length > 1) {
+    for (let i = targetList.words.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [targetList.words[i], targetList.words[j]] = [targetList.words[j], targetList.words[i]];
+    }
+    persistRwggpSavingLists();
+  }
+
+  if (!Array.isArray(rwggpActiveListFilters)) {
+    rwggpActiveListFilters = [];
+  }
+
+  const existingIdx = rwggpActiveListFilters.findIndex(l => l.id === targetList.id);
+  if (existingIdx >= 0) {
+    // List already active -> update reference and generate a fresh word
+    rwggpActiveListFilters[existingIdx] = targetList;
+    renderRwggpActiveLists();
+    renderRwggpSavingsAccordion();
+    generateRandomWord();
+    if (typeof showToast === "function") {
+      showToast(`List "${targetList.name}" is already in shuffle. Generated new word!`);
+    }
+  } else {
+    // Check max 4 lists limit
+    if (rwggpActiveListFilters.length >= 4) {
+      if (typeof showToast === "function") {
+        showToast("⚠️ Maximum 4 lists can be shuffled together. Remove one first.");
+      }
+      return;
+    }
+
+    rwggpActiveListFilters.push(targetList);
+    rwggpActiveListFilter = rwggpActiveListFilters[0];
+    renderRwggpActiveLists();
+    renderRwggpSavingsAccordion();
+    generateRandomWord();
+
+    const count = rwggpActiveListFilters.length;
+    if (typeof showToast === "function") {
+      if (count === 1) {
+        showToast(`🔀 Shuffled & generating from: "${targetList.name}"`);
+      } else {
+        showToast(`🔀 Added "${targetList.name}" (shuffling between ${count} lists)`);
+      }
+    }
+  }
+
+  const wordCard = document.getElementById("rwggp-word-card");
+  if (wordCard) {
+    wordCard.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
 function displayRwggpWord(wordData, pushHistory = true) {
   if (!wordData) return;
   rwggpActiveWord = wordData;
@@ -11613,17 +11731,8 @@ function displayRwggpWord(wordData, pushHistory = true) {
     }
   }
 
-  // Update active list filter pill state
-  const listPill = document.getElementById("rwggp-active-list-pill");
-  const listPillName = document.getElementById("rwggp-active-list-name");
-  if (listPill) {
-    if (rwggpActiveListFilter && rwggpActiveListFilter.name) {
-      if (listPillName) listPillName.textContent = rwggpActiveListFilter.name;
-      listPill.classList.remove("hidden");
-    } else {
-      listPill.classList.add("hidden");
-    }
-  }
+  // Update active lists filter stack state
+  renderRwggpActiveLists();
 
   if (card) {
     card.classList.remove("hidden");
@@ -11640,14 +11749,20 @@ function displayRwggpWord(wordData, pushHistory = true) {
 }
 
 async function generateRandomWord() {
-  // If an active saved list filter is set, pick randomly from that saved list!
-  if (rwggpActiveListFilter && Array.isArray(rwggpActiveListFilter.words) && rwggpActiveListFilter.words.length > 0) {
-    const listWords = rwggpActiveListFilter.words;
-    const randomIndex = Math.floor(Math.random() * listWords.length);
-    const chosen = listWords[randomIndex];
-    const fullWord = (rwggpWords || []).find(w => (w.word || "").toLowerCase() === (chosen.word || "").toLowerCase()) || chosen;
-    displayRwggpWord(fullWord, true);
-    return;
+  // If active saved list filter(s) are set, pick randomly among the active saved lists!
+  // When 2 lists: shuffles randomly between both.
+  // When 3 lists: shuffles randomly between all 3.
+  // When 4 lists: shuffles randomly between all 4.
+  if (Array.isArray(rwggpActiveListFilters) && rwggpActiveListFilters.length > 0) {
+    const validLists = rwggpActiveListFilters.filter(l => Array.isArray(l.words) && l.words.length > 0);
+    if (validLists.length > 0) {
+      // Pick a random list from the active lists to ensure equal distribution across lists
+      const chosenList = validLists[Math.floor(Math.random() * validLists.length)];
+      const chosenWordObj = chosenList.words[Math.floor(Math.random() * chosenList.words.length)];
+      const fullWord = (rwggpWords || []).find(w => (w.word || "").toLowerCase() === (chosenWordObj.word || "").toLowerCase()) || chosenWordObj;
+      displayRwggpWord(fullWord, true);
+      return;
+    }
   }
 
   if (!rwggpWords || rwggpWords.length === 0) {
@@ -11832,6 +11947,7 @@ function renderRwggpSavingsAccordion() {
   container.innerHTML = rwggpSavingLists.map(list => {
     const wordsCount = (list.words || []).length;
     const isExpanded = expandedListIds.has(list.id);
+    const isInShuffle = (rwggpActiveListFilters || []).some(l => l.id === list.id);
     return `
       <div class="savings-accordion-item ${isExpanded ? 'expanded' : ''}" data-list-id="${escapeHtml(list.id)}">
         <div class="savings-accordion-header">
@@ -11862,8 +11978,8 @@ function renderRwggpSavingsAccordion() {
           </div>
           ${wordsCount > 0 ? `
             <div class="savings-list-actions">
-              <button type="button" class="savings-action-btn btn-shuffle-list" data-action="shuffle-list" title="Shuffle this list and generate a random word from it">
-                <i class="fa-solid fa-shuffle"></i> Shuffle This List
+              <button type="button" class="savings-action-btn btn-shuffle-list ${isInShuffle ? 'is-in-active-shuffle' : ''}" data-action="shuffle-list" title="${isInShuffle ? 'Currently in active shuffle pool. Click to re-shuffle & generate.' : 'Add this list to shuffle pool (up to 4 lists)'}">
+                <i class="fa-solid fa-shuffle"></i> ${isInShuffle ? 'In Shuffle (Active)' : 'Shuffle This List'}
               </button>
             </div>
           ` : ''}
@@ -11893,11 +12009,7 @@ function renderRwggpSavingsAccordion() {
       delListBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (confirm(`Delete the list "${targetList ? targetList.name : ''}"?`)) {
-          if (rwggpActiveListFilter && rwggpActiveListFilter.id === listId) {
-            rwggpActiveListFilter = null;
-            const pill = document.getElementById("rwggp-active-list-pill");
-            if (pill) pill.classList.add("hidden");
-          }
+          removeRwggpActiveList(listId);
           rwggpSavingLists = rwggpSavingLists.filter(l => l.id !== listId);
           persistRwggpSavingLists();
           renderRwggpSavingsAccordion();
@@ -11915,32 +12027,8 @@ function renderRwggpSavingsAccordion() {
           return;
         }
 
-        // Shuffle words in place if 2 or more
-        if (targetList.words.length > 1) {
-          for (let i = targetList.words.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [targetList.words[i], targetList.words[j]] = [targetList.words[j], targetList.words[i]];
-          }
-          persistRwggpSavingLists();
-          renderRwggpSavingsAccordion();
-        }
-
-        // Attribute "Generate Random Word" attribution:
-        // Set active list filter and generate/display random word from list
-        rwggpActiveListFilter = targetList;
-        const randomIndex = Math.floor(Math.random() * targetList.words.length);
-        const chosen = targetList.words[randomIndex];
-        const fullWord = (rwggpWords || []).find(w => (w.word || "").toLowerCase() === (chosen.word || "").toLowerCase()) || chosen;
-        displayRwggpWord(fullWord, true);
-
-        // Scroll smoothly to the generator word card
-        const wordCard = document.getElementById("rwggp-word-card");
-        if (wordCard) {
-          wordCard.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-        if (typeof showToast === "function") {
-          showToast(`🔀 Shuffled & generating from: "${targetList.name}"`);
-        }
+        // Add or re-shuffle active list
+        addRwggpActiveList(targetList);
       });
     }
 
@@ -11953,10 +12041,8 @@ function renderRwggpSavingsAccordion() {
           e.stopPropagation();
           if (targetList) {
             targetList.words = (targetList.words || []).filter(w => (w.word || "").toLowerCase() !== wordStr.toLowerCase());
-            if (rwggpActiveListFilter && rwggpActiveListFilter.id === listId && targetList.words.length === 0) {
-              rwggpActiveListFilter = null;
-              const pill = document.getElementById("rwggp-active-list-pill");
-              if (pill) pill.classList.add("hidden");
+            if (targetList.words.length === 0) {
+              removeRwggpActiveList(listId);
             }
             persistRwggpSavingLists();
             renderRwggpSavingsAccordion();
