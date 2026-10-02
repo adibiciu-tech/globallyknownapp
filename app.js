@@ -11298,11 +11298,8 @@ function renderRwggpSavingsAccordion() {
           </div>
           ${wordsCount > 0 ? `
             <div class="savings-list-actions">
-              <button type="button" class="savings-action-btn btn-shuffle-list" data-action="shuffle-list" title="Shuffle the words in this saved list">
+              <button type="button" class="savings-action-btn btn-shuffle-list" data-action="shuffle-list" title="Shuffle this list and generate a random word from it">
                 <i class="fa-solid fa-shuffle"></i> Shuffle This List
-              </button>
-              <button type="button" class="savings-action-btn btn-practice-list" data-action="practice-list" title="Generate random words from this list in the main generator">
-                <i class="fa-solid fa-dice"></i> Generate Random Word
               </button>
             </div>
           ` : ''}
@@ -11319,7 +11316,6 @@ function renderRwggpSavingsAccordion() {
     const body = itemEl.querySelector(".savings-accordion-body");
     const delListBtn = itemEl.querySelector('[data-action="delete-list"]');
     const shuffleBtn = itemEl.querySelector('[data-action="shuffle-list"]');
-    const practiceBtn = itemEl.querySelector('[data-action="practice-list"]');
 
     if (header && body) {
       header.addEventListener("click", (e) => {
@@ -11350,30 +11346,24 @@ function renderRwggpSavingsAccordion() {
     if (shuffleBtn) {
       shuffleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (!targetList || !Array.isArray(targetList.words) || targetList.words.length <= 1) {
-          if (typeof showToast === "function") showToast("Add more words to this list to shuffle");
-          return;
-        }
-        // Fisher-Yates shuffle
-        for (let i = targetList.words.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [targetList.words[i], targetList.words[j]] = [targetList.words[j], targetList.words[i]];
-        }
-        persistRwggpSavingLists();
-        renderRwggpSavingsAccordion();
-        if (typeof showToast === "function") showToast(`🔀 Shuffled "${targetList.name}" words!`);
-      });
-    }
-
-    if (practiceBtn) {
-      practiceBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
         if (!targetList || !Array.isArray(targetList.words) || targetList.words.length === 0) {
-          if (typeof showToast === "function") showToast("No words in this list to generate");
+          if (typeof showToast === "function") showToast("No words in this list to shuffle");
           return;
         }
+
+        // Shuffle words in place if 2 or more
+        if (targetList.words.length > 1) {
+          for (let i = targetList.words.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [targetList.words[i], targetList.words[j]] = [targetList.words[j], targetList.words[i]];
+          }
+          persistRwggpSavingLists();
+          renderRwggpSavingsAccordion();
+        }
+
+        // Attribute "Generate Random Word" attribution:
+        // Set active list filter and generate/display random word from list
         rwggpActiveListFilter = targetList;
-        // Pick and display a random word from this list right now
         const randomIndex = Math.floor(Math.random() * targetList.words.length);
         const chosen = targetList.words[randomIndex];
         const fullWord = (rwggpWords || []).find(w => (w.word || "").toLowerCase() === (chosen.word || "").toLowerCase()) || chosen;
@@ -11385,7 +11375,7 @@ function renderRwggpSavingsAccordion() {
           wordCard.scrollIntoView({ behavior: "smooth", block: "center" });
         }
         if (typeof showToast === "function") {
-          showToast(`🔀 Generating from list: "${targetList.name}"`);
+          showToast(`🔀 Shuffled & generating from: "${targetList.name}"`);
         }
       });
     }
