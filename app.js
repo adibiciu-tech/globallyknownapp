@@ -9618,6 +9618,42 @@ function handleSeekClick(direction, isDesktop = true) {
   }, 1000);
 }
 
+function updatePlaybackNavButtonsState(index, totalCount, isDesktop = true) {
+  if (isDesktop) {
+    const btnPrev = document.getElementById("btn-cinema-prev-video");
+    const btnNext = document.getElementById("btn-cinema-next-video");
+    if (btnPrev) {
+      if (index <= 0) {
+        btnPrev.classList.add("disabled");
+        btnPrev.title = "First video of playlist";
+      } else {
+        btnPrev.classList.remove("disabled");
+        btnPrev.title = "Previous Video (Shortcut: Shift+P)";
+      }
+    }
+    if (btnNext) {
+      if (index >= totalCount - 1) {
+        btnNext.classList.add("disabled");
+        btnNext.title = "End of playlist reached";
+      } else {
+        btnNext.classList.remove("disabled");
+        btnNext.title = "Next Video (Shortcut: Shift+N)";
+      }
+    }
+  } else {
+    const btnPrev = document.getElementById("btn-mobile-cinema-prev");
+    const btnNext = document.getElementById("btn-mobile-cinema-next");
+    if (btnPrev) {
+      if (index <= 0) btnPrev.classList.add("disabled");
+      else btnPrev.classList.remove("disabled");
+    }
+    if (btnNext) {
+      if (index >= totalCount - 1) btnNext.classList.add("disabled");
+      else btnNext.classList.remove("disabled");
+    }
+  }
+}
+
 function playNextVideo(isDesktop = true, isAutoAdvance = false) {
   if (isAdvancingVideo) return;
   isAdvancingVideo = true;
@@ -9630,19 +9666,19 @@ function playNextVideo(isDesktop = true, isAutoAdvance = false) {
     const vids = currentDesktopActiveCategory.enrichedVideos || [];
     if (vids.length === 0) return;
 
-    if (vids.length === 1) {
-      const iframe = document.getElementById("desktop-cinema-iframe");
-      if (iframe) {
-        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "seekTo", args: [0, true] }), "*");
-        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
+    let currentIdx = currentDesktopActiveVideo ? vids.findIndex(v => v.id === currentDesktopActiveVideo.id) : 0;
+    if (currentIdx < 0) currentIdx = 0;
+
+    // When reaching the end of the playlist: DO NOT loop back to start!
+    // No action will happen when the last video is finished.
+    if (currentIdx >= vids.length - 1) {
+      if (!isAutoAdvance) {
+        showToast("🏁 You have reached the end of this playlist.");
       }
       return;
     }
 
-    let currentIdx = currentDesktopActiveVideo ? vids.findIndex(v => v.id === currentDesktopActiveVideo.id) : 0;
-    if (currentIdx < 0) currentIdx = 0;
-
-    const nextIdx = (currentIdx + 1) % vids.length;
+    const nextIdx = currentIdx + 1;
     const nextVideo = vids[nextIdx];
     const trackEl = document.getElementById("desktop-playlist-items-track");
     const itemEl = trackEl ? trackEl.children[nextIdx] : null;
@@ -9660,19 +9696,19 @@ function playNextVideo(isDesktop = true, isAutoAdvance = false) {
     const vids = currentMobileActiveCategory.enrichedVideos || [];
     if (vids.length === 0) return;
 
-    if (vids.length === 1) {
-      const iframe = document.getElementById("mobile-cinema-iframe");
-      if (iframe) {
-        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "seekTo", args: [0, true] }), "*");
-        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
+    let currentIdx = currentMobileActiveVideo ? vids.findIndex(v => v.id === currentMobileActiveVideo.id) : 0;
+    if (currentIdx < 0) currentIdx = 0;
+
+    // When reaching the end of the playlist: DO NOT loop back to start!
+    // No action will happen when the last video is finished.
+    if (currentIdx >= vids.length - 1) {
+      if (!isAutoAdvance) {
+        showToast("🏁 You have reached the end of this playlist.");
       }
       return;
     }
 
-    let currentIdx = currentMobileActiveVideo ? vids.findIndex(v => v.id === currentMobileActiveVideo.id) : 0;
-    if (currentIdx < 0) currentIdx = 0;
-
-    const nextIdx = (currentIdx + 1) % vids.length;
+    const nextIdx = currentIdx + 1;
     const nextVideo = vids[nextIdx];
     const itemsListEl = document.getElementById("mobile-playlist-items-list");
     const itemEl = itemsListEl ? itemsListEl.children[nextIdx] : null;
@@ -9700,19 +9736,13 @@ function playPrevVideo(isDesktop = true) {
     const vids = currentDesktopActiveCategory.enrichedVideos || [];
     if (vids.length === 0) return;
 
-    if (vids.length === 1) {
-      const iframe = document.getElementById("desktop-cinema-iframe");
-      if (iframe) {
-        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "seekTo", args: [0, true] }), "*");
-        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
-      }
+    let currentIdx = currentDesktopActiveVideo ? vids.findIndex(v => v.id === currentDesktopActiveVideo.id) : 0;
+    if (currentIdx <= 0) {
+      showToast("⏮ You are already at the first video.");
       return;
     }
 
-    let currentIdx = currentDesktopActiveVideo ? vids.findIndex(v => v.id === currentDesktopActiveVideo.id) : 0;
-    if (currentIdx < 0) currentIdx = 0;
-
-    const prevIdx = (currentIdx - 1 + vids.length) % vids.length;
+    const prevIdx = currentIdx - 1;
     const prevVideo = vids[prevIdx];
     const trackEl = document.getElementById("desktop-playlist-items-track");
     const itemEl = trackEl ? trackEl.children[prevIdx] : null;
@@ -9725,19 +9755,13 @@ function playPrevVideo(isDesktop = true) {
     const vids = currentMobileActiveCategory.enrichedVideos || [];
     if (vids.length === 0) return;
 
-    if (vids.length === 1) {
-      const iframe = document.getElementById("mobile-cinema-iframe");
-      if (iframe) {
-        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "seekTo", args: [0, true] }), "*");
-        iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
-      }
+    let currentIdx = currentMobileActiveVideo ? vids.findIndex(v => v.id === currentMobileActiveVideo.id) : 0;
+    if (currentIdx <= 0) {
+      showToast("⏮ You are already at the first video.");
       return;
     }
 
-    let currentIdx = currentMobileActiveVideo ? vids.findIndex(v => v.id === currentMobileActiveVideo.id) : 0;
-    if (currentIdx < 0) currentIdx = 0;
-
-    const prevIdx = (currentIdx - 1 + vids.length) % vids.length;
+    const prevIdx = currentIdx - 1;
     const prevVideo = vids[prevIdx];
     const itemsListEl = document.getElementById("mobile-playlist-items-list");
     const itemEl = itemsListEl ? itemsListEl.children[prevIdx] : null;
@@ -9903,6 +9927,7 @@ function loadDesktopCinemaVideo(video, cat, index, itemEl) {
 
   const totalVids = cat.enrichedVideos ? cat.enrichedVideos.length : 1;
   if (counterEl) counterEl.textContent = `${index + 1} / ${totalVids}`;
+  updatePlaybackNavButtonsState(index, totalVids, true);
 
   // Update active state in sidebar
   if (trackEl) {
@@ -10322,6 +10347,7 @@ function loadMobileCinemaVideo(video, cat, index, itemEl) {
 
   const totalCount = cat.enrichedVideos ? cat.enrichedVideos.length : 1;
   if (counterEl) counterEl.textContent = `${index + 1} / ${totalCount}`;
+  updatePlaybackNavButtonsState(index, totalCount, false);
 
   const mobWrapper = document.getElementById("mobile-cinema-iframe-wrapper");
   const isMobShort = (cat && cat.type === "shorts") || (video && (video.videoType === "shorts" || String(video.embedUrl || "").includes("/shorts/")));

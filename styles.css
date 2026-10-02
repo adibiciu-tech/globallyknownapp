@@ -11630,6 +11630,21 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   color: #818cf8 !important;
 }
 
+.cinema-nav-btn.disabled,
+.btn-mobile-prev.disabled,
+.btn-mobile-next.disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+}
+
+.cinema-nav-btn.disabled:hover,
+.btn-mobile-prev.disabled:hover,
+.btn-mobile-next.disabled:hover {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: inherit !important;
+}
+
 /* Modal YouTube Playlist Detection Banner */
 .playlist-detect-banner {
   margin-top: 0.75rem;
