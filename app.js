@@ -649,6 +649,7 @@ function verbToIng(v) {
 }
 
 const COMMON_TYPOS = {
+  "hei": "hey",
   "helo": "hello",
   "hellow": "hello",
   "hallo": "hello",
@@ -899,6 +900,18 @@ function getRuleBasedGrammarFix(text) {
     changed = true;
     const ing = verbToIng(verb);
     return `${be} <s class="grammar-strike">${verb}</s> <span class="grammar-fix">${ing}</span>`;
+  });
+
+  // 11b. Inverted questions with contraction or be-verb + subject + base verb:
+  // e.g. "how's it go?", "how is work go?", "is he go?", "are you study?"
+  const invProgRegex = new RegExp(`((?:<span class="grammar-fix">[^<]*'s<\\/span>|\\b${beVerbs}))\\s+([a-zA-Z]+)\\s+(${commonBaseVerbs})\\b`, 'gi');
+  updated = updated.replace(invProgRegex, (match, bePart, subject, verb) => {
+    if (/^(it|he|she|they|you|we|life|work|business|school|everything|everyone|things)$/i.test(subject.trim())) {
+      changed = true;
+      const ing = verbToIng(verb);
+      return `${bePart} ${subject} <s class="grammar-strike">${verb}</s> <span class="grammar-fix">${ing}</span>`;
+    }
+    return match;
   });
 
   // Missing 'am/is/are' in progressive
@@ -2077,6 +2090,7 @@ STRICT RULES ON CORRECTIONS:
    Examples:
    - User: "whats happening?" -> [CORRECTION: <s>whats -> what's</s> happening?]
    - User: "whats poppin?" -> [CORRECTION: <s>whats -> what's</s> poppin?]
+   - User: "hows it go?" -> [CORRECTION: <s>hows -> how's</s> it <s>go -> going</s>?]
    - User: "im looking forward" -> [CORRECTION: <s>im -> I'm</s> looking forward]
    - User: "dont worry" -> [CORRECTION: <s>dont -> don't</s> worry]
    - User: "should we keep going?" -> (Casual lowercase question -> NO CORRECTION TAG)
