@@ -11494,8 +11494,8 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   color: #f8fafc;
 }
 
-/* Active Videos: Dynamically inherits active theme accent color */
-.video-type-btn[data-type="videos"].active {
+/* Active Video Type Tab (Videos & Shorts): Dynamically inherits active theme accent color */
+.video-type-btn.active {
   background: var(--glow-color-1, rgba(192, 132, 252, 0.22)) !important;
   border-color: var(--accent-yellow, #c084fc) !important;
   color: var(--accent-yellow, #c084fc) !important;
@@ -11503,55 +11503,47 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 }
 
 /* Explicit theme overrides to guarantee exact color matching across all themes */
-:root[data-theme="purple"] .video-type-btn[data-type="videos"].active {
+:root[data-theme="purple"] .video-type-btn.active {
   background: rgba(192, 132, 252, 0.22) !important;
   border-color: #c084fc !important;
   color: #c084fc !important;
   box-shadow: 0 0 14px rgba(192, 132, 252, 0.4) !important;
 }
 
-:root[data-theme="emerald"] .video-type-btn[data-type="videos"].active {
+:root[data-theme="emerald"] .video-type-btn.active {
   background: rgba(16, 185, 129, 0.22) !important;
   border-color: #10b981 !important;
   color: #10b981 !important;
   box-shadow: 0 0 14px rgba(16, 185, 129, 0.4) !important;
 }
 
-:root[data-theme="crimson"] .video-type-btn[data-type="videos"].active {
+:root[data-theme="crimson"] .video-type-btn.active {
   background: rgba(244, 63, 94, 0.22) !important;
   border-color: #f43f5e !important;
   color: #f43f5e !important;
   box-shadow: 0 0 14px rgba(244, 63, 94, 0.4) !important;
 }
 
-:root[data-theme="cyan"] .video-type-btn[data-type="videos"].active {
+:root[data-theme="cyan"] .video-type-btn.active {
   background: rgba(6, 182, 212, 0.22) !important;
   border-color: #06b6d4 !important;
   color: #38bdf8 !important;
   box-shadow: 0 0 14px rgba(6, 182, 212, 0.4) !important;
 }
 
-:root[data-theme="dark"] .video-type-btn[data-type="videos"].active,
-:root:not([data-theme]) .video-type-btn[data-type="videos"].active {
+:root[data-theme="dark"] .video-type-btn.active,
+:root:not([data-theme]) .video-type-btn.active {
   background: rgba(246, 202, 33, 0.2) !important;
   border-color: #f6ca21 !important;
   color: #f6ca21 !important;
   box-shadow: 0 0 14px rgba(246, 202, 33, 0.4) !important;
 }
 
-:root[data-theme="rainbow"] .video-type-btn[data-type="videos"].active {
+:root[data-theme="rainbow"] .video-type-btn.active {
   background: linear-gradient(135deg, rgba(255, 0, 127, 0.3), rgba(0, 229, 255, 0.2)) !important;
   border-color: #ff007f !important;
   color: #ffffff !important;
   box-shadow: 0 0 14px rgba(255, 0, 127, 0.45) !important;
-}
-
-/* Active Shorts: YouTube Shorts Crimson / Rose glow */
-.video-type-btn[data-type="shorts"].active {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(244, 63, 94, 0.2));
-  border-color: rgba(248, 113, 113, 0.55);
-  color: #f87171;
-  box-shadow: 0 0 14px rgba(239, 68, 68, 0.3);
 }
 
 /* Mobile Toggle Bar Width Alignment */
@@ -11575,8 +11567,8 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   max-width: 420px !important;
   margin: 0 auto !important;
   border-radius: 20px !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(239, 68, 68, 0.18) !important;
-  border: 1px solid rgba(248, 113, 113, 0.3) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 24px var(--glow-color-1, rgba(246, 202, 33, 0.18)) !important;
+  border: 1px solid var(--accent-yellow, rgba(246, 202, 33, 0.3)) !important;
 }
 
 .mobile-cinema-iframe-wrapper.is-short-mode {
@@ -11584,8 +11576,8 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   max-width: 330px !important;
   margin: 0 auto !important;
   border-radius: 18px !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(239, 68, 68, 0.2) !important;
-  border: 1px solid rgba(248, 113, 113, 0.35) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.9), 0 0 20px var(--glow-color-1, rgba(246, 202, 33, 0.2)) !important;
+  border: 1px solid var(--accent-yellow, rgba(246, 202, 33, 0.35)) !important;
 }
 
 /* YouTube-Style On-Screen Seek Overlay Indicators */
