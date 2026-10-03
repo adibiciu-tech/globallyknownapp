@@ -2696,7 +2696,6 @@ function renderSidebarConversations() {
     li.addEventListener("click", (e) => {
       if (e.target.closest(".conversation-action-btn") || e.target.closest(".conversation-context-menu") || li.classList.contains("renaming")) return;
       loadSolConversation(conv.id);
-      if (typeof showToast === "function") showToast(`Loaded "${displayTitle}"`);
     });
 
     // Inline Rename Flow
