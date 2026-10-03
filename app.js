@@ -1021,12 +1021,20 @@ function cleanTagText(str) {
 
 function diffSentencesForGrammar(original, corrected) {
   if (!original || !corrected) return escapeHtml(original || "");
-  const origWords = original.trim().split(/\s+/);
-  const corrWords = corrected.trim().split(/\s+/);
-  
+
+  // If corrected string contains arrow notation (e.g. "wrong -> right" or "wrong → right"), extract the right side
+  if (/->|→|=>|\|/.test(corrected)) {
+    const parts = corrected.split(/\s*(?:->|→|=>|\|)\s*/);
+    corrected = (parts[parts.length - 1] || "").trim();
+  }
+
+  // If original and corrected are identical case-insensitively, DO NOT correct capitalization!
   if (original.trim().toLowerCase() === corrected.trim().toLowerCase()) {
     return escapeHtml(original);
   }
+
+  const origWords = original.trim().split(/\s+/);
+  const corrWords = corrected.trim().split(/\s+/);
 
   const stripHtml = str => (str || "").replace(/<[^>]*>/g, "");
 
@@ -1071,6 +1079,21 @@ function formatGrammarMarkup(text, originalQuery = "") {
   if (text.includes("grammar-strike")) return text;
 
   let result = text;
+
+  // Normalize unicode arrow → to ->
+  result = result.replace(/→/g, "->");
+
+  // If raw string has an arrow without tags: e.g. "should we keep going? -> Should we keep going?"
+  if (!result.includes("<") && /->|=>|\|/.test(result)) {
+    const parts = result.split(/\s*(?:->|=>|\|)\s*/);
+    const wrong = (parts[0] || "").trim();
+    const right = (parts[parts.length - 1] || "").trim();
+    // If they only differ by case / capitalization, IGNORE completely!
+    if (wrong.toLowerCase() === right.toLowerCase()) {
+      return escapeHtml(originalQuery || wrong);
+    }
+    return diffSentencesForGrammar(originalQuery || wrong, right);
+  }
 
   // Pre-clean nested tags inside arrow clauses: e.g. -> <s>correction</s></s> => -> correction</s>
   result = result.replace(/(->|=>|\|)([\s\S]*?)<\/(?:s|strike|del)>(?:\s*<\/(?:s|strike|del)>)*/gi, (m, arrow, inner) => {
@@ -1156,6 +1179,24 @@ function extractAndApplySolGrammarHint(aiResponseText, userDiv, historyEntry) {
   if (correctionMatch) {
     const rawMarkup = correctionMatch[1].trim();
     const originalText = historyEntry.content || "";
+
+    // Ignore if rawMarkup is just capitalization (e.g. "should we keep going? -> Should we keep going?")
+    const cleanedRaw = rawMarkup.replace(/<[^>]*>/g, "").replace(/→/g, "->");
+    let isCapitalizationOnly = false;
+    if (/->|=>|\|/.test(cleanedRaw)) {
+      const parts = cleanedRaw.split(/\s*(?:->|=>|\|)\s*/);
+      if ((parts[0] || "").trim().toLowerCase() === (parts[parts.length - 1] || "").trim().toLowerCase()) {
+        isCapitalizationOnly = true;
+      }
+    } else if (cleanedRaw.trim().toLowerCase() === originalText.trim().toLowerCase()) {
+      isCapitalizationOnly = true;
+    }
+
+    if (isCapitalizationOnly) {
+      cleanReply = aiResponseText.replace(/\[CORRECTION:\s*[\s\S]*?\]\s*/i, "").trim();
+      return cleanReply;
+    }
+
     const formattedHtml = formatGrammarMarkup(rawMarkup, originalText);
     if (formattedHtml && formattedHtml !== uQueryEl.innerHTML) {
       uQueryEl.innerHTML = formattedHtml;
@@ -1204,6 +1245,7 @@ function extractAndApplySolGrammarHint(aiResponseText, userDiv, historyEntry) {
 
   return cleanReply;
 }
+window.extractAndApplySolGrammarHint = extractAndApplySolGrammarHint;
 
 let homeConversationHistory = [];
 let currentHomeConvId = null;
@@ -1947,7 +1989,12 @@ STRICT RULES ON CORRECTIONS:
    - If the user's message has NO genuine grammatical errors, DO NOT output any [CORRECTION: ...] line at all.
    - WHEN IN DOUBT, LEAVE IT ALONE. Do not correct acceptable English.
 
-3. CORRECTION FORMAT:
+3. STRICT PROHIBITION ON CAPITALIZATION & PUNCTUATION CORRECTIONS:
+   - NEVER correct capitalization, casing, or punctuation!
+   - Messages starting in lowercase (e.g. "should we keep going?", "what do you think?", "how are you", "yeah sure", "i like it") are completely normal casual chatting. NEVER capitalize the first letter, and NEVER output a [CORRECTION: ...] tag just to change lowercase to uppercase or add punctuation marks!
+   - If a sentence has no genuine grammatical violation or typo, DO NOT output any [CORRECTION: ...] line at all!
+
+4. CORRECTION FORMAT:
    - When a genuine grammatical error exists, output on the VERY FIRST LINE:
      [CORRECTION: <user sentence with <s>mistake -> correction</s>>]
    - CRITICAL: Always use the exact format <s>mistake -> correction</s> with the arrow (->) between the mistake and the correction.
@@ -1956,6 +2003,8 @@ STRICT RULES ON CORRECTIONS:
    - Do NOT rewrite or swap other words in the sentence. Only wrap the exact mistaken word(s) in <s>mistake -> correction</s>.
    
    Examples:
+   - User: "should we keep going?" -> (Casual lowercase question -> NO CORRECTION TAG)
+   - User: "how are you doing" -> (Casual lowercase message -> NO CORRECTION TAG)
    - User: "this auto-correction function I added" -> [CORRECTION: this auto-correction function <s>I added -> I've added</s>]
    - User: "She don't like apples" -> [CORRECTION: She <s>don't -> doesn't</s> like apples]
    - User: "Carmen been alone today" -> [CORRECTION: Carmen <s>been -> has been</s> alone today]
@@ -2458,7 +2507,11 @@ function loadSolConversation(convId) {
         const userDiv = document.createElement("div");
         userDiv.className = "gemini-inline-message";
         const ruleFix = getRuleBasedGrammarFix(text);
-        const displayHtml = msg.displayHtml || (ruleFix ? formatGrammarMarkup(ruleFix) : escapeHtml(text));
+        let displayHtml = msg.displayHtml || (ruleFix ? formatGrammarMarkup(ruleFix) : escapeHtml(text));
+        if (displayHtml && (/->|→|=>/.test(displayHtml)) && !displayHtml.includes("grammar-strike")) {
+          displayHtml = escapeHtml(text);
+          msg.displayHtml = displayHtml;
+        }
         userDiv.innerHTML = `<div class="gemini-user-query">${displayHtml}</div>`;
         conversationEl.appendChild(userDiv);
       } else if (msg.role === "model") {
