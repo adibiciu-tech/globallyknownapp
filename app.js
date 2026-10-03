@@ -1690,7 +1690,98 @@ function attachAiActions(aiDiv, text) {
       openTeachSolModal(userQuery || "hi sol", text, aiDiv);
     });
   }
+
+  // Direct Tap Toggle on the AI message bubble
+  const responseBubble = aiDiv.querySelector(".gemini-ai-response");
+  if (responseBubble && !responseBubble.hasAttribute("data-tap-init")) {
+    responseBubble.setAttribute("data-tap-init", "true");
+    responseBubble.style.cursor = "pointer";
+    responseBubble.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (e.target.closest(".gemini-action-btn") || e.target.closest(".gemini-ai-actions")) return;
+      if (window.getSelection && window.getSelection().toString().trim().length > 0) return;
+
+      const isAlreadyShown = aiDiv.classList.contains("show-actions") || actionsDiv.classList.contains("is-visible");
+      // Close other message action rows
+      document.querySelectorAll(".gemini-inline-message.show-actions, .gemini-ai-row.show-actions, .gemini-ai-actions.is-visible").forEach(el => {
+        el.classList.remove("show-actions", "is-visible");
+      });
+
+      if (!isAlreadyShown) {
+        aiDiv.classList.add("show-actions");
+        actionsDiv.classList.add("is-visible");
+        setTimeout(() => {
+          if (actionsDiv && typeof actionsDiv.scrollIntoView === "function") {
+            actionsDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        }, 100);
+      } else {
+        aiDiv.classList.remove("show-actions");
+        actionsDiv.classList.remove("is-visible");
+      }
+    });
+  }
 }
+window.attachAiActions = attachAiActions;
+
+function scrollSolChatToBottom(smooth = true) {
+  const behavior = smooth ? "smooth" : "auto";
+  const conversationEl = document.getElementById("gemini-home-conversation");
+  const panelSol = document.getElementById("panel-sol-chat");
+  const homeContent = document.querySelector("#panel-sol-chat .gemini-home-content");
+  const appMain = document.querySelector(".app-main") || document.querySelector("main") || document.documentElement;
+  const lastMsg = conversationEl ? conversationEl.lastElementChild : null;
+  const inputWrapper = document.getElementById("gemini-input-wrapper") || document.querySelector(".gemini-input-wrapper");
+
+  if (conversationEl) {
+    try {
+      conversationEl.scrollTo({ top: conversationEl.scrollHeight + 99999, behavior });
+    } catch (_) {
+      conversationEl.scrollTop = conversationEl.scrollHeight + 99999;
+    }
+  }
+  if (panelSol) {
+    try {
+      panelSol.scrollTo({ top: panelSol.scrollHeight + 99999, behavior });
+    } catch (_) {
+      panelSol.scrollTop = panelSol.scrollHeight + 99999;
+    }
+  }
+  if (homeContent) {
+    try {
+      homeContent.scrollTo({ top: homeContent.scrollHeight + 99999, behavior });
+    } catch (_) {
+      homeContent.scrollTop = homeContent.scrollHeight + 99999;
+    }
+  }
+  if (appMain) {
+    try {
+      appMain.scrollTo({ top: appMain.scrollHeight + 99999, behavior });
+    } catch (_) {
+      appMain.scrollTop = appMain.scrollHeight + 99999;
+    }
+  }
+
+  if (lastMsg && typeof lastMsg.scrollIntoView === "function") {
+    try {
+      lastMsg.scrollIntoView({ behavior, block: "end", inline: "nearest" });
+    } catch (_) {}
+  } else if (inputWrapper && typeof inputWrapper.scrollIntoView === "function") {
+    try {
+      inputWrapper.scrollIntoView({ behavior, block: "end", inline: "nearest" });
+    } catch (_) {}
+  }
+}
+window.scrollSolChatToBottom = scrollSolChatToBottom;
+
+// Tapped outside any chat message - close open action bars
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".gemini-inline-message")) {
+    document.querySelectorAll(".gemini-inline-message.show-actions, .gemini-ai-row.show-actions, .gemini-ai-actions.is-visible").forEach(el => {
+      el.classList.remove("show-actions", "is-visible");
+    });
+  }
+});
 
 function syncInputBarHasText(input) {
   if (!input) return;
@@ -1780,6 +1871,11 @@ function initStartHerePanel() {
     conversationEl.appendChild(userDiv);
     updateHomeChatModeState();
 
+    // Auto-scroll chat to latest message immediately on user send
+    scrollSolChatToBottom(true);
+    requestAnimationFrame(() => scrollSolChatToBottom(true));
+    setTimeout(() => scrollSolChatToBottom(true), 60);
+
     // Append to home conversation history
     const historyEntry = {
       role: "user",
@@ -1813,6 +1909,7 @@ function initStartHerePanel() {
         if (typeof attachSolToLastMessage === "function") {
           attachSolToLastMessage();
         }
+        scrollSolChatToBottom(true);
       }
       return { aiDiv, aiBody };
     };
@@ -1898,7 +1995,7 @@ STRICT RULES ON CORRECTIONS:
 
           if (displayText) {
             aiBody.innerHTML = marked.parse(displayText) + `<span class="cursor-blink"></span>`;
-            aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            scrollSolChatToBottom(false);
           }
         },
         (errorMsg) => {
@@ -1913,7 +2010,7 @@ STRICT RULES ON CORRECTIONS:
               </div>
             </div>
           `;
-          aiDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          scrollSolChatToBottom(true);
         },
         (finalText) => {
           setSolThinking(false);
@@ -1926,6 +2023,7 @@ STRICT RULES ON CORRECTIONS:
             homeConversationHistory.push({ role: "model", content: responseText, parts: [{ text: responseText }] });
             saveActiveConversationMessages();
             attachAiActions(aiDiv, responseText);
+            scrollSolChatToBottom(true);
           }
         }
       );
@@ -1940,6 +2038,7 @@ STRICT RULES ON CORRECTIONS:
           saveActiveConversationMessages();
         }
         attachAiActions(aiDiv, responseText);
+        scrollSolChatToBottom(true);
       }
 
       // Automatically refine conversation title with AI on the first exchange
@@ -1954,6 +2053,7 @@ STRICT RULES ON CORRECTIONS:
           <i class="fa-solid fa-circle-exclamation"></i> <strong>Connection Error:</strong> ${escapeHtml(err.message || String(err))}
         </div>
       `;
+      scrollSolChatToBottom(true);
     } finally {
       setSolThinking(false);
     }
@@ -2396,7 +2496,9 @@ function loadSolConversation(convId) {
   triggerHomeFadeInAnimation();
 
   setTimeout(() => {
-    if (conversationEl && conversationEl.lastElementChild) {
+    if (typeof scrollSolChatToBottom === "function") {
+      scrollSolChatToBottom(false);
+    } else if (conversationEl && conversationEl.lastElementChild) {
       conversationEl.lastElementChild.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
     const homeInput = document.getElementById("gemini-home-input");

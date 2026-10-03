@@ -10877,23 +10877,53 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   transition: opacity 0.22s ease, visibility 0.22s ease;
 }
 
-/* Make action buttons visible only when the mouse cursor is hovering over the message box or actions area */
+/* Make action buttons visible on desktop when mouse is hovering over message or actions */
 .gemini-inline-message:hover .gemini-ai-actions,
 .gemini-ai-row:hover .gemini-ai-actions,
 .gemini-ai-content-col:hover .gemini-ai-actions,
 .gemini-ai-response:hover + .gemini-ai-actions,
 .gemini-ai-actions:hover,
-.gemini-ai-actions:focus-within {
+.gemini-ai-actions:focus-within,
+.gemini-inline-message.show-actions .gemini-ai-actions,
+.gemini-ai-row.show-actions .gemini-ai-actions,
+.gemini-ai-content-col.show-actions .gemini-ai-actions {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
 
-@media (hover: none) {
+/* On mobile / touch viewports: hide action buttons by default, reveal when message bubble is tapped (.show-actions) */
+@media (max-width: 900px), (hover: none) {
   .gemini-ai-actions {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    max-height: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+    overflow: hidden !important;
+    transition: opacity 0.22s ease, max-height 0.22s ease, margin 0.2s ease, padding 0.2s ease !important;
+  }
+
+  .gemini-inline-message.show-actions .gemini-ai-actions,
+  .gemini-ai-row.show-actions .gemini-ai-actions,
+  .gemini-ai-content-col.show-actions .gemini-ai-actions,
+  .gemini-ai-response.show-actions + .gemini-ai-actions,
+  .gemini-ai-actions.is-visible {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
+    max-height: 60px !important;
+    margin-top: 8px !important;
+    padding-top: 6px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    overflow: visible !important;
+  }
+
+  .gemini-ai-response {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

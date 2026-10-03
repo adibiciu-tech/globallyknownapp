@@ -1046,6 +1046,44 @@ html, body {
   margin-bottom: 0.5rem !important;
 }
 
+/* Mobile AI Response Action Buttons: Hidden by default, revealed on message bubble tap */
+.gemini-ai-actions {
+  display: flex !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  max-height: 0 !important;
+  height: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top: none !important;
+  overflow: hidden !important;
+  transition: opacity 0.22s ease, max-height 0.22s ease, margin 0.2s ease, padding 0.2s ease !important;
+}
+
+.gemini-inline-message.show-actions .gemini-ai-actions,
+.gemini-ai-row.show-actions .gemini-ai-actions,
+.gemini-ai-content-col.show-actions .gemini-ai-actions,
+.gemini-ai-response.show-actions + .gemini-ai-actions,
+.gemini-ai-actions.is-visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  max-height: 70px !important;
+  height: auto !important;
+  margin-top: 8px !important;
+  padding-top: 6px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  overflow: visible !important;
+}
+
+.gemini-ai-response,
+.gemini-ai-response * {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ==========================================================================
    RANDOM WORD GENERATOR WITH GUIDED PRONUNCIATION (RWGGP) - MOBILE OPTIMIZATION
    ========================================================================== */
