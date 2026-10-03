@@ -13570,22 +13570,25 @@ async function toggleVideoRotation(isDesktop = null) {
   updateRotateButtonsUI(isVideoRotatedLandscape);
 
   const mobWrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+  const deskWrapper = document.getElementById("desktop-cinema-iframe-wrapper");
 
   if (isVideoRotatedLandscape) {
     await lockScreenToLandscape();
-    if (mobWrapper && !isElementFullscreen()) {
+    if (mobWrapper) {
       mobWrapper.classList.add("is-pseudo-landscape");
     }
-    showToast("🔄 Rotated Horizontally (Landscape)");
+    if (deskWrapper) {
+      deskWrapper.classList.add("is-landscape-wide");
+    }
+    showToast("🔄 Rotated Horizontally (Wide)");
   } else {
     if (mobWrapper) {
       mobWrapper.classList.remove("is-pseudo-landscape");
     }
-    if (isElementFullscreen()) {
-      await lockScreenToPortrait();
-    } else {
-      unlockScreenOrientation();
+    if (deskWrapper) {
+      deskWrapper.classList.remove("is-landscape-wide");
     }
+    unlockScreenOrientation();
     showToast("📱 Rotated Vertically (Portrait)");
   }
 }
@@ -13597,27 +13600,17 @@ async function toggleCinemaFullscreen(isDesktop = true) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
 
-  const isFs = isElementFullscreen() || wrapper.classList.contains("is-cinema-fullscreen");
-  if (!isFs) {
-    try {
-      if (wrapper.requestFullscreen) {
-        await wrapper.requestFullscreen();
-      } else if (wrapper.webkitRequestFullscreen) {
-        await wrapper.webkitRequestFullscreen();
-      } else if (wrapper.mozRequestFullScreen) {
-        await wrapper.mozRequestFullScreen();
-      } else if (wrapper.msRequestFullscreen) {
-        await wrapper.msRequestFullscreen();
-      } else {
-        wrapper.classList.add("is-cinema-fullscreen");
-      }
-    } catch (err) {
-      console.warn("Fullscreen request error, using CSS fullscreen fallback:", err);
-      wrapper.classList.add("is-cinema-fullscreen");
-    }
+  const isFs = wrapper.classList.contains("is-cinema-fullscreen") || isElementFullscreen();
+  const deskIcon = document.getElementById("desktop-screen-fullscreen-icon");
+  const mobIcon = document.getElementById("mobile-screen-fullscreen-icon");
 
+  if (!isFs) {
+    // Pure CSS Immersive Fullscreen to eliminate browser/OS security prompt
     wrapper.classList.add("is-cinema-fullscreen");
     document.body.classList.add("has-cinema-fullscreen");
+
+    if (deskIcon) deskIcon.className = "fa-solid fa-compress";
+    if (mobIcon) mobIcon.className = "fa-solid fa-compress";
 
     if (isVideoRotatedLandscape && !isCurrentVideoShort()) {
       await lockScreenToLandscape();
@@ -13627,6 +13620,14 @@ async function toggleCinemaFullscreen(isDesktop = true) {
 
     showScreenControlsTemporarily(isDesktop, 3500);
   } else {
+    // Exit fullscreen
+    wrapper.classList.remove("is-cinema-fullscreen");
+    document.body.classList.remove("has-cinema-fullscreen");
+
+    if (deskIcon) deskIcon.className = "fa-solid fa-expand";
+    if (mobIcon) mobIcon.className = "fa-solid fa-expand";
+
+    // Clean up any native HTML5 fullscreen if active
     try {
       if (document.fullscreenElement) {
         if (document.exitFullscreen) await document.exitFullscreen();
@@ -13635,10 +13636,9 @@ async function toggleCinemaFullscreen(isDesktop = true) {
         else if (document.msExitFullscreen) await document.msExitFullscreen();
       }
     } catch (err) {
-      console.warn("Exit fullscreen error:", err);
+      console.warn("Exit native fullscreen error:", err);
     }
-    wrapper.classList.remove("is-cinema-fullscreen");
-    document.body.classList.remove("has-cinema-fullscreen");
+
     unlockScreenOrientation();
   }
 }
