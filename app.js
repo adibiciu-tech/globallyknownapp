@@ -708,12 +708,78 @@ const COMMON_TYPOS = {
   "fourty": "forty"
 };
 
+const COMMON_CONTRACTIONS = {
+  "whats": "what's",
+  "im": "I'm",
+  "dont": "don't",
+  "cant": "can't",
+  "wont": "won't",
+  "thats": "that's",
+  "hows": "how's",
+  "wheres": "where's",
+  "theres": "there's",
+  "heres": "here's",
+  "youre": "you're",
+  "theyre": "they're",
+  "weve": "we've",
+  "youve": "you've",
+  "theyve": "they've",
+  "couldve": "could've",
+  "shouldve": "should've",
+  "wouldve": "would've",
+  "mustve": "must've",
+  "isnt": "isn't",
+  "arent": "aren't",
+  "wasnt": "wasn't",
+  "werent": "weren't",
+  "didnt": "didn't",
+  "doesnt": "doesn't",
+  "havent": "haven't",
+  "hasnt": "hasn't",
+  "hadnt": "hadn't",
+  "couldnt": "couldn't",
+  "shouldnt": "shouldn't",
+  "wouldnt": "wouldn't",
+  "whos": "who's",
+  "itll": "it'll",
+  "youll": "you'll",
+  "theyll": "they'll"
+};
+
 function getRuleBasedGrammarFix(text) {
   if (!text) return null;
   let updated = text;
   let changed = false;
 
-  // 1. Common typos and misspellings
+  // 1. Contractions missing apostrophes: whats -> what's, dont -> don't, im -> I'm, etc.
+  for (const [mis, fix] of Object.entries(COMMON_CONTRACTIONS)) {
+    const reg = new RegExp(`\\b(${mis})\\b`, 'gi');
+    if (reg.test(updated)) {
+      updated = updated.replace(reg, (match, word) => {
+        changed = true;
+        let targetFix = fix;
+        if (word[0] === word[0].toUpperCase() && word[0] !== word[0].toLowerCase()) {
+          targetFix = fix.charAt(0).toUpperCase() + fix.slice(1);
+        } else if (mis === "im") {
+          targetFix = "I'm";
+        } else {
+          targetFix = fix.charAt(0).toLowerCase() + fix.slice(1);
+        }
+        return `<s class="grammar-strike">${word}</s> <span class="grammar-fix">${targetFix}</span>`;
+      });
+    }
+  }
+
+  // 1b. lets + verb -> let's (e.g. lets go, lets keep, lets do)
+  updated = updated.replace(/\blets\s+(go|do|see|talk|keep|make|try|get|have|start|play|find|take|check|look|eat|run|walk|call|work|listen|practice)\b/gi, (match, v) => {
+    changed = true;
+    const isCap = match[0] === match[0].toUpperCase() && match[0] !== match[0].toLowerCase();
+    const fix = isCap ? "Let's" : "let's";
+    const strike = isCap ? "Lets" : "lets";
+    return `<s class="grammar-strike">${strike}</s> <span class="grammar-fix">${fix}</span> ${v}`;
+  });
+
+  // 2. Common typos and misspellings
   for (const [typo, fix] of Object.entries(COMMON_TYPOS)) {
     const reg = new RegExp(`\\b(${typo})\\b`, 'gi');
     if (reg.test(updated)) {
@@ -1989,12 +2055,18 @@ STRICT RULES ON CORRECTIONS:
    - If the user's message has NO genuine grammatical errors, DO NOT output any [CORRECTION: ...] line at all.
    - WHEN IN DOUBT, LEAVE IT ALONE. Do not correct acceptable English.
 
-3. STRICT PROHIBITION ON CAPITALIZATION & PUNCTUATION CORRECTIONS:
-   - NEVER correct capitalization, casing, or punctuation!
-   - Messages starting in lowercase (e.g. "should we keep going?", "what do you think?", "how are you", "yeah sure", "i like it") are completely normal casual chatting. NEVER capitalize the first letter, and NEVER output a [CORRECTION: ...] tag just to change lowercase to uppercase or add punctuation marks!
+3. APOSTROPHES IN CONTRACTIONS ARE MANDATORY CORRECTIONS:
+   - Contractions missing apostrophes (such as "whats", "im", "dont", "cant", "wont", "thats", "youre", "theyre", "isnt", "didnt", "hows", "wheres", "theres") are true spelling errors and MUST ALWAYS be corrected!
+   - Format: [CORRECTION: <s>whats -> what's</s> happening?] or [CORRECTION: <s>im -> I'm</s> ready]
+   - Note: Missing apostrophes in contractions are NOT casual punctuation—they are misspelled contractions and MUST be corrected with <s>wrong -> right</s>.
+
+4. STRICT PROHIBITION ON CAPITALIZATION & CASUAL PUNCTUATION:
+   - NEVER correct capitalization or casing!
+   - Messages starting in lowercase (e.g. "what's happening?", "how are you", "what do you think?") are completely normal casual chat. DO NOT change the first letter from lowercase to uppercase!
+   - NEVER correct missing periods or commas at the end of casual messages.
    - If a sentence has no genuine grammatical violation or typo, DO NOT output any [CORRECTION: ...] line at all!
 
-4. CORRECTION FORMAT:
+5. CORRECTION FORMAT:
    - When a genuine grammatical error exists, output on the VERY FIRST LINE:
      [CORRECTION: <user sentence with <s>mistake -> correction</s>>]
    - CRITICAL: Always use the exact format <s>mistake -> correction</s> with the arrow (->) between the mistake and the correction.
@@ -2003,6 +2075,10 @@ STRICT RULES ON CORRECTIONS:
    - Do NOT rewrite or swap other words in the sentence. Only wrap the exact mistaken word(s) in <s>mistake -> correction</s>.
    
    Examples:
+   - User: "whats happening?" -> [CORRECTION: <s>whats -> what's</s> happening?]
+   - User: "whats poppin?" -> [CORRECTION: <s>whats -> what's</s> poppin?]
+   - User: "im looking forward" -> [CORRECTION: <s>im -> I'm</s> looking forward]
+   - User: "dont worry" -> [CORRECTION: <s>dont -> don't</s> worry]
    - User: "should we keep going?" -> (Casual lowercase question -> NO CORRECTION TAG)
    - User: "how are you doing" -> (Casual lowercase message -> NO CORRECTION TAG)
    - User: "this auto-correction function I added" -> [CORRECTION: this auto-correction function <s>I added -> I've added</s>]
@@ -2508,7 +2584,10 @@ function loadSolConversation(convId) {
         userDiv.className = "gemini-inline-message";
         const ruleFix = getRuleBasedGrammarFix(text);
         let displayHtml = msg.displayHtml || (ruleFix ? formatGrammarMarkup(ruleFix) : escapeHtml(text));
-        if (displayHtml && (/->|→|=>/.test(displayHtml)) && !displayHtml.includes("grammar-strike")) {
+        if (ruleFix && (!msg.displayHtml || !msg.displayHtml.includes("grammar-strike"))) {
+          displayHtml = formatGrammarMarkup(ruleFix);
+          msg.displayHtml = displayHtml;
+        } else if (displayHtml && (/->|→|=>/.test(displayHtml)) && !displayHtml.includes("grammar-strike")) {
           displayHtml = escapeHtml(text);
           msg.displayHtml = displayHtml;
         }

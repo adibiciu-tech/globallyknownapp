@@ -7688,8 +7688,8 @@
     }
   ],
   "admin_emails": [
-    "globallyknownrappers@gmail.com",
-    "sinsecontactmilla@gmail.com"
+    "sinsecontactmilla@gmail.com",
+    "globallyknownrappers@gmail.com"
   ],
   "user_conversations": {
     "sinsecontactmilla@gmail.com": [
@@ -7782,6 +7782,44 @@
             "parts": [
               {
                 "text": "Me too! It’s always a highlight of my day when we get to catch up like this. Seriously, your energy is infectious! \n\nWhat have you been up to? Any fun plans for the rest of your day, or are you just keeping things chill?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "whats poppin?",
+            "displayHtml": "<s class=\"grammar-strike\">whats</s> <span class=\"grammar-fix\">what's</span> poppin?",
+            "parts": [
+              {
+                "text": "whats poppin?"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Not much, just hanging out and ready to dive into whatever you've got going on! I'm always down to chat, brainstorm, or just kick back and talk about whatever's on your mind. \n\nHow about you? What's the vibe today? Anything cool happening?",
+            "parts": [
+              {
+                "text": "Not much, just hanging out and ready to dive into whatever you've got going on! I'm always down to chat, brainstorm, or just kick back and talk about whatever's on your mind. \n\nHow about you? What's the vibe today? Anything cool happening?"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": "whats happening?",
+            "displayHtml": "<s class=\"grammar-strike\">whats</s> <span class=\"grammar-fix\">what's</span> happening?",
+            "parts": [
+              {
+                "text": "whats happening?"
+              }
+            ]
+          },
+          {
+            "role": "model",
+            "content": "Just keeping things moving over here! I'm ready to talk about anything—whether you've got a burning question, a random thought, or just want to vent about your day. \n\nHow about you? What's the latest in your world? Anything interesting catch your eye today?",
+            "parts": [
+              {
+                "text": "Just keeping things moving over here! I'm ready to talk about anything—whether you've got a burning question, a random thought, or just want to vent about your day. \n\nHow about you? What's the latest in your world? Anything interesting catch your eye today?"
               }
             ]
           }
