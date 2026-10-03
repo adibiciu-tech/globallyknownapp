@@ -7892,7 +7892,7 @@
           {
             "role": "user",
             "content": "hows your day so far?",
-            "displayHtml": "hows your day so far?",
+            "displayHtml": "<s class=\"grammar-strike\">hows</s> <span class=\"grammar-fix\">how's</span> your day so far?",
             "parts": [
               {
                 "text": "hows your day so far?"

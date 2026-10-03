@@ -46,7 +46,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=35125">
+  <link rel="stylesheet" href="styles.css?v=35128">
   <link rel="stylesheet" href="desktop.css?v=1020" media="(min-width: 901px)">
   <link rel="stylesheet" href="mobile.css?v=1046" media="(max-width: 900px)">
   <!-- CodeMirror CSS for Code Editor -->
@@ -328,12 +328,12 @@
                 </svg>
               </div>
 
-              <div class="gemini-home-input-bar">
-                <button class="gemini-bar-icon-btn" id="btn-home-attach" title="Add Image or File">
+              <form class="gemini-home-input-bar" id="gemini-home-input-form" onsubmit="return false;" autocomplete="off" data-lpignore="true">
+                <button type="button" class="gemini-bar-icon-btn" id="btn-home-attach" title="Add Image or File">
                   <i class="fa-solid fa-plus"></i>
                 </button>
                 
-                <input type="text" id="gemini-home-input" name="gemini-home-input" placeholder="Ask Sol" autocomplete="off" />
+                <input type="text" id="gemini-home-input" name="sol-chat-query" placeholder="Ask Sol" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
 
                 <div class="gemini-home-model-selector" id="home-model-selector" title="Select AI Engine Model">
                   <span class="model-blue-dot">●</span>
@@ -341,14 +341,14 @@
                   <i class="fa-solid fa-chevron-down arrow-icon"></i>
                 </div>
 
-                <button class="gemini-bar-icon-btn mic-btn" id="btn-home-mic" title="Voice Input">
+                <button type="button" class="gemini-bar-icon-btn mic-btn" id="btn-home-mic" title="Voice Input">
                   <i class="fa-solid fa-microphone"></i>
                 </button>
 
-                <button class="gemini-bar-icon-btn send-btn" id="btn-home-send" title="Send Message">
+                <button type="button" class="gemini-bar-icon-btn send-btn" id="btn-home-send" title="Send Message">
                   <i class="fa-solid fa-arrow-up"></i>
                 </button>
-              </div>
+              </form>
             </div>
 
             <!-- Dynamic Inline Gemini Conversation Container -->
@@ -857,7 +857,7 @@
 
               <!-- Discord Bottom Message Composer Bar -->
               <footer class="discord-chat-composer">
-                <form class="discord-composer-box" id="discord-quick-composer-form">
+                <form class="discord-composer-box" id="discord-quick-composer-form" autocomplete="off" data-lpignore="true">
                   <button type="button" class="composer-btn attach" id="btn-composer-attach-modal" title="Upload Image or Rich Post">
                     <i class="fa-solid fa-circle-plus"></i>
                   </button>
@@ -868,6 +868,10 @@
                       class="discord-composer-input" 
                       placeholder="Message #announcements..." 
                       autocomplete="off"
+                      data-lpignore="true"
+                      data-1p-ignore="true"
+                      data-bwignore="true"
+                      data-form-type="other"
                     />
                   </div>
                   <div class="composer-extras">
@@ -904,18 +908,18 @@
                 <button class="close-modal-btn" id="btn-close-circle-modal"><i class="fa-solid fa-xmark"></i></button>
               </div>
               <div id="circle-composer-user-badge" class="circle-composer-user-badge" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(197,160,89,0.15);border-radius:8px;margin-bottom:1.2rem;"></div>
-              <form id="circle-post-form">
+              <form id="circle-post-form" autocomplete="off" data-lpignore="true">
                 <div class="form-group">
                   <label for="circle-post-title" class="sr-only">Post Title</label>
-                  <input type="text" id="circle-post-title" name="circle-post-title" placeholder="Title of your post..." required autocomplete="off">
+                  <input type="text" id="circle-post-title" name="circle-post-title" placeholder="Title of your post..." required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                 </div>
                 <div class="form-group">
                   <label for="circle-post-body" class="sr-only">Post Content</label>
-                  <textarea id="circle-post-body" name="circle-post-body" placeholder="Share study tips, questions, or updates..." required></textarea>
+                  <textarea id="circle-post-body" name="circle-post-body" placeholder="Share study tips, questions, or updates..." required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"></textarea>
                 </div>
                 <div class="form-group">
                   <label for="circle-post-image" class="sr-only">Image URL</label>
-                  <input type="text" id="circle-post-image" name="circle-post-image" placeholder="Image URL (optional)..." autocomplete="off">
+                  <input type="text" id="circle-post-image" name="circle-post-image" placeholder="Image URL (optional)..." autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                 </div>
                 <button type="submit" class="circle-submit-post-btn">Publish Post</button>
               </form>
@@ -1039,9 +1043,9 @@
 
             <!-- Search & Analyze Input -->
             <div class="rwggp-search-wrapper">
-              <form class="rwggp-search-form" id="rwggp-analyze-form">
+              <form class="rwggp-search-form" id="rwggp-analyze-form" autocomplete="off" data-lpignore="true">
                 <label for="rwggp-analyze-input" class="sr-only">Analyze word</label>
-                <input type="text" id="rwggp-analyze-input" name="rwggp-analyze-input" placeholder="Enter a word to analyze..." autocomplete="off">
+                <input type="text" id="rwggp-analyze-input" name="rwggp-analyze-input" placeholder="Enter a word to analyze..." autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                 <button type="submit" class="rwggp-analyze-btn">
                   <i class="fa-solid fa-magnifying-glass"></i> Analyze
                 </button>
@@ -1102,7 +1106,7 @@
             <div style="padding:0.75rem 1.25rem; border-bottom:1px solid #f1f5f9; background:#ffffff;">
               <div style="position:relative; display:flex; align-items:center;">
                 <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; color:#94a3b8; font-size:0.85rem;"></i>
-                <input type="text" id="cat-modal-search" placeholder="Search words in this category..." style="width:100%; height:38px; padding:0 1rem 0 2.25rem; border-radius:8px; border:1px solid #e2e8f0; font-size:0.88rem; outline:none;" />
+                <input type="text" id="cat-modal-search" placeholder="Search words in this category..." autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width:100%; height:38px; padding:0 1rem 0 2.25rem; border-radius:8px; border:1px solid #e2e8f0; font-size:0.88rem; outline:none;" />
               </div>
             </div>
             <div id="cat-modal-words-grid" style="max-height:360px; overflow-y:auto; padding:1rem 1.25rem; display:grid; grid-template-columns:repeat(3, 1fr); gap:0.5rem;">
@@ -1122,13 +1126,13 @@
             </div>
             <div class="save-popover-search-wrapper">
               <i class="fa-solid fa-magnifying-glass save-popover-search-icon"></i>
-              <input type="text" class="save-popover-search" id="save-popover-search-input" placeholder="Search lists...">
+              <input type="text" class="save-popover-search" id="save-popover-search-input" placeholder="Search lists..." autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
             </div>
             <button type="button" class="save-popover-create-btn" id="btn-show-create-list">
               <i class="fa-solid fa-plus"></i> Create New List
             </button>
             <div class="save-popover-create-row hidden" id="save-popover-create-row">
-              <input type="text" class="save-popover-new-list-input" id="save-new-list-input" placeholder="List name (e.g. My Favorites)">
+              <input type="text" class="save-popover-new-list-input" id="save-new-list-input" placeholder="List name (e.g. My Favorites)" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
               <button type="button" class="save-popover-add-btn" id="btn-confirm-create-list">Create</button>
               <button type="button" class="save-popover-cancel-create" id="btn-cancel-create-list">&times;</button>
             </div>
@@ -1492,7 +1496,7 @@
                   </div>
                   <div class="mobile-search-box">
                     <i class="fa-solid fa-magnifying-glass mobile-search-icon"></i>
-                    <input type="text" id="mobile-playlist-search-input" class="mobile-search-input" placeholder="Search playlists..." />
+                    <input type="text" id="mobile-playlist-search-input" class="mobile-search-input" placeholder="Search playlists..." autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
                   </div>
                   <!-- TWO BUTTONS CATEGORY (VIDEOS / SHORTS) -->
                   <div class="video-type-toggle-bar mobile-toggle-bar" id="mobile-video-type-toggle">
@@ -1846,13 +1850,13 @@
             <div class="gemini-input-wrapper">
               <div class="gemini-home-glow-bg"></div>
 
-              <div class="gemini-home-input-bar">
+              <form class="gemini-home-input-bar" id="lab-home-input-form" onsubmit="return false;" autocomplete="off" data-lpignore="true">
                 <label class="gemini-bar-icon-btn" id="btn-lab-attach" title="Attach an Image (Optional)" style="cursor: pointer; margin-bottom: 0;">
                   <i class="fa-solid fa-plus"></i>
                   <input type="file" id="lab-custom-upload" accept="image/*" style="display: none;">
                 </label>
                 
-                <input type="text" id="lab-home-input" name="lab-home-input" placeholder="Describe anything to Sol..." autocomplete="off" />
+                <input type="text" id="lab-home-input" name="sol-lab-query" placeholder="Describe anything to Sol..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
 
                 <div class="gemini-home-model-selector" id="lab-lang-selector" title="Click to Change Language">
                   <span class="model-blue-dot">●</span>
@@ -1860,14 +1864,14 @@
                   <i class="fa-solid fa-chevron-down arrow-icon"></i>
                 </div>
 
-                <button class="gemini-bar-icon-btn mic-btn" id="btn-lab-mic" title="Voice Input">
+                <button type="button" class="gemini-bar-icon-btn mic-btn" id="btn-lab-mic" title="Voice Input">
                   <i class="fa-solid fa-microphone"></i>
                 </button>
 
-                <button class="gemini-bar-icon-btn send-btn" id="btn-lab-send" title="Send Description">
+                <button type="button" class="gemini-bar-icon-btn send-btn" id="btn-lab-send" title="Send Description">
                   <i class="fa-solid fa-arrow-up"></i>
                 </button>
-              </div>
+              </form>
             </div>
 
             <!-- Dynamic Inline Conversation Container (Identical to Sol tab) -->
@@ -2014,7 +2018,7 @@
                   </a>
                 </div>
                 <div class="api-input-wrapper">
-                  <input type="password" id="api-key-input" name="api-key-input" placeholder="Paste Gemini API Key (AIzaSy... or AQ...)" autocomplete="off">
+                  <input type="text" id="api-key-input" name="gemini-user-key" class="masked-key-input" placeholder="Paste Gemini API Key (AIzaSy... or AQ...)" autocomplete="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                   <button type="button" class="toggle-password-btn" id="toggle-password-btn">
                     <i class="fa-solid fa-eye"></i>
                   </button>
@@ -2052,7 +2056,7 @@
               <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                 <div style="position: relative; flex: 1; min-width: 220px; max-width: 400px;">
                   <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
-                  <input type="text" id="admin-user-search-input" placeholder="Search by name or email..." style="width: 100%; padding: 0.55rem 0.85rem 0.55rem 2.25rem; border-radius: 10px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.88rem; outline: none;">
+                  <input type="text" id="admin-user-search-input" placeholder="Search by name or email..." autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width: 100%; padding: 0.55rem 0.85rem 0.55rem 2.25rem; border-radius: 10px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.88rem; outline: none;">
                 </div>
                 <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
                   <button type="button" class="secondary-action-btn" id="btn-export-users-csv" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #c7d2fe; font-weight: 600; padding: 0.5rem 0.95rem; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.84rem;">
@@ -2083,7 +2087,7 @@
                   </a>
                 </div>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                  <input type="text" id="admin-google-client-id-input" placeholder="e.g. 1234567890-abcdef.apps.googleusercontent.com" style="flex: 1; min-width: 260px; padding: 0.55rem 0.85rem; border-radius: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.84rem; font-family: monospace; outline: none;">
+                  <input type="text" id="admin-google-client-id-input" placeholder="e.g. 1234567890-abcdef.apps.googleusercontent.com" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="flex: 1; min-width: 260px; padding: 0.55rem 0.85rem; border-radius: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.84rem; font-family: monospace; outline: none;">
                   <button type="button" class="primary-btn" id="btn-save-google-client-id" style="padding: 0.55rem 1rem; font-size: 0.84rem; border-radius: 10px;">
                     <i class="fa-solid fa-floppy-disk"></i> Save Client ID
                   </button>
@@ -2106,7 +2110,7 @@
                 </p>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; position: relative;">
                   <div style="position: relative; flex: 1; min-width: 260px;">
-                    <input type="password" id="admin-platform-gemini-key-input" placeholder="AIzaSy... (Paste Master Gemini API Key)" style="width: 100%; box-sizing: border-box; padding: 0.55rem 2.4rem 0.55rem 0.85rem; border-radius: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.84rem; font-family: monospace; outline: none;">
+                    <input type="text" id="admin-platform-gemini-key-input" class="masked-key-input" placeholder="AIzaSy... (Paste Master Gemini API Key)" autocomplete="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width: 100%; box-sizing: border-box; padding: 0.55rem 2.4rem 0.55rem 0.85rem; border-radius: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 0.84rem; font-family: monospace; outline: none;">
                     <button type="button" id="btn-toggle-platform-gemini-key" title="Show/Hide API Key" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;">
                       <i class="fa-solid fa-eye"></i>
                     </button>
@@ -2381,7 +2385,7 @@
 
             <div class="api-key-row">
               <div class="api-input-wrapper" style="flex: 1;">
-                <input type="password" id="training-api-key-input" class="training-input" placeholder="AIzaSy..." autocomplete="off">
+                <input type="text" id="training-api-key-input" class="training-input masked-key-input" placeholder="AIzaSy..." autocomplete="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                 <button type="button" class="toggle-password-btn" id="btn-toggle-training-api-key">
                   <i class="fa-solid fa-eye"></i>
                 </button>
@@ -2633,7 +2637,7 @@
           <label style="display: block; font-size: 0.84rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">
             Video Link or Embed Code <span style="color: #38bdf8;">*</span>
           </label>
-          <input type="text" id="add-video-url-input" class="form-input" placeholder="https://www.youtube.com/watch?v=... or Shorts, Playlist, Vimeo" required style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.9rem; box-sizing: border-box;" />
+          <input type="text" id="add-video-url-input" class="form-input" placeholder="https://www.youtube.com/watch?v=... or Shorts, Playlist, Vimeo" required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.9rem; box-sizing: border-box;" />
           <span style="display: block; font-size: 0.75rem; color: #94a3b8; margin-top: 0.35rem;">
             Supports YouTube URLs, Shorts, Playlists, youtu.be, Vimeo, and &lt;iframe&gt; embed codes.
           </span>
@@ -2657,7 +2661,7 @@
           <label style="display: block; font-size: 0.84rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">
             Video Title <span style="color: #38bdf8;">*</span>
           </label>
-          <input type="text" id="add-video-title-input" class="form-input" placeholder="e.g. Walking in Central Park Vlog" required style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.9rem; box-sizing: border-box;" />
+          <input type="text" id="add-video-title-input" class="form-input" placeholder="e.g. Walking in Central Park Vlog" required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.9rem; box-sizing: border-box;" />
         </div>
 
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem;">
@@ -2707,7 +2711,7 @@
           <label style="display: block; font-size: 0.84rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">
             YouTube Playlist Link <span style="color: #ef4444;">*</span>
           </label>
-          <input type="text" id="add-playlist-url-input" class="form-input" placeholder="https://www.youtube.com/playlist?list=PL..." required style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.9rem; box-sizing: border-box;" />
+          <input type="text" id="add-playlist-url-input" class="form-input" placeholder="https://www.youtube.com/playlist?list=PL..." required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.9rem; box-sizing: border-box;" />
           <span style="display: block; font-size: 0.75rem; color: #94a3b8; margin-top: 0.35rem;">
             Paste any YouTube playlist link (Public or Unlisted).
           </span>
@@ -2729,13 +2733,13 @@
         <div style="display: grid; grid-template-columns: 70px 1fr; gap: 0.75rem; align-items: start;">
           <div>
             <label style="display: block; font-size: 0.84rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">Icon</label>
-            <input type="text" id="add-playlist-flag-input" class="form-input" value="🎬" style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); text-align: center; font-size: 1.2rem; box-sizing: border-box;" />
+            <input type="text" id="add-playlist-flag-input" class="form-input" value="🎬" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); text-align: center; font-size: 1.2rem; box-sizing: border-box;" />
           </div>
           <div>
             <label style="display: block; font-size: 0.84rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">
               Playlist Name <span style="color: #38bdf8;">*</span>
             </label>
-            <input type="text" id="add-playlist-name-input" class="form-input" placeholder="e.g. Real Life English Conversations" required style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.9rem; box-sizing: border-box;" />
+            <input type="text" id="add-playlist-name-input" class="form-input" placeholder="e.g. Real Life English Conversations" required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.9rem; box-sizing: border-box;" />
           </div>
         </div>
 
@@ -2771,7 +2775,7 @@
           <label style="display: block; font-size: 0.84rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">
             Video Title <span style="color: #38bdf8;">*</span>
           </label>
-          <input type="text" id="edit-video-title-input" class="form-input" placeholder="e.g. Episode 1 - Introduction" required style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.95rem; box-sizing: border-box;" />
+          <input type="text" id="edit-video-title-input" class="form-input" placeholder="e.g. Episode 1 - Introduction" required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width: 100%; height: 42px; border-radius: 10px; background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0 0.85rem; font-size: 0.95rem; box-sizing: border-box;" />
         </div>
 
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem;">
@@ -2958,7 +2962,11 @@
         var profile = localStorage.getItem("sol_user_profile");
         if (token && profile) {
           var m = document.getElementById("auth-modal");
-          if (m) m.classList.add("hidden");
+          if (m) {
+            m.classList.add("hidden");
+            var inps = m.querySelectorAll("input, button[type='submit']");
+            for (var i = 0; i < inps.length; i++) inps[i].disabled = true;
+          }
         }
       } catch (e) {}
     })();
@@ -2984,6 +2992,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35127"></script>
+  <script type="module" src="app.js?v=35128"></script>
 </body>
 </html>

@@ -12937,7 +12937,17 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   }
 }
 
+/* Masked Key Inputs: Mask text visually without triggering browser password managers */
+.masked-key-input {
+  -webkit-text-security: disc !important;
+  text-security: disc !important;
+  font-family: monospace, sans-serif !important;
+  letter-spacing: 0.08em;
+}
 
-
-
+.masked-key-input.revealed {
+  -webkit-text-security: none !important;
+  text-security: none !important;
+  letter-spacing: normal;
+}
 

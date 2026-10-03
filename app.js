@@ -2996,8 +2996,8 @@ function initTrainingStudio() {
   const keyInput = document.getElementById("training-api-key-input");
   if (toggleKeyBtn && keyInput) {
     toggleKeyBtn.addEventListener("click", () => {
-      keyInput.type = keyInput.type === "password" ? "text" : "password";
-      toggleKeyBtn.innerHTML = keyInput.type === "password" ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+      const isRevealed = keyInput.classList.toggle("revealed");
+      toggleKeyBtn.innerHTML = isRevealed ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
     });
   }
   if (testKeyBtn && keyInput) {
@@ -7017,12 +7017,12 @@ Never output markdown symbols (no asterisks, no bullet points, no headers). Spea
 function setupSettingsHandlers() {
   // Toggle password visibility
   togglePasswordBtn.addEventListener("click", () => {
-    const isPassword = apiKeyInput.type === "password";
-    apiKeyInput.type = isPassword ? "text" : "password";
-    
+    const isRevealed = apiKeyInput.classList.toggle("revealed");
     const icon = togglePasswordBtn.querySelector("i");
-    icon.classList.toggle("fa-eye");
-    icon.classList.toggle("fa-eye-slash");
+    if (icon) {
+      icon.classList.toggle("fa-eye", !isRevealed);
+      icon.classList.toggle("fa-eye-slash", isRevealed);
+    }
   });
 
   // Save Settings Click - Activates Gemini AI platform-wide for all devices & mobile phones
@@ -7256,9 +7256,8 @@ function setupSettingsHandlers() {
 
   if (btnTogglePlatformKey && inputPlatformKey) {
     btnTogglePlatformKey.addEventListener("click", () => {
-      const isPwd = inputPlatformKey.type === "password";
-      inputPlatformKey.type = isPwd ? "text" : "password";
-      btnTogglePlatformKey.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+      const isRevealed = inputPlatformKey.classList.toggle("revealed");
+      btnTogglePlatformKey.innerHTML = isRevealed ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
     });
   }
 
@@ -7807,7 +7806,33 @@ function initGoogleAuth() {
   initAuthSystem();
 }
 
+function setAuthModalInputsEnabled(enabled) {
+  const modal = document.getElementById("auth-modal");
+  if (!modal) return;
+  const inputs = modal.querySelectorAll("input, button[type='submit']");
+  inputs.forEach(el => {
+    el.disabled = !enabled;
+  });
+}
+window.setAuthModalInputsEnabled = setAuthModalInputsEnabled;
+
+function suppressNonAuthAutofill() {
+  const nonAuthInputs = document.querySelectorAll(
+    'input:not(#login-email):not(#login-password):not(#register-name):not(#register-email):not(#register-password):not(#register-confirm-password), textarea'
+  );
+  nonAuthInputs.forEach(input => {
+    if (input.type === 'file' || input.type === 'hidden' || input.type === 'range' || input.type === 'checkbox' || input.type === 'radio') return;
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('data-lpignore', 'true');
+    input.setAttribute('data-1p-ignore', 'true');
+    input.setAttribute('data-bwignore', 'true');
+    input.setAttribute('data-form-type', 'other');
+  });
+}
+window.suppressNonAuthAutofill = suppressNonAuthAutofill;
+
 function initAuthSystem() {
+  suppressNonAuthAutofill();
   const authModal = document.getElementById("auth-modal");
   const tabLogin = document.getElementById("tab-btn-login");
   const tabRegister = document.getElementById("tab-btn-register");
@@ -7995,7 +8020,10 @@ function initAuthSystem() {
   if (btnContinueGuest) {
     btnContinueGuest.addEventListener("click", () => {
       window.solGuestMode = true;
-      if (authModal) authModal.classList.add("hidden");
+      if (authModal) {
+        authModal.classList.add("hidden");
+        setAuthModalInputsEnabled(false);
+      }
       renderGuestProfile();
       loadUserSpecificData();
       if (typeof window.switchPanel === "function") {
@@ -8027,7 +8055,10 @@ function checkActiveSession() {
     try {
       const user = JSON.parse(savedProfile);
       if (user && user.email) {
-        if (authModal) authModal.classList.add("hidden");
+        if (authModal) {
+          authModal.classList.add("hidden");
+          setAuthModalInputsEnabled(false);
+        }
         renderUserProfile(user);
         renderCircleMembersWidget();
         if (typeof renderDiscordUserBar === "function") renderDiscordUserBar();
@@ -8045,7 +8076,10 @@ function checkActiveSession() {
 
   // Check in-memory Guest Mode in current browsing session
   if (window.solGuestMode === true) {
-    if (authModal) authModal.classList.add("hidden");
+    if (authModal) {
+      authModal.classList.add("hidden");
+      setAuthModalInputsEnabled(false);
+    }
     renderGuestProfile();
     if (typeof triggerSolGrandEntrance === "function") {
       triggerSolGrandEntrance();
@@ -8057,6 +8091,7 @@ function checkActiveSession() {
   // Mandatory: if no active authenticated session and not guest, KEEP Auth Modal open
   if (authModal) {
     authModal.classList.remove("hidden");
+    setAuthModalInputsEnabled(true);
   }
   renderSignInButton();
 }
@@ -8087,7 +8122,10 @@ function renderGuestProfile() {
     btnSignIn.addEventListener("click", () => {
       window.solGuestMode = false;
       const authModal = document.getElementById("auth-modal");
-      if (authModal) authModal.classList.remove("hidden");
+      if (authModal) {
+        authModal.classList.remove("hidden");
+        setAuthModalInputsEnabled(true);
+      }
     });
   }
 
@@ -8116,6 +8154,7 @@ function loginUserSuccess(user, token, isNew = false) {
   const authModal = document.getElementById("auth-modal");
   if (authModal) {
     authModal.classList.add("hidden");
+    setAuthModalInputsEnabled(false);
   }
 
   renderUserProfile(user);
@@ -8193,7 +8232,10 @@ function renderSignInButton() {
   if (btn) {
     btn.addEventListener("click", () => {
       const authModal = document.getElementById("auth-modal");
-      if (authModal) authModal.classList.remove("hidden");
+      if (authModal) {
+        authModal.classList.remove("hidden");
+        setAuthModalInputsEnabled(true);
+      }
     });
   }
 }
