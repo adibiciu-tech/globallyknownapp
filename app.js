@@ -2501,13 +2501,36 @@ async function requestAiTitleUpdate(convId, userQuery, aiReply = "") {
 
 let defaultSolConversations = [];
 
+function getDeletedConversationIds() {
+  const key = getActiveUserStorageKey("sol_deleted_conversations");
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function markConversationDeleted(convId) {
+  if (!convId) return;
+  const key = getActiveUserStorageKey("sol_deleted_conversations");
+  const list = getDeletedConversationIds();
+  if (!list.includes(convId)) {
+    list.push(convId);
+    try {
+      localStorage.setItem(key, JSON.stringify(list));
+    } catch (e) {}
+  }
+}
+
 function getSolConversations() {
   const key = getActiveUserStorageKey("sol_saved_conversations");
+  const deletedIds = new Set(getDeletedConversationIds());
   const saved = localStorage.getItem(key);
   if (saved) {
     try {
       const list = JSON.parse(saved);
-      const filtered = list.filter(c => !["conv_1", "conv_2", "conv_3", "conv_4"].includes(c.id));
+      const filtered = list.filter(c => !["conv_1", "conv_2", "conv_3", "conv_4"].includes(c.id) && !deletedIds.has(c.id));
       // Auto-sanitize legacy "💬 " emoji prefixes from titles
       filtered.forEach(c => {
         if (typeof c.title === "string") {
@@ -2532,6 +2555,17 @@ async function syncConversationsToServer(convs) {
   } catch(e) {}
 }
 
+async function deleteServerConversation(convId) {
+  try {
+    const profile = getActiveUserProfile();
+    const userEmail = (profile && profile.email) ? profile.email : "guest";
+    await fetch(`/api/conversations?email=${encodeURIComponent(userEmail)}&id=${encodeURIComponent(convId)}`, {
+      method: "DELETE",
+      headers: { "X-User-Email": userEmail }
+    });
+  } catch(e) {}
+}
+
 async function fetchServerConversations() {
   try {
     const profile = getActiveUserProfile();
@@ -2540,16 +2574,11 @@ async function fetchServerConversations() {
     if (res.ok) {
       const serverConvs = await res.json();
       if (Array.isArray(serverConvs)) {
+        const deletedIds = new Set(getDeletedConversationIds());
+        const cleanedConvs = serverConvs.filter(c => !deletedIds.has(c.id));
         const key = getActiveUserStorageKey("sol_saved_conversations");
-        if (serverConvs.length > 0) {
-          localStorage.setItem(key, JSON.stringify(serverConvs));
-          return serverConvs;
-        } else {
-          const local = getSolConversations();
-          if (local.length > 0) {
-            syncConversationsToServer(local);
-          }
-        }
+        localStorage.setItem(key, JSON.stringify(cleanedConvs));
+        return cleanedConvs;
       }
     }
   } catch(e) {}
@@ -2558,8 +2587,10 @@ async function fetchServerConversations() {
 
 function saveSolConversations(list) {
   const key = getActiveUserStorageKey("sol_saved_conversations");
-  localStorage.setItem(key, JSON.stringify(list));
-  syncConversationsToServer(list);
+  const deletedIds = new Set(getDeletedConversationIds());
+  const cleaned = Array.isArray(list) ? list.filter(c => !deletedIds.has(c.id)) : [];
+  localStorage.setItem(key, JSON.stringify(cleaned));
+  syncConversationsToServer(cleaned);
 }
 window.getSolConversations = getSolConversations;
 window.saveSolConversations = saveSolConversations;
@@ -2859,8 +2890,10 @@ function renderSidebarConversations() {
             ev.stopPropagation();
             closeAllConversationMenus();
             if (confirm(`Delete conversation "${displayTitle}"?`)) {
+              markConversationDeleted(conv.id);
               const updated = getSolConversations().filter(c => c.id !== conv.id);
               saveSolConversations(updated);
+              deleteServerConversation(conv.id);
               if (currentHomeConvId === conv.id) {
                 resetHomeConversationScreen();
               }

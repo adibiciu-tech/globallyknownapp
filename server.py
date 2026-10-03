@@ -1879,6 +1879,42 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(resp)
             return
 
+        elif path.startswith("/api/conversations"):
+            query = urllib.parse.parse_qs(parsed_url.query)
+            user_id = (query.get("email", [None])[0] or query.get("user", [None])[0] or self.headers.get("X-User-Email", "") or "").strip().lower()
+            conv_id = query.get("id", [None])[0]
+            if not conv_id:
+                parts = path.strip("/").split("/")
+                if len(parts) >= 3:
+                    conv_id = parts[2]
+
+            data = load_data()
+            if user_id:
+                user_convs = data.get("user_conversations", {}).get(user_id, [])
+                if conv_id:
+                    user_convs = [c for c in user_convs if str(c.get("id")) != str(conv_id)]
+                else:
+                    user_convs = []
+                if "user_conversations" not in data:
+                    data["user_conversations"] = {}
+                data["user_conversations"][user_id] = user_convs
+            else:
+                convs = data.get("conversations", [])
+                if conv_id:
+                    convs = [c for c in convs if str(c.get("id")) != str(conv_id)]
+                else:
+                    convs = []
+                data["conversations"] = convs
+
+            save_data(data)
+            resp = json.dumps({"success": True, "deletedConvId": conv_id}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers()
+            self.wfile.write(resp)
+            return
+
         self.send_error(404, "Not Found")
 
 if __name__ == "__main__":
