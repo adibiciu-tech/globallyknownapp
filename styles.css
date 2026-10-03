@@ -11664,6 +11664,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 
 /* ==========================================================================
  * On-Screen Video Controls Overlay (YouTube Style Next / Prev & Rotate)
+ * Transparent by default, visible only when screen is touched / hovered or paused
  * ========================================================================== */
 .yt-screen-controls-overlay {
   position: absolute;
@@ -11672,9 +11673,59 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   z-index: 85;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 16px;
-  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.32s ease;
+}
+
+/* Visible when touched/active, or when parent wrapper has .show-screen-controls or when video is paused */
+.desktop-cinema-iframe-wrapper:hover .yt-screen-controls-overlay,
+.desktop-cinema-iframe-wrapper.show-screen-controls .yt-screen-controls-overlay,
+.mobile-cinema-iframe-wrapper.show-screen-controls .yt-screen-controls-overlay,
+.yt-screen-controls-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* On-Screen Center Play/Pause Button */
+.yt-screen-play-pause-btn {
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.55rem;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 2;
+}
+
+.yt-screen-play-pause-btn:hover {
+  background: rgba(2, 132, 199, 0.9);
+  border-color: #38bdf8;
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 8px 28px rgba(2, 132, 199, 0.5);
+}
+
+.yt-screen-play-pause-btn:active {
+  transform: translate(-50%, -50%) scale(0.95);
 }
 
 /* On-Screen Next & Prev Buttons */
@@ -11700,14 +11751,15 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, border-color 0.2s ease, opacity 0.25s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  z-index: 2;
 }
 
 .yt-screen-nav-btn.prev {
-  left: 18px;
+  left: 20px;
 }
 
 .yt-screen-nav-btn.next {
-  right: 18px;
+  right: 20px;
 }
 
 .yt-screen-nav-btn:hover {
@@ -11752,6 +11804,7 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  z-index: 2;
 }
 
 .yt-screen-rotate-btn:hover {
@@ -11779,16 +11832,21 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
 
 /* Responsive sizes for mobile */
 @media (max-width: 900px) {
+  .yt-screen-play-pause-btn {
+    width: 56px;
+    height: 56px;
+    font-size: 1.35rem;
+  }
   .yt-screen-nav-btn {
     width: 44px;
     height: 44px;
     font-size: 1rem;
   }
   .yt-screen-nav-btn.prev {
-    left: 12px;
+    left: 14px;
   }
   .yt-screen-nav-btn.next {
-    right: 12px;
+    right: 14px;
   }
   .yt-screen-rotate-btn {
     height: 32px;

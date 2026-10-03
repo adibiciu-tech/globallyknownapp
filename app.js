@@ -9605,6 +9605,15 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
     };
   }
 
+  const btnDeskScreenPlayPause = document.getElementById("btn-desktop-screen-play-pause");
+  if (btnDeskScreenPlayPause) {
+    btnDeskScreenPlayPause.onclick = (e) => {
+      e.stopPropagation();
+      toggleVideoPlayback("desktop-cinema-iframe");
+      showScreenControlsTemporarily(true);
+    };
+  }
+
   const btnCinemaPrev = document.getElementById("btn-cinema-prev-video");
   if (btnCinemaPrev) {
     btnCinemaPrev.onclick = (e) => {
@@ -9618,6 +9627,7 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
     btnDeskScreenPrev.onclick = (e) => {
       e.stopPropagation();
       playPrevVideo(true);
+      showScreenControlsTemporarily(true);
     };
   }
 
@@ -9634,6 +9644,7 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
     btnDeskScreenNext.onclick = (e) => {
       e.stopPropagation();
       playNextVideo(true);
+      showScreenControlsTemporarily(true);
     };
   }
 
@@ -9642,7 +9653,16 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
     btnDeskScreenRotate.onclick = (e) => {
       e.stopPropagation();
       toggleVideoRotation(true);
+      showScreenControlsTemporarily(true);
     };
+  }
+
+  // Touch / tap to reveal controls on video screen
+  const deskWrapper = document.getElementById("desktop-cinema-iframe-wrapper");
+  if (deskWrapper && !deskWrapper.dataset.hasTouchListener) {
+    deskWrapper.dataset.hasTouchListener = "true";
+    deskWrapper.addEventListener("pointerdown", () => showScreenControlsTemporarily(true), { passive: true });
+    deskWrapper.addEventListener("pointermove", () => showScreenControlsTemporarily(true), { passive: true });
   }
 
   const btnCinemaRewind = document.getElementById("btn-cinema-rewind-10");
@@ -9731,19 +9751,78 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
   if (panelVideos) panelVideos.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+let desktopScreenControlsHideTimer = null;
+let mobileScreenControlsHideTimer = null;
+
+function showScreenControlsTemporarily(isDesktop = true, durationMs = 3000) {
+  const wrapperId = isDesktop ? "desktop-cinema-iframe-wrapper" : "mobile-cinema-iframe-wrapper";
+  const overlayId = isDesktop ? "desktop-screen-controls-overlay" : "mobile-screen-controls-overlay";
+  const wrapper = document.getElementById(wrapperId);
+  const overlay = document.getElementById(overlayId);
+  if (!wrapper) return;
+
+  wrapper.classList.add("show-screen-controls");
+  if (overlay) overlay.classList.add("is-visible");
+
+  if (isDesktop) {
+    if (desktopScreenControlsHideTimer) clearTimeout(desktopScreenControlsHideTimer);
+    desktopScreenControlsHideTimer = setTimeout(() => {
+      // Only autohide if video is currently playing
+      const iframe = document.getElementById("desktop-cinema-iframe");
+      const isPlaying = iframe && iframe.dataset.isPlaying !== "false";
+      if (isPlaying) {
+        if (wrapper) wrapper.classList.remove("show-screen-controls");
+        if (overlay) overlay.classList.remove("is-visible");
+      }
+    }, durationMs);
+  } else {
+    if (mobileScreenControlsHideTimer) clearTimeout(mobileScreenControlsHideTimer);
+    mobileScreenControlsHideTimer = setTimeout(() => {
+      // Only autohide if video is currently playing
+      const iframe = document.getElementById("mobile-cinema-iframe");
+      const isPlaying = iframe && iframe.dataset.isPlaying !== "false";
+      if (isPlaying) {
+        if (wrapper) wrapper.classList.remove("show-screen-controls");
+        if (overlay) overlay.classList.remove("is-visible");
+      }
+    }, durationMs);
+  }
+}
+window.showScreenControlsTemporarily = showScreenControlsTemporarily;
+
 function updateDesktopPlayPauseUI(isPlaying) {
   const btn = document.getElementById("btn-desktop-cinema-play-pause");
   const icon = document.getElementById("desktop-play-pause-icon");
   const label = document.getElementById("desktop-play-pause-label");
-  if (!btn) return;
-  if (isPlaying) {
-    btn.classList.remove("is-paused");
-    if (icon) icon.className = "fa-solid fa-pause";
-    if (label) label.textContent = "Pause Video";
-  } else {
-    btn.classList.add("is-paused");
-    if (icon) icon.className = "fa-solid fa-play";
-    if (label) label.textContent = "Play Video";
+  const screenIcon = document.getElementById("desktop-screen-play-pause-icon");
+  const wrapper = document.getElementById("desktop-cinema-iframe-wrapper");
+
+  if (screenIcon) {
+    screenIcon.className = isPlaying ? "fa-solid fa-pause" : "fa-solid fa-play";
+  }
+
+  if (btn) {
+    if (isPlaying) {
+      btn.classList.remove("is-paused");
+      if (icon) icon.className = "fa-solid fa-pause";
+      if (label) label.textContent = "Pause Video";
+    } else {
+      btn.classList.add("is-paused");
+      if (icon) icon.className = "fa-solid fa-play";
+      if (label) label.textContent = "Play Video";
+    }
+  }
+
+  // When paused, show on-screen controls overlay so the user can easily resume or navigate; when playing, autohide
+  const deskOverlay = document.getElementById("desktop-screen-controls-overlay");
+  if (wrapper) {
+    if (!isPlaying) {
+      wrapper.classList.add("show-screen-controls");
+      if (deskOverlay) deskOverlay.classList.add("is-visible");
+    } else {
+      wrapper.classList.remove("show-screen-controls");
+      if (deskOverlay) deskOverlay.classList.remove("is-visible");
+    }
   }
 }
 
@@ -9751,15 +9830,35 @@ function updateMobilePlayPauseUI(isPlaying) {
   const btn = document.getElementById("btn-mobile-cinema-play-pause");
   const icon = document.getElementById("mobile-play-pause-icon");
   const label = document.getElementById("mobile-play-pause-label");
-  if (!btn) return;
-  if (isPlaying) {
-    btn.classList.remove("is-paused");
-    if (icon) icon.className = "fa-solid fa-pause";
-    if (label) label.textContent = "Pause";
-  } else {
-    btn.classList.add("is-paused");
-    if (icon) icon.className = "fa-solid fa-play";
-    if (label) label.textContent = "Play";
+  const screenIcon = document.getElementById("mobile-screen-play-pause-icon");
+  const wrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+
+  if (screenIcon) {
+    screenIcon.className = isPlaying ? "fa-solid fa-pause" : "fa-solid fa-play";
+  }
+
+  if (btn) {
+    if (isPlaying) {
+      btn.classList.remove("is-paused");
+      if (icon) icon.className = "fa-solid fa-pause";
+      if (label) label.textContent = "Pause";
+    } else {
+      btn.classList.add("is-paused");
+      if (icon) icon.className = "fa-solid fa-play";
+      if (label) label.textContent = "Play";
+    }
+  }
+
+  // When paused, show on-screen controls overlay; when playing, autohide
+  const mobOverlay = document.getElementById("mobile-screen-controls-overlay");
+  if (wrapper) {
+    if (!isPlaying) {
+      wrapper.classList.add("show-screen-controls");
+      if (mobOverlay) mobOverlay.classList.add("is-visible");
+    } else {
+      wrapper.classList.remove("show-screen-controls");
+      if (mobOverlay) mobOverlay.classList.remove("is-visible");
+    }
   }
 }
 
@@ -10572,6 +10671,15 @@ function openMobilePlaylistPage(cat, videoToPlay = null) {
     };
   }
 
+  const btnMobileScreenPlayPause = document.getElementById("btn-mobile-screen-play-pause");
+  if (btnMobileScreenPlayPause) {
+    btnMobileScreenPlayPause.onclick = (e) => {
+      e.stopPropagation();
+      toggleVideoPlayback("mobile-cinema-iframe");
+      showScreenControlsTemporarily(false);
+    };
+  }
+
   const btnMobilePrev = document.getElementById("btn-mobile-cinema-prev");
   if (btnMobilePrev) {
     btnMobilePrev.onclick = (e) => {
@@ -10585,6 +10693,7 @@ function openMobilePlaylistPage(cat, videoToPlay = null) {
     btnMobileScreenPrev.onclick = (e) => {
       e.stopPropagation();
       playPrevVideo(false);
+      showScreenControlsTemporarily(false);
     };
   }
 
@@ -10601,6 +10710,7 @@ function openMobilePlaylistPage(cat, videoToPlay = null) {
     btnMobileScreenNext.onclick = (e) => {
       e.stopPropagation();
       playNextVideo(false);
+      showScreenControlsTemporarily(false);
     };
   }
 
@@ -10609,7 +10719,16 @@ function openMobilePlaylistPage(cat, videoToPlay = null) {
     btnMobileScreenRotate.onclick = (e) => {
       e.stopPropagation();
       toggleVideoRotation(false);
+      showScreenControlsTemporarily(false);
     };
+  }
+
+  // Touch / tap to reveal controls on video screen in mobile
+  const mobWrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+  if (mobWrapper && !mobWrapper.dataset.hasTouchListener) {
+    mobWrapper.dataset.hasTouchListener = "true";
+    mobWrapper.addEventListener("pointerdown", () => showScreenControlsTemporarily(false), { passive: true });
+    mobWrapper.addEventListener("pointermove", () => showScreenControlsTemporarily(false), { passive: true });
   }
 
   const btnMobileRewind = document.getElementById("btn-mobile-cinema-rewind-10");

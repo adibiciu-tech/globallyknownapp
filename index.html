@@ -46,7 +46,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=35129">
+  <link rel="stylesheet" href="styles.css?v=35132">
   <link rel="stylesheet" href="desktop.css?v=1020" media="(min-width: 901px)">
   <link rel="stylesheet" href="mobile.css?v=1046" media="(max-width: 900px)">
   <!-- CodeMirror CSS for Code Editor -->
@@ -1393,10 +1393,13 @@
                           <span class="yt-seek-text" id="desktop-seek-text-right">+10 seconds</span>
                         </div>
                       </div>
-                      <!-- On-Screen Video Controls Overlay (YouTube Style Next / Prev & Rotate) -->
+                      <!-- On-Screen Video Controls Overlay (YouTube Style Play/Pause, Next / Prev & Rotate) -->
                       <div class="yt-screen-controls-overlay" id="desktop-screen-controls-overlay">
                         <button type="button" class="yt-screen-nav-btn prev" id="btn-desktop-screen-prev" title="Previous Video (Shift+P)">
                           <i class="fa-solid fa-backward-step"></i>
+                        </button>
+                        <button type="button" class="yt-screen-play-pause-btn" id="btn-desktop-screen-play-pause" title="Play / Pause (Space)">
+                          <i class="fa-solid fa-play" id="desktop-screen-play-pause-icon"></i>
                         </button>
                         <button type="button" class="yt-screen-nav-btn next" id="btn-desktop-screen-next" title="Next Video (Shift+N)">
                           <i class="fa-solid fa-forward-step"></i>
@@ -1572,10 +1575,13 @@
                       <span class="yt-seek-text" id="mobile-seek-text-right">+10 seconds</span>
                     </div>
                   </div>
-                  <!-- On-Screen Video Controls Overlay (YouTube Style Next / Prev & Rotate) -->
+                  <!-- On-Screen Video Controls Overlay (YouTube Style Play/Pause, Next / Prev & Rotate) -->
                   <div class="yt-screen-controls-overlay" id="mobile-screen-controls-overlay">
                     <button type="button" class="yt-screen-nav-btn prev" id="btn-mobile-screen-prev" title="Previous Video">
                       <i class="fa-solid fa-backward-step"></i>
+                    </button>
+                    <button type="button" class="yt-screen-play-pause-btn" id="btn-mobile-screen-play-pause" title="Play / Pause">
+                      <i class="fa-solid fa-play" id="mobile-screen-play-pause-icon"></i>
                     </button>
                     <button type="button" class="yt-screen-nav-btn next" id="btn-mobile-screen-next" title="Next Video">
                       <i class="fa-solid fa-forward-step"></i>
@@ -3018,6 +3024,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35131"></script>
+  <script type="module" src="app.js?v=35132"></script>
 </body>
 </html>
