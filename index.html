@@ -46,7 +46,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
   
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css?v=35128">
+  <link rel="stylesheet" href="styles.css?v=35129">
   <link rel="stylesheet" href="desktop.css?v=1020" media="(min-width: 901px)">
   <link rel="stylesheet" href="mobile.css?v=1046" media="(max-width: 900px)">
   <!-- CodeMirror CSS for Code Editor -->
@@ -1393,6 +1393,19 @@
                           <span class="yt-seek-text" id="desktop-seek-text-right">+10 seconds</span>
                         </div>
                       </div>
+                      <!-- On-Screen Video Controls Overlay (YouTube Style Next / Prev & Rotate) -->
+                      <div class="yt-screen-controls-overlay" id="desktop-screen-controls-overlay">
+                        <button type="button" class="yt-screen-nav-btn prev" id="btn-desktop-screen-prev" title="Previous Video (Shift+P)">
+                          <i class="fa-solid fa-backward-step"></i>
+                        </button>
+                        <button type="button" class="yt-screen-nav-btn next" id="btn-desktop-screen-next" title="Next Video (Shift+N)">
+                          <i class="fa-solid fa-forward-step"></i>
+                        </button>
+                        <button type="button" class="yt-screen-rotate-btn" id="btn-desktop-screen-rotate" title="Rotate Horizontally">
+                          <i class="fa-solid fa-arrows-rotate"></i>
+                          <span class="rotate-btn-label">Rotate</span>
+                        </button>
+                      </div>
                     </div>
 
                     <!-- Under Player Details & Action Bar -->
@@ -1558,6 +1571,19 @@
                       <i class="fa-solid fa-rotate-right"></i>
                       <span class="yt-seek-text" id="mobile-seek-text-right">+10 seconds</span>
                     </div>
+                  </div>
+                  <!-- On-Screen Video Controls Overlay (YouTube Style Next / Prev & Rotate) -->
+                  <div class="yt-screen-controls-overlay" id="mobile-screen-controls-overlay">
+                    <button type="button" class="yt-screen-nav-btn prev" id="btn-mobile-screen-prev" title="Previous Video">
+                      <i class="fa-solid fa-backward-step"></i>
+                    </button>
+                    <button type="button" class="yt-screen-nav-btn next" id="btn-mobile-screen-next" title="Next Video">
+                      <i class="fa-solid fa-forward-step"></i>
+                    </button>
+                    <button type="button" class="yt-screen-rotate-btn" id="btn-mobile-screen-rotate" title="Rotate Horizontally">
+                      <i class="fa-solid fa-arrows-rotate"></i>
+                      <span class="rotate-btn-label">Rotate</span>
+                    </button>
                   </div>
                 </div>
 
@@ -2992,6 +3018,6 @@
     }
   </script>
   <!-- Application Logic -->
-  <script type="module" src="app.js?v=35128"></script>
+  <script type="module" src="app.js?v=35129"></script>
 </body>
 </html>

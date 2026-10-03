@@ -9600,11 +9600,35 @@ function openDesktopPlaylistPage(cat, videoToPlay = null) {
     };
   }
 
+  const btnDeskScreenPrev = document.getElementById("btn-desktop-screen-prev");
+  if (btnDeskScreenPrev) {
+    btnDeskScreenPrev.onclick = (e) => {
+      e.stopPropagation();
+      playPrevVideo(true);
+    };
+  }
+
   const btnCinemaNext = document.getElementById("btn-cinema-next-video");
   if (btnCinemaNext) {
     btnCinemaNext.onclick = (e) => {
       e.stopPropagation();
       playNextVideo(true);
+    };
+  }
+
+  const btnDeskScreenNext = document.getElementById("btn-desktop-screen-next");
+  if (btnDeskScreenNext) {
+    btnDeskScreenNext.onclick = (e) => {
+      e.stopPropagation();
+      playNextVideo(true);
+    };
+  }
+
+  const btnDeskScreenRotate = document.getElementById("btn-desktop-screen-rotate");
+  if (btnDeskScreenRotate) {
+    btnDeskScreenRotate.onclick = (e) => {
+      e.stopPropagation();
+      toggleVideoRotation(true);
     };
   }
 
@@ -9956,38 +9980,43 @@ function handleSeekClick(direction, isDesktop = true) {
 }
 
 function updatePlaybackNavButtonsState(index, totalCount, isDesktop = true) {
+  const isFirst = index <= 0;
+  const isLast = index >= totalCount - 1;
+
   if (isDesktop) {
     const btnPrev = document.getElementById("btn-cinema-prev-video");
     const btnNext = document.getElementById("btn-cinema-next-video");
+    const btnScreenPrev = document.getElementById("btn-desktop-screen-prev");
+    const btnScreenNext = document.getElementById("btn-desktop-screen-next");
+
     if (btnPrev) {
-      if (index <= 0) {
-        btnPrev.classList.add("disabled");
-        btnPrev.title = "First video of playlist";
-      } else {
-        btnPrev.classList.remove("disabled");
-        btnPrev.title = "Previous Video (Shortcut: Shift+P)";
-      }
+      btnPrev.classList.toggle("disabled", isFirst);
+      btnPrev.title = isFirst ? "First video of playlist" : "Previous Video (Shortcut: Shift+P)";
     }
+    if (btnScreenPrev) {
+      btnScreenPrev.classList.toggle("disabled", isFirst);
+      btnScreenPrev.title = isFirst ? "First video of playlist" : "Previous Video (Shift+P)";
+    }
+
     if (btnNext) {
-      if (index >= totalCount - 1) {
-        btnNext.classList.add("disabled");
-        btnNext.title = "End of playlist reached";
-      } else {
-        btnNext.classList.remove("disabled");
-        btnNext.title = "Next Video (Shortcut: Shift+N)";
-      }
+      btnNext.classList.toggle("disabled", isLast);
+      btnNext.title = isLast ? "End of playlist reached" : "Next Video (Shortcut: Shift+N)";
+    }
+    if (btnScreenNext) {
+      btnScreenNext.classList.toggle("disabled", isLast);
+      btnScreenNext.title = isLast ? "End of playlist reached" : "Next Video (Shift+N)";
     }
   } else {
     const btnPrev = document.getElementById("btn-mobile-cinema-prev");
     const btnNext = document.getElementById("btn-mobile-cinema-next");
-    if (btnPrev) {
-      if (index <= 0) btnPrev.classList.add("disabled");
-      else btnPrev.classList.remove("disabled");
-    }
-    if (btnNext) {
-      if (index >= totalCount - 1) btnNext.classList.add("disabled");
-      else btnNext.classList.remove("disabled");
-    }
+    const btnScreenPrev = document.getElementById("btn-mobile-screen-prev");
+    const btnScreenNext = document.getElementById("btn-mobile-screen-next");
+
+    if (btnPrev) btnPrev.classList.toggle("disabled", isFirst);
+    if (btnScreenPrev) btnScreenPrev.classList.toggle("disabled", isFirst);
+
+    if (btnNext) btnNext.classList.toggle("disabled", isLast);
+    if (btnScreenNext) btnScreenNext.classList.toggle("disabled", isLast);
   }
 }
 
@@ -10227,6 +10256,12 @@ function loadDesktopCinemaVideo(video, cat, index, itemEl) {
   if (iframeWrapper) {
     if (isShort) iframeWrapper.classList.add("is-short-mode");
     else iframeWrapper.classList.remove("is-short-mode");
+  }
+  isVideoRotatedLandscape = false;
+  updateRotateButtonsUI(false);
+  const btnDeskRotate = document.getElementById("btn-desktop-screen-rotate");
+  if (btnDeskRotate) {
+    btnDeskRotate.style.display = isShort ? "none" : "flex";
   }
 
   // Format clean embed URL with enablejsapi and autoplay
@@ -10532,11 +10567,35 @@ function openMobilePlaylistPage(cat, videoToPlay = null) {
     };
   }
 
+  const btnMobileScreenPrev = document.getElementById("btn-mobile-screen-prev");
+  if (btnMobileScreenPrev) {
+    btnMobileScreenPrev.onclick = (e) => {
+      e.stopPropagation();
+      playPrevVideo(false);
+    };
+  }
+
   const btnMobileNext = document.getElementById("btn-mobile-cinema-next");
   if (btnMobileNext) {
     btnMobileNext.onclick = (e) => {
       e.stopPropagation();
       playNextVideo(false);
+    };
+  }
+
+  const btnMobileScreenNext = document.getElementById("btn-mobile-screen-next");
+  if (btnMobileScreenNext) {
+    btnMobileScreenNext.onclick = (e) => {
+      e.stopPropagation();
+      playNextVideo(false);
+    };
+  }
+
+  const btnMobileScreenRotate = document.getElementById("btn-mobile-screen-rotate");
+  if (btnMobileScreenRotate) {
+    btnMobileScreenRotate.onclick = (e) => {
+      e.stopPropagation();
+      toggleVideoRotation(false);
     };
   }
 
@@ -10691,6 +10750,12 @@ function loadMobileCinemaVideo(video, cat, index, itemEl) {
   if (mobWrapper) {
     if (isMobShort) mobWrapper.classList.add("is-short-mode");
     else mobWrapper.classList.remove("is-short-mode");
+  }
+  isVideoRotatedLandscape = false;
+  updateRotateButtonsUI(false);
+  const btnMobRotate = document.getElementById("btn-mobile-screen-rotate");
+  if (btnMobRotate) {
+    btnMobRotate.style.display = isMobShort ? "none" : "flex";
   }
 
   // Embed URL with autoplay
@@ -13196,6 +13261,45 @@ syncDynamicViewport();
 // =========================================================================
 // Universal Fullscreen & Automatic Screen Orientation Manager
 // =========================================================================
+let isVideoRotatedLandscape = false;
+
+function isCurrentVideoShort() {
+  const deskPage = document.getElementById("desktop-video-player-page");
+  const isDesktop = deskPage && !deskPage.classList.contains("hidden");
+  if (isDesktop) {
+    const wrapper = document.getElementById("desktop-cinema-iframe-wrapper");
+    if (wrapper && wrapper.classList.contains("is-short-mode")) return true;
+    if (currentDesktopActiveCategory && currentDesktopActiveCategory.type === "shorts") return true;
+    if (currentDesktopActiveVideo && (currentDesktopActiveVideo.videoType === "shorts" || String(currentDesktopActiveVideo.embedUrl || "").includes("/shorts/"))) return true;
+  } else {
+    const wrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+    if (wrapper && wrapper.classList.contains("is-short-mode")) return true;
+    if (currentMobileActiveCategory && currentMobileActiveCategory.type === "shorts") return true;
+    if (currentMobileActiveVideo && (currentMobileActiveVideo.videoType === "shorts" || String(currentMobileActiveVideo.embedUrl || "").includes("/shorts/"))) return true;
+  }
+  return false;
+}
+
+async function lockScreenToPortrait() {
+  try {
+    if (screen.orientation && typeof screen.orientation.lock === "function") {
+      await screen.orientation.lock("portrait").catch(async () => {
+        await screen.orientation.lock("portrait-primary").catch(() => {});
+      });
+    } else if (screen.lockOrientation) {
+      screen.lockOrientation("portrait");
+    } else if (screen.webkitLockOrientation) {
+      screen.webkitLockOrientation("portrait");
+    } else if (screen.mozLockOrientation) {
+      screen.mozLockOrientation("portrait");
+    } else if (screen.msLockOrientation) {
+      screen.msLockOrientation("portrait");
+    }
+  } catch (err) {
+    console.debug("[Orientation] Portrait lock failed:", err);
+  }
+}
+
 async function lockScreenToLandscape() {
   try {
     if (screen.orientation && typeof screen.orientation.lock === "function") {
@@ -13243,11 +13347,68 @@ function isElementFullscreen() {
   );
 }
 
+function updateRotateButtonsUI(isLandscape) {
+  const deskBtn = document.getElementById("btn-desktop-screen-rotate");
+  const mobBtn = document.getElementById("btn-mobile-screen-rotate");
+  [deskBtn, mobBtn].forEach(btn => {
+    if (!btn) return;
+    const label = btn.querySelector(".rotate-btn-label");
+    if (isLandscape) {
+      btn.classList.add("active");
+      if (label) label.textContent = "Portrait";
+      btn.title = "Rotate Vertically (Portrait)";
+    } else {
+      btn.classList.remove("active");
+      if (label) label.textContent = "Rotate";
+      btn.title = "Rotate Horizontally (Landscape)";
+    }
+  });
+}
+
+async function toggleVideoRotation(isDesktop = null) {
+  // Shorts do not rotate horizontally
+  if (isCurrentVideoShort()) {
+    showToast("📱 Shorts are vertical video format.");
+    return;
+  }
+
+  isVideoRotatedLandscape = !isVideoRotatedLandscape;
+  updateRotateButtonsUI(isVideoRotatedLandscape);
+
+  const mobWrapper = document.getElementById("mobile-cinema-iframe-wrapper");
+
+  if (isVideoRotatedLandscape) {
+    await lockScreenToLandscape();
+    if (mobWrapper && !isElementFullscreen()) {
+      mobWrapper.classList.add("is-pseudo-landscape");
+    }
+    showToast("🔄 Rotated Horizontally (Landscape)");
+  } else {
+    if (mobWrapper) {
+      mobWrapper.classList.remove("is-pseudo-landscape");
+    }
+    if (isElementFullscreen()) {
+      await lockScreenToPortrait();
+    } else {
+      unlockScreenOrientation();
+    }
+    showToast("📱 Rotated Vertically (Portrait)");
+  }
+}
+
+window.toggleVideoRotation = toggleVideoRotation;
+
 function handleUniversalFullscreenChange() {
   const isFs = isElementFullscreen();
   const wrapper = document.getElementById("mobile-cinema-iframe-wrapper");
   if (isFs) {
-    lockScreenToLandscape();
+    // When going fullscreen, both Shorts and Long Videos go vertically by default
+    // unless the user explicitly requested landscape rotation!
+    if (isVideoRotatedLandscape && !isCurrentVideoShort()) {
+      lockScreenToLandscape();
+    } else {
+      lockScreenToPortrait();
+    }
   } else {
     unlockScreenOrientation();
     if (wrapper && wrapper.classList.contains("is-pseudo-landscape")) {
@@ -13257,58 +13418,7 @@ function handleUniversalFullscreenChange() {
 }
 
 async function toggleMobileLandscapeFullscreen(forceState = null) {
-  const wrapper = document.getElementById("mobile-cinema-iframe-wrapper");
-  const iframe = document.getElementById("mobile-cinema-iframe");
-  const target = wrapper || iframe;
-  if (!target) return;
-
-  const isFs = isElementFullscreen();
-  const isPseudo = wrapper && wrapper.classList.contains("is-pseudo-landscape");
-  const shouldOpen = forceState !== null ? forceState : (!isFs && !isPseudo);
-
-  if (shouldOpen) {
-    // 1. Try standard Fullscreen API
-    let fsSuccess = false;
-    try {
-      if (target.requestFullscreen) {
-        await target.requestFullscreen();
-        fsSuccess = true;
-      } else if (target.webkitRequestFullscreen) {
-        await target.webkitRequestFullscreen();
-        fsSuccess = true;
-      } else if (iframe && iframe.requestFullscreen) {
-        await iframe.requestFullscreen();
-        fsSuccess = true;
-      } else if (iframe && iframe.webkitRequestFullscreen) {
-        await iframe.webkitRequestFullscreen();
-        fsSuccess = true;
-      }
-    } catch (e) {
-      console.debug("Fullscreen request notice:", e);
-    }
-
-    // 2. Lock screen orientation
-    await lockScreenToLandscape();
-
-    // 3. Fallback for iOS or environments where orientation lock is restricted:
-    if (!isElementFullscreen()) {
-      if (wrapper) {
-        wrapper.classList.add("is-pseudo-landscape");
-        showToast("🔄 Rotated to Cinema Landscape (tap Rotate to exit)");
-      }
-    }
-  } else {
-    // Exit landscape & fullscreen
-    if (wrapper) wrapper.classList.remove("is-pseudo-landscape");
-    if (isElementFullscreen()) {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen().catch(() => {});
-      } else if (document.webkitExitFullscreen) {
-        await document.webkitExitFullscreen().catch(() => {});
-      }
-    }
-    unlockScreenOrientation();
-  }
+  toggleVideoRotation(false);
 }
 
 // Global Fullscreen Event Listeners across all standard & vendor prefixes
@@ -13326,14 +13436,22 @@ window.addEventListener("message", (e) => {
     if (payload && typeof payload === "object") {
       if (payload.info && typeof payload.info.fullscreen === "boolean") {
         if (payload.info.fullscreen) {
-          lockScreenToLandscape();
+          if (isVideoRotatedLandscape && !isCurrentVideoShort()) {
+            lockScreenToLandscape();
+          } else {
+            lockScreenToPortrait();
+          }
         } else {
           unlockScreenOrientation();
         }
       }
       if (payload.event === "onFullscreenChange") {
         if (payload.info === true || payload.data === true) {
-          lockScreenToLandscape();
+          if (isVideoRotatedLandscape && !isCurrentVideoShort()) {
+            lockScreenToLandscape();
+          } else {
+            lockScreenToPortrait();
+          }
         } else {
           unlockScreenOrientation();
         }

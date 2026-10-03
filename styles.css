@@ -11662,6 +11662,144 @@ body:not(:has(#panel-sol-chat.has-messages)) .sol-last-msg-companion.sol-free-fl
   white-space: nowrap;
 }
 
+/* ==========================================================================
+ * On-Screen Video Controls Overlay (YouTube Style Next / Prev & Rotate)
+ * ========================================================================== */
+.yt-screen-controls-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 85;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* On-Screen Next & Prev Buttons */
+.yt-screen-nav-btn {
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, border-color 0.2s ease, opacity 0.25s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.yt-screen-nav-btn.prev {
+  left: 18px;
+}
+
+.yt-screen-nav-btn.next {
+  right: 18px;
+}
+
+.yt-screen-nav-btn:hover {
+  background: rgba(2, 132, 199, 0.88);
+  border-color: #38bdf8;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+}
+
+.yt-screen-nav-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.yt-screen-nav-btn.disabled,
+.yt-screen-nav-btn:disabled {
+  opacity: 0.22 !important;
+  pointer-events: none !important;
+}
+
+/* On-Screen Rotate Button (for Long Videos) */
+.yt-screen-rotate-btn {
+  pointer-events: auto;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.yt-screen-rotate-btn:hover {
+  background: rgba(168, 85, 247, 0.85);
+  border-color: #c084fc;
+  transform: scale(1.05);
+  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.45);
+}
+
+.yt-screen-rotate-btn:active {
+  transform: scale(0.95);
+}
+
+.yt-screen-rotate-btn.active {
+  background: rgba(14, 165, 233, 0.35);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+/* Hide Rotate button when in Shorts mode (Shorts are always vertical) */
+.desktop-cinema-iframe-wrapper.is-short-mode .yt-screen-rotate-btn,
+.mobile-cinema-iframe-wrapper.is-short-mode .yt-screen-rotate-btn {
+  display: none !important;
+}
+
+/* Responsive sizes for mobile */
+@media (max-width: 900px) {
+  .yt-screen-nav-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+  }
+  .yt-screen-nav-btn.prev {
+    left: 12px;
+  }
+  .yt-screen-nav-btn.next {
+    right: 12px;
+  }
+  .yt-screen-rotate-btn {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 0.74rem;
+    top: 10px;
+    right: 10px;
+  }
+}
+
+
 /* Playback Control Groups & Seek Buttons */
 .cinema-playback-group {
   display: flex;
